@@ -80,25 +80,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. CONFIGURAÇÃO DA URL DA PLANILHA ---
-# Cole aqui a URL gerada na implantação do Apps Script
+# --- 2. CONFIGURAÇÃO DA API DO GOOGLE APPS SCRIPT ---
 API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
-
-# Se preferir colocar no st.secrets ou em campo editável na barra lateral:
-if "API_URL" in st.secrets:
-    API_URL = st.secrets["API_URL"]
 
 # --- 3. COMUNICAÇÃO COM A PLANILHA VIA API ---
 def carregar_dados_planilha():
-    if not API_URL or "SUA_URL" in API_URL:
-        st.warning("⚠️ Insira a URL do Web App do Google Apps Script na variável API_URL ou na barra lateral.")
-        return pd.DataFrame()
     try:
-        r = requests.get(API_URL, timeout=20)
+        r = requests.get(API_URL, timeout=30)
         dados = r.json()
         if isinstance(dados, list):
-            df = pd.DataFrame(dados)
-            return df
+            return pd.DataFrame(dados)
         return pd.DataFrame()
     except Exception as e:
         st.error(f"Erro ao buscar registros da planilha: {e}")
@@ -109,7 +100,7 @@ def enviar_importacao_planilha(linhas):
         "action": "importar",
         "linhas": linhas
     }
-    r = requests.post(API_URL, json=payload, timeout=30)
+    r = requests.post(API_URL, json=payload, timeout=40)
     return r.json()
 
 def enviar_atualizacao_conferencia(itens):
@@ -117,7 +108,7 @@ def enviar_atualizacao_conferencia(itens):
         "action": "atualizar",
         "itens": itens
     }
-    r = requests.post(API_URL, json=payload, timeout=30)
+    r = requests.post(API_URL, json=payload, timeout=40)
     return r.json()
 
 # --- 4. EXTRAÇÃO ASSERTIVA DO EXCEL ---
@@ -199,9 +190,6 @@ def extrair_excel(uploaded_file):
 
 # --- 5. BARRA LATERAL ---
 st.sidebar.markdown("### 🏢 Logística & Estoque")
-if not API_URL or "SUA_URL" in API_URL:
-    API_URL = st.sidebar.text_input("URL do Google Apps Script:", type="password")
-
 menu = st.sidebar.radio(
     "Navegação:",
     ["1. Importar Remessa (Excel)", "2. Folha de Impressão Cega", "3. Digitar Conferência / Corrigir"]
@@ -234,7 +222,7 @@ if menu == "1. Importar Remessa (Excel)":
             else:
                 data_importacao = datetime.now().strftime("%d/%m/%Y %H:%M")
                 
-                # Monta a estrutura exata das colunas A até H
+                # Monta as colunas A até H
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
@@ -244,8 +232,8 @@ if menu == "1. Importar Remessa (Excel)":
                         item["Produto"],      # Coluna D
                         item["Descricao"],    # Coluna E
                         item["Quantidade"],   # Coluna F
-                        "",                   # Coluna G (aberta para conferência)
-                        ""                    # Coluna H (aberta para divergência)
+                        "",                   # Coluna G
+                        ""                    # Coluna H
                     ])
 
                 with st.spinner("Gravando linhas diretamente na planilha Google Sheets..."):
@@ -372,8 +360,6 @@ elif menu == "3. Digitar Conferência / Corrigir":
             """, unsafe_allow_html=True)
 
             itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
-            
-            # Se já houver conferência gravada na planilha, carrega o valor; caso contrário, inicia com 0.0
             itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce").fillna(0.0)
 
             st.write("Digite as quantidades conferidas na coluna **Conferência** (ou altere valores para correção):")
@@ -382,7 +368,7 @@ elif menu == "3. Digitar Conferência / Corrigir":
             editado = st.data_editor(
                 df_editavel,
                 column_config={
-                    "row_index": None,  # Oculta o índice da linha física
+                    "row_index": None,
                     "produto": st.column_config.TextColumn("Código", disabled=True),
                     "descricao": st.column_config.TextColumn("Descrição", disabled=True),
                     "quantidade": st.column_config.NumberColumn("Qtd. Esperada", disabled=True, format="%.2f"),
@@ -411,12 +397,15 @@ elif menu == "3. Digitar Conferência / Corrigir":
                     return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
 
             st.write("#### Painel Dinâmico de Divergências")
-            st.dataframe(
-                editado[["produto", "descricao", "quantidade", "conferencia", "divergencia"]].style.applymap(
-                    colorir_divergencia, subset=["divergencia"]
-                ),
-                use_container_width=True
-            )
+            
+            # Compatibilidade com Pandas recentes (map) e antigos (applymap)
+            styler_tabela = editado[["produto", "descricao", "quantidade", "conferencia", "divergencia"]].style
+            if hasattr(styler_tabela, "map"):
+                styler_tabela = styler_tabela.map(colorir_divergencia, subset=["divergencia"])
+            else:
+                styler_tabela = styler_tabela.applymap(colorir_divergencia, subset=["divergencia"])
+
+            st.dataframe(styler_tabela, use_container_width=True)
 
             itens_divergentes = editado[editado["divergencia"] != 0]
             total_divergencias = len(itens_divergentes)
