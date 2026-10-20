@@ -83,7 +83,7 @@ st.markdown("""
 # --- 2. CONFIGURAÇÃO DA API DO GOOGLE APPS SCRIPT ---
 API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
 
-# --- 3. COMUNICAÇÃO COM A PLANILHA VIA API ---
+# --- 3. COMUNICAÇÃO COM A PLANILHA ---
 def carregar_dados_planilha():
     try:
         r = requests.get(API_URL, timeout=30)
@@ -111,7 +111,7 @@ def enviar_atualizacao_conferencia(itens):
     r = requests.post(API_URL, json=payload, timeout=40)
     return r.json()
 
-# --- 4. EXTRAÇÃO ASSERTIVA DO EXCEL ---
+# --- 4. EXTRAÇÃO DO EXCEL ---
 def extrair_excel(uploaded_file):
     itens = []
     df_raw = pd.read_excel(uploaded_file, header=None, dtype=str)
@@ -192,7 +192,7 @@ def extrair_excel(uploaded_file):
 st.sidebar.markdown("### 🏢 Logística & Estoque")
 menu = st.sidebar.radio(
     "Navegação:",
-    ["1. Importar Remessa (Excel)", "2. Folha de Impressão Cega", "3. Digitar Conferência / Corrigir"]
+    ["1. Importar Remessa (Excel)", "2. Folha de Impressão Cega", "3. Digitar Conferência Cega"]
 )
 
 # ==============================================================================
@@ -218,11 +218,10 @@ if menu == "1. Importar Remessa (Excel)":
                 itens = extrair_excel(arquivo_excel)
 
             if not itens:
-                st.warning("Nenhum item válido foi encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
+                st.warning("Nenhum item válido encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
             else:
                 data_importacao = datetime.now().strftime("%d/%m/%Y %H:%M")
                 
-                # Monta as colunas A até H
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
@@ -232,8 +231,8 @@ if menu == "1. Importar Remessa (Excel)":
                         item["Produto"],      # Coluna D
                         item["Descricao"],    # Coluna E
                         item["Quantidade"],   # Coluna F
-                        "",                   # Coluna G
-                        ""                    # Coluna H
+                        "",                   # Coluna G (aberta para conferência)
+                        ""                    # Coluna H (aberta para divergência)
                     ])
 
                 with st.spinner("Gravando linhas diretamente na planilha Google Sheets..."):
@@ -317,11 +316,10 @@ elif menu == "2. Folha de Impressão Cega":
             st.markdown(html_folha, unsafe_allow_html=True)
 
 # ==============================================================================
-# OPÇÃO 3: PESQUISAR REMESSA, DIGITAR CONFERÊNCIA E CORRIGIR DIVERGÊNCIAS
+# OPÇÃO 3: DIGITAÇÃO CEGA, COMPARAÇÃO, GRAVAÇÃO E RECONFERÊNCIA DE DIVERGÊNCIAS
 # ==============================================================================
-elif menu == "3. Digitar Conferência / Corrigir":
-    st.markdown('<div class="main-title">🔍 Validação, Digitação e Correção de Conferência</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Busca os itens da remessa na planilha, calcula divergências em tempo real e atualiza os dados.</div>', unsafe_allow_html=True)
+elif menu == "3. Digitar Conferência Cega":
+    st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
 
     with st.spinner("Buscando registros na planilha Google..."):
         df = carregar_dados_planilha()
@@ -338,6 +336,31 @@ elif menu == "3. Digitar Conferência / Corrigir":
             local_atual = itens_remessa["local"].iloc[0]
             data_atual = itens_remessa["data_importacao"].iloc[0]
 
+            # Converte colunas numéricas
+            itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
+            itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
+            itens_remessa["divergencia"] = pd.to_numeric(itens_remessa["divergencia"], errors="coerce")
+
+            # Identifica se a remessa já passou por uma primeira conferência
+            ja_conferida = itens_remessa["conferencia"].notna().any()
+            
+            # Filtra itens com divergência (divergência diferente de zero)
+            itens_divergentes = itens_remessa[itens_remessa["divergencia"].fillna(1) != 0].copy()
+
+            # --- DEFINIÇÃO DO MODO (PRIMEIRA CONFERÊNCIA OU SEGUNDA CONFERÊNCIA/CORREÇÃO) ---
+            if ja_conferida and len(itens_divergentes) > 0:
+                modo_reconferencia = True
+                dados_trabalho = itens_divergentes.copy()
+                st.warning(f"⚠️ **Segunda Conferência:** Esta remessa possui **{len(itens_divergentes)} item(ns) com divergência**. Exibindo apenas os itens divergentes para correção.")
+            elif ja_conferida and len(itens_divergentes) == 0:
+                modo_reconferencia = False
+                dados_trabalho = itens_remessa.copy()
+                st.success("✨ **Remessa 100% Conferida e Sem Divergências!** Todos os itens batem com o esperado.")
+            else:
+                modo_reconferencia = False
+                dados_trabalho = itens_remessa.copy()
+                st.info("📋 **Primeira Conferência (Contagem Cega):** Digite os valores contados fisicamente. As quantidades esperadas não são exibidas nesta etapa.")
+
             st.markdown(f"""
             <div class="metric-container">
                 <div class="metric-card">
@@ -353,25 +376,23 @@ elif menu == "3. Digitar Conferência / Corrigir":
                     <strong>{data_atual}</strong>
                 </div>
                 <div class="metric-card">
-                    <span>Total de Itens</span>
-                    <strong>{len(itens_remessa)}</strong>
+                    <span>Itens em Tela</span>
+                    <strong>{len(dados_trabalho)}</strong>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
-            itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce").fillna(0.0)
+            # Prepara a tabela de digitação (sem mostrar a quantidade esperada)
+            dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
+            df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-            st.write("Digite as quantidades conferidas na coluna **Conferência** (ou altere valores para correção):")
-            df_editavel = itens_remessa[["row_index", "produto", "descricao", "quantidade", "conferencia"]].copy()
-
+            st.write("Digite as quantidades físicas conferidas abaixo:")
             editado = st.data_editor(
                 df_editavel,
                 column_config={
                     "row_index": None,
                     "produto": st.column_config.TextColumn("Código", disabled=True),
                     "descricao": st.column_config.TextColumn("Descrição", disabled=True),
-                    "quantidade": st.column_config.NumberColumn("Qtd. Esperada", disabled=True, format="%.2f"),
                     "conferencia": st.column_config.NumberColumn(
                         "Conferência (Físico)",
                         min_value=0.0,
@@ -382,60 +403,82 @@ elif menu == "3. Digitar Conferência / Corrigir":
                 },
                 use_container_width=True,
                 hide_index=True,
-                key="editor_conferencia"
+                key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
-            # Divergência = Conferido - Esperado
-            editado["divergencia"] = editado["conferencia"] - editado["quantidade"]
+            # --- BOTÃO DE COMPARAÇÃO & GRAVAÇÃO NA PLANILHA ---
+            if st.button("⚖️ Comparar e Gravar Conferência na Planilha", type="primary"):
+                with st.spinner("Calculando divergências e gravando diretamente na planilha..."):
+                    # Mapeia as quantidades esperadas para calcular divergência
+                    mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
+                    
+                    itens_atualizar = []
+                    resultados_comparacao = []
 
-            def colorir_divergencia(valor):
-                if valor < 0:
-                    return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
-                elif valor > 0:
-                    return "background-color: #dcfce7; color: #166534; font-weight: 700;"
-                else:
-                    return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+                    for _, row in editado.iterrows():
+                        r_id = int(row["row_index"])
+                        conf_val = float(row["conferencia"])
+                        qtd_esp = mapa_esperado.get(r_id, 0.0)
+                        div_val = conf_val - qtd_esp
 
-            st.write("#### Painel Dinâmico de Divergências")
-            
-            # Compatibilidade com Pandas recentes (map) e antigos (applymap)
-            styler_tabela = editado[["produto", "descricao", "quantidade", "conferencia", "divergencia"]].style
-            if hasattr(styler_tabela, "map"):
-                styler_tabela = styler_tabela.map(colorir_divergencia, subset=["divergencia"])
-            else:
-                styler_tabela = styler_tabela.applymap(colorir_divergencia, subset=["divergencia"])
+                        itens_atualizar.append({
+                            "row_index": r_id,
+                            "conferencia": conf_val,
+                            "divergencia": div_val
+                        })
 
-            st.dataframe(styler_tabela, use_container_width=True)
+                        resultados_comparacao.append({
+                            "produto": row["produto"],
+                            "descricao": row["descricao"],
+                            "qtd_esperada": qtd_esp,
+                            "conferencia": conf_val,
+                            "divergencia": div_val
+                        })
 
-            itens_divergentes = editado[editado["divergencia"] != 0]
-            total_divergencias = len(itens_divergentes)
+                    # Grava diretamente no Google Sheets através da API
+                    try:
+                        res = enviar_atualizacao_conferencia(itens_atualizar)
+                        if res.get("status") == "success":
+                            st.success("✅ Conferência e divergências gravadas com sucesso na planilha Google!")
+                            
+                            df_resultado = pd.DataFrame(resultados_comparacao)
+                            
+                            # Função para colorir a divergência
+                            def colorir_divergencia(valor):
+                                if valor < 0:
+                                    return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                elif valor > 0:
+                                    return "background-color: #dcfce7; color: #166534; font-weight: 700;"
+                                else:
+                                    return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
 
-            st.write("---")
-            if total_divergencias == 0:
-                st.success("✨ **Perfeito!** Todos os itens foram conferidos e as quantidades estão exatamente iguais às da remessa.")
-            else:
-                st.warning(f"⚠️ Existem **{total_divergencias} produto(s) com divergência**. Você pode gravar a conferência ou corrigir as quantidades acima.")
-
-            col_salvar, col_recarregar = st.columns([2, 1])
-            with col_salvar:
-                if st.button("💾 Gravar / Atualizar Conferência na Planilha", type="primary"):
-                    with st.spinner("Atualizando colunas G e H na planilha Google Sheets..."):
-                        itens_atualizar = []
-                        for _, row in editado.iterrows():
-                            itens_atualizar.append({
-                                "row_index": int(row["row_index"]),
-                                "conferencia": float(row["conferencia"]),
-                                "divergencia": float(row["divergencia"])
-                            })
-                        try:
-                            res = enviar_atualizacao_conferencia(itens_atualizar)
-                            if res.get("status") == "success":
-                                st.success("✅ Conferência e divergências salvas com sucesso na planilha Google!")
-                                st.balloons()
+                            # Painel de resultados da comparação
+                            st.write("### 📊 Resultado da Comparação")
+                            styler_res = df_resultado.style
+                            if hasattr(styler_res, "map"):
+                                styler_res = styler_res.map(colorir_divergencia, subset=["divergencia"])
                             else:
-                                st.error(f"Erro ao salvar: {res.get('message')}")
-                        except Exception as e:
-                            st.error(f"Falha de conexão com a planilha: {e}")
-            with col_recarregar:
-                if st.button("🔄 Recarregar Dados da Planilha"):
-                    st.rerun()
+                                styler_res = styler_res.applymap(colorir_divergencia, subset=["divergencia"])
+
+                            st.dataframe(
+                                styler_res,
+                                column_config={
+                                    "produto": "Código",
+                                    "descricao": "Descrição",
+                                    "qtd_esperada": st.column_config.NumberColumn("Qtd. Esperada", format="%.2f"),
+                                    "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
+                                    "divergencia": st.column_config.NumberColumn("Divergência", format="%.2f"),
+                                },
+                                use_container_width=True
+                            )
+
+                            erros = df_resultado[df_resultado["divergencia"] != 0]
+                            if len(erros) == 0:
+                                st.balloons()
+                                st.success("🎉 **Nenhuma divergência encontrada!** Remessa totalmente conferida.")
+                            else:
+                                st.warning(f"⚠️ **Atenção:** Foram encontrados **{len(erros)} item(ns) com divergência**. Ao buscar novamente esta remessa, o formulário exibirá apenas estes itens para a segunda conferência.")
+                        else:
+                            st.error(f"Erro ao salvar na planilha: {res.get('message')}")
+                    except Exception as e:
+                        st.error(f"Falha de conexão com a planilha: {e}")
