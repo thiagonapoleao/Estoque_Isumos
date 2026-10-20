@@ -316,7 +316,7 @@ elif menu == "2. Folha de Impressão Cega":
             st.markdown(html_folha, unsafe_allow_html=True)
 
 # ==============================================================================
-# OPÇÃO 3: DIGITAÇÃO CEGA, COMPARAÇÃO, GRAVAÇÃO E RECONFERÊNCIA DE DIVERGÊNCIAS
+# OPÇÃO 3: DIGITAÇÃO CEGA, COMPARAÇÃO, GRAVAÇÃO E RECONFERÊNCIA (TOTALMENTE CEGA)
 # ==============================================================================
 elif menu == "3. Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
@@ -341,25 +341,25 @@ elif menu == "3. Digitar Conferência Cega":
             itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
             itens_remessa["divergencia"] = pd.to_numeric(itens_remessa["divergencia"], errors="coerce")
 
-            # Identifica se a remessa já passou por uma primeira conferência
+            # Verifica se já houve conferência prévia gravada
             ja_conferida = itens_remessa["conferencia"].notna().any()
             
-            # Filtra itens com divergência (divergência diferente de zero)
+            # Filtra apenas itens com divergência pendente
             itens_divergentes = itens_remessa[itens_remessa["divergencia"].fillna(1) != 0].copy()
 
-            # --- DEFINIÇÃO DO MODO (PRIMEIRA CONFERÊNCIA OU SEGUNDA CONFERÊNCIA/CORREÇÃO) ---
+            # --- DEFINIÇÃO DO MODO (PRIMEIRA CONFERÊNCIA OU RECONFERÊNCIA DE ERROS) ---
             if ja_conferida and len(itens_divergentes) > 0:
                 modo_reconferencia = True
                 dados_trabalho = itens_divergentes.copy()
-                st.warning(f"⚠️ **Segunda Conferência:** Esta remessa possui **{len(itens_divergentes)} item(ns) com divergência**. Exibindo apenas os itens divergentes para correção.")
+                st.warning(f"⚠️ **Segunda Conferência (Apenas Divergências):** Foram identificados **{len(itens_divergentes)} item(ns)** com contagem divergente. Reconte apenas os itens listados abaixo.")
             elif ja_conferida and len(itens_divergentes) == 0:
                 modo_reconferencia = False
                 dados_trabalho = itens_remessa.copy()
-                st.success("✨ **Remessa 100% Conferida e Sem Divergências!** Todos os itens batem com o esperado.")
+                st.success("✨ **Remessa 100% Conferida e Sem Divergências!** Todos os itens foram validados com sucesso.")
             else:
                 modo_reconferencia = False
                 dados_trabalho = itens_remessa.copy()
-                st.info("📋 **Primeira Conferência (Contagem Cega):** Digite os valores contados fisicamente. As quantidades esperadas não são exibidas nesta etapa.")
+                st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
             st.markdown(f"""
             <div class="metric-container">
@@ -376,17 +376,17 @@ elif menu == "3. Digitar Conferência Cega":
                     <strong>{data_atual}</strong>
                 </div>
                 <div class="metric-card">
-                    <span>Itens em Tela</span>
+                    <span>Itens a Conferir</span>
                     <strong>{len(dados_trabalho)}</strong>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            # Prepara a tabela de digitação (sem mostrar a quantidade esperada)
+            # Prepara a tabela de digitação - QUANTIDADE ESPERADA OCULTA
             dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
             df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-            st.write("Digite as quantidades físicas conferidas abaixo:")
+            st.write("Digite as quantidades físicas conferidas:")
             editado = st.data_editor(
                 df_editavel,
                 column_config={
@@ -408,12 +408,11 @@ elif menu == "3. Digitar Conferência Cega":
 
             # --- BOTÃO DE COMPARAÇÃO & GRAVAÇÃO NA PLANILHA ---
             if st.button("⚖️ Comparar e Gravar Conferência na Planilha", type="primary"):
-                with st.spinner("Calculando divergências e gravando diretamente na planilha..."):
-                    # Mapeia as quantidades esperadas para calcular divergência
+                with st.spinner("Gravando na planilha e validando contagem..."):
                     mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
                     
                     itens_atualizar = []
-                    resultados_comparacao = []
+                    resultados_exibicao = []
 
                     for _, row in editado.iterrows():
                         r_id = int(row["row_index"])
@@ -421,63 +420,63 @@ elif menu == "3. Digitar Conferência Cega":
                         qtd_esp = mapa_esperado.get(r_id, 0.0)
                         div_val = conf_val - qtd_esp
 
+                        # Envia os dados completos para a planilha (inclusive a divergência calculada)
                         itens_atualizar.append({
                             "row_index": r_id,
                             "conferencia": conf_val,
                             "divergencia": div_val
                         })
 
-                        resultados_comparacao.append({
+                        # Na tela NÃO EXIBE a quantidade esperada nem o valor exato da divergência
+                        status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
+                        resultados_exibicao.append({
                             "produto": row["produto"],
                             "descricao": row["descricao"],
-                            "qtd_esperada": qtd_esp,
                             "conferencia": conf_val,
-                            "divergencia": div_val
+                            "status": status,
+                            "_tem_erro": (div_val != 0)
                         })
 
-                    # Grava diretamente no Google Sheets através da API
                     try:
                         res = enviar_atualizacao_conferencia(itens_atualizar)
                         if res.get("status") == "success":
-                            st.success("✅ Conferência e divergências gravadas com sucesso na planilha Google!")
+                            st.success("✅ Dados conferidos e gravados com sucesso na planilha Google!")
                             
-                            df_resultado = pd.DataFrame(resultados_comparacao)
+                            df_resultado = pd.DataFrame(resultados_exibicao)
                             
-                            # Função para colorir a divergência
-                            def colorir_divergencia(valor):
-                                if valor < 0:
+                            # Função para colorir o status sem expor valores
+                            def colorir_status(val):
+                                if "Divergente" in str(val):
                                     return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
-                                elif valor > 0:
-                                    return "background-color: #dcfce7; color: #166534; font-weight: 700;"
                                 else:
                                     return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
 
-                            # Painel de resultados da comparação
-                            st.write("### 📊 Resultado da Comparação")
-                            styler_res = df_resultado.style
+                            st.write("### 📊 Resultado da Conferência")
+                            
+                            df_mostrar = df_resultado[["produto", "descricao", "conferencia", "status"]]
+                            styler_res = df_mostrar.style
                             if hasattr(styler_res, "map"):
-                                styler_res = styler_res.map(colorir_divergencia, subset=["divergencia"])
+                                styler_res = styler_res.map(colorir_status, subset=["status"])
                             else:
-                                styler_res = styler_res.applymap(colorir_divergencia, subset=["divergencia"])
+                                styler_res = styler_res.applymap(colorir_status, subset=["status"])
 
                             st.dataframe(
                                 styler_res,
                                 column_config={
                                     "produto": "Código",
                                     "descricao": "Descrição",
-                                    "qtd_esperada": st.column_config.NumberColumn("Qtd. Esperada", format="%.2f"),
                                     "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
-                                    "divergencia": st.column_config.NumberColumn("Divergência", format="%.2f"),
+                                    "status": "Situação da Contagem",
                                 },
                                 use_container_width=True
                             )
 
-                            erros = df_resultado[df_resultado["divergencia"] != 0]
-                            if len(erros) == 0:
+                            total_erros = df_resultado["_tem_erro"].sum()
+                            if total_erros == 0:
                                 st.balloons()
-                                st.success("🎉 **Nenhuma divergência encontrada!** Remessa totalmente conferida.")
+                                st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
                             else:
-                                st.warning(f"⚠️ **Atenção:** Foram encontrados **{len(erros)} item(ns) com divergência**. Ao buscar novamente esta remessa, o formulário exibirá apenas estes itens para a segunda conferência.")
+                                st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
                         else:
                             st.error(f"Erro ao salvar na planilha: {res.get('message')}")
                     except Exception as e:
