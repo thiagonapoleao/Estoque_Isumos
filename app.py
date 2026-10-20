@@ -1,10 +1,10 @@
-import sqlite3
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import requests
 import streamlit.components.v1 as components
 
-# --- 1. CONFIGURAÇÃO DA PÁGINA & TEMA CLARO CORPORATIVO ---
+# --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Gestão de Conferência de Mercadorias",
     page_icon="📦",
@@ -57,8 +57,6 @@ st.markdown("""
         color: #0f172a;
         margin-top: 4px;
     }
-
-    /* Regras de Impressão para Folha A4 Cega */
     @media print {
         header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
@@ -82,60 +80,47 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. BANCO DE DADOS LOCAL (ZERO CONFIGURAÇÃO / SEM SECRETS) ---
-DB_NAME = "conferencia_mercadorias.db"
+# --- 2. CONFIGURAÇÃO DA URL DA PLANILHA ---
+# Cole aqui a URL gerada na implantação do Apps Script
+API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
 
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS conferencia (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            remessa TEXT,
-            local TEXT,
-            data_importacao TEXT,
-            produto TEXT,
-            descricao TEXT,
-            quantidade REAL,
-            conferencia REAL,
-            divergencia REAL
-        )
-    """)
-    conn.commit()
-    conn.close()
+# Se preferir colocar no st.secrets ou em campo editável na barra lateral:
+if "API_URL" in st.secrets:
+    API_URL = st.secrets["API_URL"]
 
-init_db()
+# --- 3. COMUNICAÇÃO COM A PLANILHA VIA API ---
+def carregar_dados_planilha():
+    if not API_URL or "SUA_URL" in API_URL:
+        st.warning("⚠️ Insira a URL do Web App do Google Apps Script na variável API_URL ou na barra lateral.")
+        return pd.DataFrame()
+    try:
+        r = requests.get(API_URL, timeout=20)
+        dados = r.json()
+        if isinstance(dados, list):
+            df = pd.DataFrame(dados)
+            return df
+        return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Erro ao buscar registros da planilha: {e}")
+        return pd.DataFrame()
 
-def salvar_remessa_db(linhas):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.executemany("""
-        INSERT INTO conferencia 
-        (remessa, local, data_importacao, produto, descricao, quantidade, conferencia, divergencia)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, linhas)
-    conn.commit()
-    conn.close()
+def enviar_importacao_planilha(linhas):
+    payload = {
+        "action": "importar",
+        "linhas": linhas
+    }
+    r = requests.post(API_URL, json=payload, timeout=30)
+    return r.json()
 
-def carregar_dados_db():
-    conn = sqlite3.connect(DB_NAME)
-    df = pd.read_sql_query("SELECT * FROM conferencia ORDER BY id ASC", conn)
-    conn.close()
-    return df
+def enviar_atualizacao_conferencia(itens):
+    payload = {
+        "action": "atualizar",
+        "itens": itens
+    }
+    r = requests.post(API_URL, json=payload, timeout=30)
+    return r.json()
 
-def atualizar_conferencia_db(registros_atualizados):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    for reg in registros_atualizados:
-        cursor.execute("""
-            UPDATE conferencia
-            SET conferencia = ?, divergencia = ?
-            WHERE id = ?
-        """, (reg["conferencia"], reg["divergencia"], reg["id"]))
-    conn.commit()
-    conn.close()
-
-# --- 3. EXTRAÇÃO ASSERTIVA DO EXCEL ---
+# --- 4. EXTRAÇÃO ASSERTIVA DO EXCEL ---
 def extrair_excel(uploaded_file):
     itens = []
     df_raw = pd.read_excel(uploaded_file, header=None, dtype=str)
@@ -145,7 +130,6 @@ def extrair_excel(uploaded_file):
     idx_col_desc = None
     idx_col_qtd = None
 
-    # Varre as linhas procurando onde começa a tabela de produtos
     for r_idx in range(min(50, len(df_raw))):
         linha = df_raw.iloc[r_idx]
         linha_limpa = [str(val).strip().lower() for val in linha.dropna()]
@@ -159,13 +143,10 @@ def extrair_excel(uploaded_file):
                     continue
                 v = str(val).strip().lower()
                 
-                # Identifica coluna do código do produto
                 if any(k in v for k in ["produto", "código", "codigo", "item"]) and idx_col_prod is None:
                     idx_col_prod = c_idx
-                # Identifica descrição
                 elif any(k in v for k in ["descri", "nome", "especifica"]) and idx_col_desc is None:
                     idx_col_desc = c_idx
-                # Identifica quantidade (ignora lote e número de série)
                 elif any(k in v for k in ["quant", "qtd"]) and not any(k in v for k in ["lote", "série", "serie"]):
                     idx_col_qtd = c_idx
             break
@@ -173,13 +154,11 @@ def extrair_excel(uploaded_file):
     if linha_cabecalho is None:
         return itens
 
-    # Fallbacks estruturais
     if idx_col_prod is None:
         idx_col_prod = 0
     if idx_col_desc is None and len(df_raw.columns) > 1:
         idx_col_desc = 1
 
-    # Itera sobre os dados a partir da linha logo abaixo do cabeçalho
     for r_idx in range(linha_cabecalho + 1, len(df_raw)):
         linha = df_raw.iloc[r_idx]
 
@@ -218,19 +197,22 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. BARRA LATERAL ---
+# --- 5. BARRA LATERAL ---
 st.sidebar.markdown("### 🏢 Logística & Estoque")
+if not API_URL or "SUA_URL" in API_URL:
+    API_URL = st.sidebar.text_input("URL do Google Apps Script:", type="password")
+
 menu = st.sidebar.radio(
     "Navegação:",
-    ["1. Importar Remessa (Excel)", "2. Folha de Impressão Cega", "3. Digitar Conferência", "4. Exportar Dados"]
+    ["1. Importar Remessa (Excel)", "2. Folha de Impressão Cega", "3. Digitar Conferência / Corrigir"]
 )
 
 # ==============================================================================
-# OPÇÃO 1: IMPORTAR REMESSA (EXCEL)
+# OPÇÃO 1: IMPORTAR EXCEL E SALVAR NA PLANILHA GOOGLE
 # ==============================================================================
 if menu == "1. Importar Remessa (Excel)":
     st.markdown('<div class="main-title">📥 Importação de Remessa via Planilha Excel</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Carregue o arquivo Excel (.xlsx / .xls), ignorando cabeçalhos prévios e lotes/séries.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Gravação direta na aba Conferencia da Planilha Google.</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -240,7 +222,7 @@ if menu == "1. Importar Remessa (Excel)":
 
     arquivo_excel = st.file_uploader("Selecione o arquivo Excel da Remessa", type=["xlsx", "xls"])
 
-    if st.button("Processar e Salvar no Sistema", type="primary"):
+    if st.button("Processar e Salvar na Planilha Google", type="primary"):
         if not num_remessa or not nome_local or not arquivo_excel:
             st.error("Preencha todos os campos obrigatórios e anexe o arquivo Excel.")
         else:
@@ -251,28 +233,32 @@ if menu == "1. Importar Remessa (Excel)":
                 st.warning("Nenhum item válido foi encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
             else:
                 data_importacao = datetime.now().strftime("%d/%m/%Y %H:%M")
-                linhas_inserir = []
-
+                
+                # Monta a estrutura exata das colunas A até H
+                linhas_para_sheets = []
                 for item in itens:
-                    linhas_inserir.append((
-                        num_remessa,
-                        nome_local,
-                        data_importacao,
-                        item["Produto"],
-                        item["Descricao"],
-                        item["Quantidade"],
-                        None,  # Conferencia vazia
-                        None   # Divergencia vazia
-                    ))
+                    linhas_para_sheets.append([
+                        num_remessa,          # Coluna A
+                        nome_local,           # Coluna B
+                        data_importacao,      # Coluna C
+                        item["Produto"],      # Coluna D
+                        item["Descricao"],    # Coluna E
+                        item["Quantidade"],   # Coluna F
+                        "",                   # Coluna G (aberta para conferência)
+                        ""                    # Coluna H (aberta para divergência)
+                    ])
 
-                try:
-                    salvar_remessa_db(linhas_inserir)
-                    st.success(f"✅ {len(linhas_inserir)} itens importados com sucesso para a remessa **{num_remessa}**!")
-                    
-                    df_preview = pd.DataFrame(itens)
-                    st.dataframe(df_preview, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Erro ao salvar no banco local: {e}")
+                with st.spinner("Gravando linhas diretamente na planilha Google Sheets..."):
+                    try:
+                        res = enviar_importacao_planilha(linhas_para_sheets)
+                        if res.get("status") == "success":
+                            st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso na planilha para a remessa **{num_remessa}**!")
+                            df_preview = pd.DataFrame(itens)
+                            st.dataframe(df_preview, use_container_width=True)
+                        else:
+                            st.error(f"Erro reportado pela planilha: {res.get('message')}")
+                    except Exception as e:
+                        st.error(f"Falha de conexão com a planilha: {e}")
 
 # ==============================================================================
 # OPÇÃO 2: FOLHA DE IMPRESSÃO CEGA (SEM QUANTIDADES)
@@ -281,10 +267,11 @@ elif menu == "2. Folha de Impressão Cega":
     st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-title">Gere a folha de contagem física sem as quantidades esperadas para anotação em campo.</div>', unsafe_allow_html=True)
 
-    df = carregar_dados_db()
+    with st.spinner("Consultando dados na planilha Google..."):
+        df = carregar_dados_planilha()
 
     if df.empty:
-        st.info("Nenhuma remessa encontrada no sistema. Importe um arquivo na Opção 1.")
+        st.info("Nenhuma remessa encontrada na planilha.")
     else:
         remessas_disponiveis = [r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
         remessa_selecionada = st.selectbox("Selecione a Remessa para Gerar a Impressão:", [""] + remessas_disponiveis)
@@ -342,16 +329,17 @@ elif menu == "2. Folha de Impressão Cega":
             st.markdown(html_folha, unsafe_allow_html=True)
 
 # ==============================================================================
-# OPÇÃO 3: FORMULÁRIO DE CONFERÊNCIA & VALIDAÇÃO
+# OPÇÃO 3: PESQUISAR REMESSA, DIGITAR CONFERÊNCIA E CORRIGIR DIVERGÊNCIAS
 # ==============================================================================
-elif menu == "3. Digitar Conferência":
-    st.markdown('<div class="main-title">🔍 Validação e Digitação da Conferência</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Consulte os itens pela Remessa, informe as quantidades físicas e valide divergências.</div>', unsafe_allow_html=True)
+elif menu == "3. Digitar Conferência / Corrigir":
+    st.markdown('<div class="main-title">🔍 Validação, Digitação e Correção de Conferência</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Busca os itens da remessa na planilha, calcula divergências em tempo real e atualiza os dados.</div>', unsafe_allow_html=True)
 
-    df = carregar_dados_db()
+    with st.spinner("Buscando registros na planilha Google..."):
+        df = carregar_dados_planilha()
 
     if df.empty:
-        st.info("Nenhuma remessa encontrada para conferência.")
+        st.info("Nenhuma remessa encontrada na planilha para conferência.")
     else:
         remessas = [r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
         remessa_pesquisa = st.selectbox("Pesquisar pelo Número da Remessa:", [""] + remessas)
@@ -384,15 +372,17 @@ elif menu == "3. Digitar Conferência":
             """, unsafe_allow_html=True)
 
             itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
+            
+            # Se já houver conferência gravada na planilha, carrega o valor; caso contrário, inicia com 0.0
             itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce").fillna(0.0)
 
-            st.write("Insira as quantidades contadas na coluna **Conferência**:")
-            df_editavel = itens_remessa[["id", "produto", "descricao", "quantidade", "conferencia"]].copy()
+            st.write("Digite as quantidades conferidas na coluna **Conferência** (ou altere valores para correção):")
+            df_editavel = itens_remessa[["row_index", "produto", "descricao", "quantidade", "conferencia"]].copy()
 
             editado = st.data_editor(
                 df_editavel,
                 column_config={
-                    "id": None,  # Oculta o ID da visualização
+                    "row_index": None,  # Oculta o índice da linha física
                     "produto": st.column_config.TextColumn("Código", disabled=True),
                     "descricao": st.column_config.TextColumn("Descrição", disabled=True),
                     "quantidade": st.column_config.NumberColumn("Qtd. Esperada", disabled=True, format="%.2f"),
@@ -412,7 +402,6 @@ elif menu == "3. Digitar Conferência":
             # Divergência = Conferido - Esperado
             editado["divergencia"] = editado["conferencia"] - editado["quantidade"]
 
-            # Realce visual condicional
             def colorir_divergencia(valor):
                 if valor < 0:
                     return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
@@ -429,53 +418,35 @@ elif menu == "3. Digitar Conferência":
                 use_container_width=True
             )
 
-            # Bloqueio caso haja divergência
             itens_divergentes = editado[editado["divergencia"] != 0]
             total_divergencias = len(itens_divergentes)
 
             st.write("---")
             if total_divergencias == 0:
                 st.success("✨ **Perfeito!** Todos os itens foram conferidos e as quantidades estão exatamente iguais às da remessa.")
-                
-                if st.button("Gravar Conferência Sem Divergências", type="primary"):
-                    with st.spinner("Atualizando registros no sistema..."):
-                        registros_para_atualizar = []
+            else:
+                st.warning(f"⚠️ Existem **{total_divergencias} produto(s) com divergência**. Você pode gravar a conferência ou corrigir as quantidades acima.")
+
+            col_salvar, col_recarregar = st.columns([2, 1])
+            with col_salvar:
+                if st.button("💾 Gravar / Atualizar Conferência na Planilha", type="primary"):
+                    with st.spinner("Atualizando colunas G e H na planilha Google Sheets..."):
+                        itens_atualizar = []
                         for _, row in editado.iterrows():
-                            registros_para_atualizar.append({
-                                "id": int(row["id"]),
+                            itens_atualizar.append({
+                                "row_index": int(row["row_index"]),
                                 "conferencia": float(row["conferencia"]),
                                 "divergencia": float(row["divergencia"])
                             })
-                        
-                        atualizar_conferencia_db(registros_para_atualizar)
-                        st.success("✅ Conferência validada e gravada com sucesso!")
-                        st.balloons()
-            else:
-                st.error(f"⚠️ **Atenção:** Existem **{total_divergencias} produto(s) com divergência**. O salvamento fica bloqueado até que os valores estejam conferidos sem divergência.")
-
-# ==============================================================================
-# OPÇÃO 4: EXPORTAR DADOS
-# ==============================================================================
-elif menu == "4. Exportar Dados":
-    st.markdown('<div class="main-title">📤 Exportação de Registros</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Baixe a tabela completa de conferência em formato Excel (.xlsx).</div>', unsafe_allow_html=True)
-
-    df_export = carregar_dados_db()
-    if df_export.empty:
-        st.info("Nenhum registro para exportar.")
-    else:
-        st.dataframe(df_export, use_container_width=True)
-        
-        # Gera o arquivo Excel para download
-        excel_buffer = pd.ExcelWriter("conferencia_exportada.xlsx", engine="openpyxl")
-        df_export.to_excel(excel_buffer, index=False, sheet_name="Conferencia")
-        excel_buffer.close()
-
-        with open("conferencia_exportada.xlsx", "rb") as f:
-            st.download_button(
-                label="📥 Baixar Planilha em Excel (.xlsx)",
-                data=f,
-                file_name=f"conferencia_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                type="primary"
-            )
+                        try:
+                            res = enviar_atualizacao_conferencia(itens_atualizar)
+                            if res.get("status") == "success":
+                                st.success("✅ Conferência e divergências salvas com sucesso na planilha Google!")
+                                st.balloons()
+                            else:
+                                st.error(f"Erro ao salvar: {res.get('message')}")
+                        except Exception as e:
+                            st.error(f"Falha de conexão com a planilha: {e}")
+            with col_recarregar:
+                if st.button("🔄 Recarregar Dados da Planilha"):
+                    st.rerun()
