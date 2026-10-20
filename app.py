@@ -269,51 +269,125 @@ elif menu == "2. Folha de Impressão Cega":
             data_cad = dados_remessa["data_importacao"].iloc[0] if not dados_remessa.empty else ""
             local_cad = dados_remessa["local"].iloc[0] if not dados_remessa.empty else ""
 
-            col_btn, _ = st.columns([2, 5])
-            with col_btn:
-                if st.button("🖨️ Imprimir Folha de Contagem", type="primary"):
-                    components.html("<script>window.parent.print();</script>", height=0, width=0)
-
-            html_folha = f"""
-            <div class="printable-area" style="background:#ffffff; padding:24px; border:1px solid #cbd5e1; border-radius:8px; margin-top:10px;">
-                <div style="border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
-                    <h2 style="margin: 0; font-size: 20px; color: #0f172a;">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</h2>
-                    <div style="display: flex; gap: 30px; margin-top: 10px; font-size: 13px; color: #334155;">
-                        <div><strong>REMESSA:</strong> {remessa_selecionada}</div>
-                        <div><strong>LOCAL:</strong> {local_cad}</div>
-                        <div><strong>DATA IMPORTAÇÃO:</strong> {data_cad}</div>
-                    </div>
-                </div>
-
-                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                    <thead>
-                        <tr style="background-color: #f8fafc;">
-                            <th style="border: 1px solid #94a3b8; padding: 10px; width: 15%; text-align: left; font-size: 13px;">CÓDIGO</th>
-                            <th style="border: 1px solid #94a3b8; padding: 10px; width: 60%; text-align: left; font-size: 13px;">DESCRIÇÃO DO PRODUTO</th>
-                            <th style="border: 1px solid #94a3b8; padding: 10px; width: 25%; text-align: center; font-size: 13px;">QTD. CONFERIDA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            """
+            linhas_tabela = ""
             for _, row in dados_remessa.iterrows():
-                html_folha += f"""
-                    <tr>
-                        <td style="border: 1px solid #cbd5e1; padding: 10px; font-size: 13px; font-weight: 600;">{row['produto']}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 10px; font-size: 13px;">{row['descricao']}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 10px; height: 36px; text-align: center; background-color: #fcfcfc;"></td>
-                    </tr>
-                """
-            
-            html_folha += """
-                    </tbody>
-                </table>
-                <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; color: #475569;">
-                    <div>Assinatura do Conferente: _____________________________________</div>
-                    <div>Data da Conferência: ____/____/________</div>
-                </div>
-            </div>
-            """
-            st.markdown(html_folha, unsafe_allow_html=True)
+                cod_item = str(row.get('produto', ''))
+                desc_item = str(row.get('descricao', ''))
+                linhas_tabela += (
+                    "<tr>"
+                    f"<td style='border: 1px solid #334155; padding: 10px; font-weight: bold;'>{cod_item}</td>"
+                    f"<td style='border: 1px solid #334155; padding: 10px;'>{desc_item}</td>"
+                    "<td style='border: 1px solid #334155; padding: 10px; height: 38px;'></td>"
+                    "</tr>"
+                )
+
+            documento_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            color: #0f172a;
+            margin: 0;
+            padding: 10px;
+            background-color: #ffffff;
+        }}
+        .header-box {{
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }}
+        .header-title {{
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #0f172a;
+        }}
+        .header-meta {{
+            display: flex;
+            gap: 25px;
+            font-size: 13px;
+            color: #334155;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }}
+        th {{
+            border: 1px solid #0f172a;
+            background-color: #f1f5f9;
+            padding: 10px;
+            font-size: 13px;
+            text-align: left;
+        }}
+        .signature-box {{
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #334155;
+            padding-top: 10px;
+        }}
+        .btn-imprimir {{
+            background-color: #0f766e;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }}
+        .btn-imprimir:hover {{
+            background-color: #115e59;
+        }}
+        @media print {{
+            .btn-imprimir {{
+                display: none !important;
+            }}
+            body {{
+                padding: 0;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha de Contagem</button>
+
+    <div class="header-box">
+        <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
+        <div class="header-meta">
+            <div><strong>REMESSA:</strong> {remessa_selecionada}</div>
+            <div><strong>LOCAL:</strong> {local_cad}</div>
+            <div><strong>DATA IMPORTAÇÃO:</strong> {data_cad}</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">CÓDIGO</th>
+                <th style="width: 55%;">DESCRIÇÃO DO PRODUTO</th>
+                <th style="width: 25%; text-align: center;">QTD. CONFERIDA</th>
+            </tr>
+        </thead>
+        <tbody>
+            {linhas_tabela}
+        </tbody>
+    </table>
+
+    <div class="signature-box">
+        <div>Assinatura do Conferente: _____________________________________</div>
+        <div>Data da Conferência: ____/____/________</div>
+    </div>
+</body>
+</html>"""
+
+            altura_calculada = max(550, 160 + (len(dados_remessa) * 45))
+            components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
 # OPÇÃO 3: DIGITAÇÃO CEGA, COMPARAÇÃO, GRAVAÇÃO E RECONFERÊNCIA (TOTALMENTE CEGA)
@@ -336,18 +410,13 @@ elif menu == "3. Digitar Conferência Cega":
             local_atual = itens_remessa["local"].iloc[0]
             data_atual = itens_remessa["data_importacao"].iloc[0]
 
-            # Converte colunas numéricas
             itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
             itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
             itens_remessa["divergencia"] = pd.to_numeric(itens_remessa["divergencia"], errors="coerce")
 
-            # Verifica se já houve conferência prévia gravada
             ja_conferida = itens_remessa["conferencia"].notna().any()
-            
-            # Filtra apenas itens com divergência pendente
             itens_divergentes = itens_remessa[itens_remessa["divergencia"].fillna(1) != 0].copy()
 
-            # --- DEFINIÇÃO DO MODO (PRIMEIRA CONFERÊNCIA OU RECONFERÊNCIA DE ERROS) ---
             if ja_conferida and len(itens_divergentes) > 0:
                 modo_reconferencia = True
                 dados_trabalho = itens_divergentes.copy()
@@ -382,7 +451,6 @@ elif menu == "3. Digitar Conferência Cega":
             </div>
             """, unsafe_allow_html=True)
 
-            # Prepara a tabela de digitação - QUANTIDADE ESPERADA OCULTA
             dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
             df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
@@ -406,7 +474,6 @@ elif menu == "3. Digitar Conferência Cega":
                 key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
-            # --- BOTÃO DE COMPARAÇÃO & GRAVAÇÃO NA PLANILHA ---
             if st.button("⚖️ Comparar e Gravar Conferência na Planilha", type="primary"):
                 with st.spinner("Gravando na planilha e validando contagem..."):
                     mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
@@ -420,14 +487,12 @@ elif menu == "3. Digitar Conferência Cega":
                         qtd_esp = mapa_esperado.get(r_id, 0.0)
                         div_val = conf_val - qtd_esp
 
-                        # Envia os dados completos para a planilha (inclusive a divergência calculada)
                         itens_atualizar.append({
                             "row_index": r_id,
                             "conferencia": conf_val,
                             "divergencia": div_val
                         })
 
-                        # Na tela NÃO EXIBE a quantidade esperada nem o valor exato da divergência
                         status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
                         resultados_exibicao.append({
                             "produto": row["produto"],
@@ -444,7 +509,6 @@ elif menu == "3. Digitar Conferência Cega":
                             
                             df_resultado = pd.DataFrame(resultados_exibicao)
                             
-                            # Função para colorir o status sem expor valores
                             def colorir_status(val):
                                 if "Divergente" in str(val):
                                     return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
