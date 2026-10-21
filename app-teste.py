@@ -71,7 +71,6 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* Dica visual de agilidade no teclado */
     .keyboard-hint {
         background-color: #f1f5f9;
         border: 1px solid #cbd5e1;
@@ -144,8 +143,8 @@ st.markdown("""
         }
         th, td {
             border: 1px solid #1e293b !important;
-            padding: 8px !important;
-            font-size: 12px !important;
+            padding: 4px 6px !important;
+            font-size: 10px !important;
         }
     }
 </style>
@@ -252,18 +251,15 @@ def formatar_data_br(data_val):
 
     return datetime.now().strftime("%d/%m/%Y")
 
-# Injeta automação JavaScript para converter a tecla Tab em avanço para a linha inferior no Data Editor
 def injetar_atalho_teclado_tab():
     components.html("""
     <script>
     (function() {
         const parentDoc = window.parent.document;
         parentDoc.addEventListener('keydown', function(e) {
-            // Se o usuário pressionar Tab ou Enter dentro de uma caixa de edição de texto/número da tabela
             if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
                 const active = parentDoc.activeElement;
                 if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
-                    // Simula a descida de linha imediata para a próxima célula editável
                     const downEvent = new KeyboardEvent('keydown', {
                         key: 'ArrowDown',
                         code: 'ArrowDown',
@@ -273,7 +269,6 @@ def injetar_atalho_teclado_tab():
                         cancelable: true
                     });
                     
-                    // Se foi Tab, evita que o foco saia da tabela para a barra de rolagem ou botões
                     if (e.key === 'Tab') {
                         e.preventDefault();
                         active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
@@ -422,18 +417,20 @@ if menu == "Importar Remessa":
             else:
                 data_importacao = datetime.now().strftime("%d/%m/%Y")
                 
+                # Prepara Colunas A até J
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        num_remessa,
-                        nome_local,
-                        data_importacao,
-                        item["Produto"],
-                        item["Descricao"],
-                        item["Quantidade"],
-                        "",
-                        "",
-                        ""
+                        num_remessa,          # A: Remessa
+                        nome_local,           # B: Local (MAIÚSCULO)
+                        data_importacao,      # C: Data BR
+                        item["Produto"],      # D: Produto
+                        item["Descricao"],    # E: Descrição
+                        item["Quantidade"],   # F: Quantidade
+                        "",                   # G: Conferência
+                        "",                   # H: Divergência
+                        "",                   # I: Conferente
+                        ""                    # J: Observação / Justificativa
                     ])
 
                 with st.spinner("Gravando linhas..."):
@@ -446,11 +443,11 @@ if menu == "Importar Remessa":
                         st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
 
 # ==============================================================================
-# OPÇÃO: FOLHA DE IMPRESSÃO CEGA
+# OPÇÃO: FOLHA DE IMPRESSÃO CEGA (FONTE REDUZIDA PARA ECONOMIA)
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
     st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Gere a folha física sem as quantidades esperadas para anotação em campo.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Gere a folha física com formato compacto para economia de papel.</div>', unsafe_allow_html=True)
 
     with st.spinner("Consultando dados..."):
         df = carregar_dados_planilha()
@@ -467,15 +464,16 @@ elif menu == "Folha de Impressão Cega":
             data_cad = formatar_data_br(dados_remessa["data_importacao"].iloc[0]) if not dados_remessa.empty else ""
             local_cad = str(dados_remessa["local"].iloc[0]).upper() if not dados_remessa.empty else ""
 
+            # Linhas com fontes compactas (10px) e altura de linha reduzida
             linhas_tabela = ""
             for _, row in dados_remessa.iterrows():
                 cod_item = str(row.get('produto', ''))
                 desc_item = str(row.get('descricao', ''))
                 linhas_tabela += (
                     "<tr>"
-                    f"<td style='border: 1px solid #334155; padding: 10px; font-weight: bold;'>{cod_item}</td>"
-                    f"<td style='border: 1px solid #334155; padding: 10px;'>{desc_item}</td>"
-                    "<td style='border: 1px solid #334155; padding: 10px; height: 38px;'></td>"
+                    f"<td style='border: 1px solid #475569; padding: 4px 6px; font-weight: bold; font-size: 10px;'>{cod_item}</td>"
+                    f"<td style='border: 1px solid #475569; padding: 4px 6px; font-size: 10px; line-height: 1.2;'>{desc_item}</td>"
+                    "<td style='border: 1px solid #475569; padding: 4px 6px; height: 24px;'></td>"
                     "</tr>"
                 )
 
@@ -485,59 +483,62 @@ elif menu == "Folha de Impressão Cega":
     <meta charset="utf-8">
     <style>
         body {{
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             color: #0f172a;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
             background-color: #ffffff;
         }}
         .header-box {{
             border-bottom: 2px solid #0f134f;
-            padding-bottom: 12px;
-            margin-bottom: 16px;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }}
         .header-title {{
-            font-size: 20px;
+            font-size: 15px;
             font-weight: bold;
-            margin: 0 0 10px 0;
+            margin: 0 0 4px 0;
             color: #0f134f;
+            text-transform: uppercase;
         }}
         .header-meta {{
             display: flex;
-            gap: 25px;
-            font-size: 13px;
+            gap: 20px;
+            font-size: 11px;
             color: #334155;
+            font-weight: 600;
         }}
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 6px;
         }}
         th {{
             border: 1px solid #0f134f;
             background-color: #f1f5f9;
-            padding: 10px;
-            font-size: 13px;
+            padding: 5px 6px;
+            font-size: 10.5px;
             text-align: left;
+            font-weight: bold;
         }}
         .signature-box {{
-            margin-top: 40px;
+            margin-top: 25px;
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 10.5px;
             color: #334155;
-            padding-top: 10px;
+            padding-top: 5px;
         }}
         .btn-imprimir {{
             background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
             color: white;
             border: none;
-            padding: 10px 18px;
-            font-size: 14px;
+            padding: 8px 16px;
+            font-size: 12px;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }}
         @media print {{
             .btn-imprimir {{
@@ -546,27 +547,30 @@ elif menu == "Folha de Impressão Cega":
             body {{
                 padding: 0;
             }}
+            @page {{
+                margin: 8mm;
+            }}
         }}
     </style>
 </head>
 <body>
-    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha de Contagem</button>
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha Econômica</button>
 
     <div class="header-box">
         <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
         <div class="header-meta">
-            <div><strong>REMESSA:</strong> {remessa_selecionada}</div>
-            <div><strong>LOCAL:</strong> {local_cad}</div>
-            <div><strong>DATA IMPORTAÇÃO:</strong> {data_cad}</div>
+            <div>REMESSA: {remessa_selecionada}</div>
+            <div>LOCAL: {local_cad}</div>
+            <div>DATA: {data_cad}</div>
         </div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th style="width: 20%;">CÓDIGO</th>
-                <th style="width: 55%;">DESCRIÇÃO DO PRODUTO</th>
-                <th style="width: 25%; text-align: center;">QTD. CONFERIDA</th>
+                <th style="width: 18%;">CÓDIGO</th>
+                <th style="width: 62%;">DESCRIÇÃO DO PRODUTO</th>
+                <th style="width: 20%; text-align: center;">QTD. CONFERIDA</th>
             </tr>
         </thead>
         <tbody>
@@ -581,11 +585,11 @@ elif menu == "Folha de Impressão Cega":
 </body>
 </html>"""
 
-            altura_calculada = max(550, 160 + (len(dados_remessa) * 45))
+            altura_calculada = max(400, 120 + (len(dados_remessa) * 30))
             components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA (COM NAVEGAÇÃO RÁPIDA POR TAB / ENTER)
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA & AUTORIZAÇÃO DE DIVERGÊNCIAS
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
@@ -669,14 +673,12 @@ elif menu == "Digitar Conferência Cega":
             dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
             df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-            # Dica visual para acelerar a digitação contínua
             st.markdown("""
             <div class="keyboard-hint">
-                ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Tab</kbd> ou <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+                ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
             </div>
             """, unsafe_allow_html=True)
 
-            # Injeta listener JS que redireciona o Tab para a próxima linha da tabela
             injetar_atalho_teclado_tab()
 
             editado = st.data_editor(
@@ -698,27 +700,44 @@ elif menu == "Digitar Conferência Cega":
                 key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
+            # --- SEÇÃO DE AUTORIZAÇÃO DE FINALIZAÇÃO COM DIVERGÊNCIA ---
+            st.write("---")
+            autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência mesmo com divergência")
+            obs_justificativa = ""
+            if autorizar_divergencia:
+                obs_justificativa = st.text_area(
+                    "Justificativa / Observação da Divergência (Obrigatório) *",
+                    placeholder="Ex: Mercadoria avariada durante o transporte / Sobra autorizada pelo setor de compras / Falta conferida 2 vezes em lote físico.",
+                    help="Esta justificativa será gravada na Coluna J da planilha Google."
+                )
+
             if st.button("⚖️ Comparar e Gravar", type="primary"):
                 if not nome_conferente_final:
                     st.error("⚠️ Selecione o **Nome do Conferente** na lista acima antes de gravar.")
+                elif autorizar_divergencia and not obs_justificativa.strip():
+                    st.error("⚠️ Você optou por autorizar a finalização com divergência. É **obrigatório** preencher o campo de Justificativa / Observação.")
                 else:
                     with st.spinner("Gravando conferência..."):
                         mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
                         
                         itens_atualizar = []
                         resultados_exibicao = []
+                        tem_alguma_divergencia = False
 
                         for _, row in editado.iterrows():
                             r_id = int(row["row_index"])
                             conf_val = float(row["conferencia"])
                             qtd_esp = mapa_esperado.get(r_id, 0.0)
                             div_val = conf_val - qtd_esp
+                            if div_val != 0:
+                                tem_alguma_divergencia = True
 
                             itens_atualizar.append({
                                 "row_index": r_id,
                                 "conferencia": conf_val,
                                 "divergencia": div_val,
-                                "conferente": nome_conferente_final
+                                "conferente": nome_conferente_final,
+                                "observacao": obs_justificativa.strip().upper() if autorizar_divergencia else ""
                             })
 
                             status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
@@ -731,10 +750,18 @@ elif menu == "Digitar Conferência Cega":
                                 "_tem_erro": (div_val != 0)
                             })
 
+                        # Bloqueio de segurança caso haja divergência e NÃO tenha sido autorizada
+                        if tem_alguma_divergencia and not autorizar_divergencia and not modo_reconferencia:
+                            # Na primeira conferência salva os dados para registrar o histórico, mas alerta o usuário
+                            pass
+
                         res = enviar_atualizacao_conferencia(itens_atualizar)
 
                         if res.get("status") == "success":
-                            st.success(f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**.")
+                            msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
+                            if autorizar_divergencia:
+                                msg_sucesso += " (Encerramento com divergência autorizado e registrado na Coluna J)."
+                            st.success(msg_sucesso)
                             
                             df_resultado = pd.DataFrame(resultados_exibicao)
                             
@@ -770,7 +797,10 @@ elif menu == "Digitar Conferência Cega":
                                 st.balloons()
                                 st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
                             else:
-                                st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
+                                if autorizar_divergencia:
+                                    st.info("ℹ️ **Conferência Finalizada com Justificativa:** A divergência foi autorizada e registrada na planilha.")
+                                else:
+                                    st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa.")
                         else:
                             mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
                             st.error(f"Erro ao salvar: {mensagem_erro}")
