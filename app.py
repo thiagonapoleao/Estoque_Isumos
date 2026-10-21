@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 import streamlit.components.v1 as components
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
@@ -12,14 +14,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Moderna Corporativa com Degradê Customizado
+# Estilização Moderna com Degradê e Cards Corporativos
 st.markdown("""
 <style>
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
-    /* Títulos */
     .main-title {
         font-size: 26px;
         font-weight: 700;
@@ -34,7 +35,6 @@ st.markdown("""
         margin-bottom: 22px;
     }
 
-    /* Cards com Design Moderno Corporativo */
     .metric-container {
         display: flex;
         gap: 16px;
@@ -71,7 +71,7 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* Degradê Aplicado em Todos os Botões do Streamlit */
+    /* Degradê aplicado a todos os botões */
     div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
         background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
@@ -90,7 +90,6 @@ st.markdown("""
         transform: scale(1.01) !important;
     }
 
-    /* Menu Lateral / Sidebar Estilizada */
     [data-testid="stSidebar"] {
         background-color: #f8fafc;
         border-right: 1px solid #e2e8f0;
@@ -108,7 +107,6 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(15, 19, 79, 0.2);
     }
 
-    /* Regras de Impressão */
     @media print {
         header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
@@ -132,24 +130,45 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. CONFIGURAÇÃO DA API ---
+# --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
 API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
 
-# --- 3. COMUNICAÇÃO COM A PLANILHA ---
+def get_session():
+    """Cria uma sessão HTTP com retentativas automáticas e pool persistente."""
+    session = requests.Session()
+    retries = Retry(
+        total=3,
+        backoff_factor=1.5,
+        status_forcelist=[500, 502, 503, 504],
+        raise_on_status=False
+    )
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+# --- 3. COMUNICAÇÃO COM CACHE (EVITA TIMEOUTS REPETIDOS) ---
+@st.cache_data(ttl=180, show_spinner=False)
+def carregar_dados_planilha_cached():
+    session = get_session()
+    r = session.get(API_URL, timeout=60)
+    dados = r.json()
+    if isinstance(dados, list):
+        return pd.DataFrame(dados)
+    return pd.DataFrame()
+
 def carregar_dados_planilha():
     try:
-        r = requests.get(API_URL, timeout=30)
-        dados = r.json()
-        if isinstance(dados, list):
-            return pd.DataFrame(dados)
-        return pd.DataFrame()
+        return carregar_dados_planilha_cached()
     except Exception as e:
         st.error(f"Erro ao buscar registros da planilha: {e}")
         return pd.DataFrame()
 
+@st.cache_data(ttl=300, show_spinner=False)
 def carregar_lista_conferentes():
     try:
-        r = requests.get(f"{API_URL}?action=get_conferentes", timeout=15)
+        session = get_session()
+        r = session.get(f"{API_URL}?action=get_conferentes", timeout=40)
         lista = r.json()
         if isinstance(lista, list) and len(lista) > 0:
             return sorted(lista)
@@ -158,27 +177,24 @@ def carregar_lista_conferentes():
         return []
 
 def enviar_cadastro_conferente(nome):
-    payload = {
-        "action": "cadastrar_conferente",
-        "nome": nome
-    }
-    r = requests.post(API_URL, json=payload, timeout=20)
+    session = get_session()
+    payload = {"action": "cadastrar_conferente", "nome": nome}
+    r = session.post(API_URL, json=payload, timeout=50)
+    carregar_lista_conferentes.clear() # Limpa o cache para carregar o novo nome
     return r.json()
 
 def enviar_importacao_planilha(linhas):
-    payload = {
-        "action": "importar",
-        "linhas": linhas
-    }
-    r = requests.post(API_URL, json=payload, timeout=40)
+    session = get_session()
+    payload = {"action": "importar", "linhas": linhas}
+    r = session.post(API_URL, json=payload, timeout=60)
+    carregar_dados_planilha_cached.clear()
     return r.json()
 
 def enviar_atualizacao_conferencia(itens):
-    payload = {
-        "action": "atualizar",
-        "itens": itens
-    }
-    r = requests.post(API_URL, json=payload, timeout=40)
+    session = get_session()
+    payload = {"action": "atualizar", "itens": itens}
+    r = session.post(API_URL, json=payload, timeout=60)
+    carregar_dados_planilha_cached.clear()
     return r.json()
 
 def formatar_data_br(data_str):
@@ -274,7 +290,7 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO POR BOTÕES (SEM LUPA E SEM NÚMEROS) ---
+# --- 5. NAVEGAÇÃO POR BOTÕES ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Importar Remessa"
 
@@ -294,6 +310,12 @@ for opcao in opcoes_menu:
     if st.sidebar.button(rotulo, key=f"btn_nav_{opcao}", use_container_width=True):
         st.session_state.menu_selecionado = opcao
         st.rerun()
+
+st.sidebar.write("---")
+if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_width=True):
+    carregar_dados_planilha_cached.clear()
+    carregar_lista_conferentes.clear()
+    st.rerun()
 
 menu = st.session_state.menu_selecionado
 
@@ -329,15 +351,15 @@ if menu == "Importar Remessa":
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        num_remessa,          # Coluna A: Remessa
-                        nome_local,           # Coluna B: Local (MAIÚSCULO)
-                        data_importacao,      # Coluna C: Data (BR)
-                        item["Produto"],      # Coluna D: Produto
-                        item["Descricao"],    # Coluna E: Descrição
-                        item["Quantidade"],   # Coluna F: Quantidade
-                        "",                   # Coluna G: Conferência
-                        "",                   # Coluna H: Divergência
-                        ""                    # Coluna I: Conferente
+                        num_remessa,
+                        nome_local,
+                        data_importacao,
+                        item["Produto"],
+                        item["Descricao"],
+                        item["Quantidade"],
+                        "",
+                        "",
+                        ""
                     ])
 
                 with st.spinner("Gravando linhas diretamente na planilha Google Sheets..."):
