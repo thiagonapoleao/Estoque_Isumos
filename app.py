@@ -274,22 +274,33 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. BARRA LATERAL ---
-st.sidebar.markdown('<div class="sidebar-brand">📦 ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
-menu = st.sidebar.radio(
-    "Navegação:",
-    [
-        "1. Importar Remessa (Excel)", 
-        "2. Folha de Impressão Cega", 
-        "3. Digitar Conferência Cega",
-        "4. Cadastrar Novo Conferente"
-    ]
-)
+# --- 5. NAVEGAÇÃO POR BOTÕES (SEM LUPA E SEM NÚMEROS) ---
+if "menu_selecionado" not in st.session_state:
+    st.session_state.menu_selecionado = "Importar Remessa"
+
+st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
+st.sidebar.markdown("<p style='font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px;'>MENU DE NAVEGAÇÃO</p>", unsafe_allow_html=True)
+
+opcoes_menu = [
+    "Importar Remessa",
+    "Folha de Impressão Cega",
+    "Digitar Conferência Cega",
+    "Cadastrar Novo Conferente"
+]
+
+for opcao in opcoes_menu:
+    is_active = (st.session_state.menu_selecionado == opcao)
+    rotulo = f"▶ {opcao}" if is_active else opcao
+    if st.sidebar.button(rotulo, key=f"btn_nav_{opcao}", use_container_width=True):
+        st.session_state.menu_selecionado = opcao
+        st.rerun()
+
+menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO 1: IMPORTAR EXCEL E SALVAR NA PLANILHA GOOGLE
+# OPÇÃO: IMPORTAR REMESSA
 # ==============================================================================
-if menu == "1. Importar Remessa (Excel)":
+if menu == "Importar Remessa":
     st.markdown('<div class="main-title">📥 Importação de Remessa via Planilha Excel</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-title">Gravação automática na aba Conferencia (Local salvo em MAIÚSCULAS).</div>', unsafe_allow_html=True)
 
@@ -342,9 +353,9 @@ if menu == "1. Importar Remessa (Excel)":
                         st.error(f"Falha de conexão com a planilha: {e}")
 
 # ==============================================================================
-# OPÇÃO 2: FOLHA DE IMPRESSÃO CEGA (SEM QUANTIDADES)
+# OPÇÃO: FOLHA DE IMPRESSÃO CEGA
 # ==============================================================================
-elif menu == "2. Folha de Impressão Cega":
+elif menu == "Folha de Impressão Cega":
     st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-title">Gere a folha física sem as quantidades esperadas para anotação em campo.</div>', unsafe_allow_html=True)
 
@@ -481,9 +492,9 @@ elif menu == "2. Folha de Impressão Cega":
             components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO 3: DIGITAÇÃO CEGA, SELEÇÃO EXCLUSIVA DE CONFERENTE E VALIDAÇÃO
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA
 # ==============================================================================
-elif menu == "3. Digitar Conferência Cega":
+elif menu == "Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
 
     with st.spinner("Buscando registros na planilha Google..."):
@@ -664,9 +675,9 @@ elif menu == "3. Digitar Conferência Cega":
                             st.error(f"Falha de conexão com a planilha: {e}")
 
 # ==============================================================================
-# OPÇÃO 4: FORMULÁRIO DE CADASTRO DE NOVO CONFERENTE
+# OPÇÃO: CADASTRAR NOVO CONFERENTE
 # ==============================================================================
-elif menu == "4. Cadastrar Novo Conferente":
+elif menu == "Cadastrar Novo Conferente":
     st.markdown('<div class="main-title">👤 Cadastro de Conferente</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-title">Cadastre novos conferentes diretamente na Coluna D da aba correspondente da planilha.</div>', unsafe_allow_html=True)
 
