@@ -71,6 +71,27 @@ st.markdown("""
         font-weight: 700;
     }
 
+    /* Dica visual de agilidade no teclado */
+    .keyboard-hint {
+        background-color: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #334155;
+        display: inline-block;
+        margin-bottom: 12px;
+    }
+    .keyboard-hint kbd {
+        background: #ffffff;
+        border: 1px solid #94a3b8;
+        border-bottom-width: 2px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: #0f134f;
+    }
+
     /* Degradê aplicado a todos os botões */
     div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
         background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
@@ -146,7 +167,7 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-# --- 3. SERVIÇOS DE DADOS E CACHE ---
+# --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
     session = get_session()
@@ -230,6 +251,42 @@ def formatar_data_br(data_val):
                 return p
 
     return datetime.now().strftime("%d/%m/%Y")
+
+# Injeta automação JavaScript para converter a tecla Tab em avanço para a linha inferior no Data Editor
+def injetar_atalho_teclado_tab():
+    components.html("""
+    <script>
+    (function() {
+        const parentDoc = window.parent.document;
+        parentDoc.addEventListener('keydown', function(e) {
+            // Se o usuário pressionar Tab ou Enter dentro de uma caixa de edição de texto/número da tabela
+            if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+                const active = parentDoc.activeElement;
+                if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+                    // Simula a descida de linha imediata para a próxima célula editável
+                    const downEvent = new KeyboardEvent('keydown', {
+                        key: 'ArrowDown',
+                        code: 'ArrowDown',
+                        keyCode: 40,
+                        which: 40,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    
+                    // Se foi Tab, evita que o foco saia da tabela para a barra de rolagem ou botões
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+                        setTimeout(() => {
+                            parentDoc.dispatchEvent(downEvent);
+                        }, 20);
+                    }
+                }
+            }
+        }, true);
+    })();
+    </script>
+    """, height=0, width=0)
 
 # --- 4. EXTRAÇÃO DO EXCEL ---
 def extrair_excel(uploaded_file):
@@ -528,7 +585,7 @@ elif menu == "Folha de Impressão Cega":
             components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA (COM NAVEGAÇÃO RÁPIDA POR TAB / ENTER)
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
@@ -612,7 +669,16 @@ elif menu == "Digitar Conferência Cega":
             dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
             df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-            st.write("Digite as quantidades físicas conferidas:")
+            # Dica visual para acelerar a digitação contínua
+            st.markdown("""
+            <div class="keyboard-hint">
+                ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Tab</kbd> ou <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Injeta listener JS que redireciona o Tab para a próxima linha da tabela
+            injetar_atalho_teclado_tab()
+
             editado = st.data_editor(
                 df_editavel,
                 column_config={
@@ -665,7 +731,6 @@ elif menu == "Digitar Conferência Cega":
                                 "_tem_erro": (div_val != 0)
                             })
 
-                        # Execução com validação limpa de status
                         res = enviar_atualizacao_conferencia(itens_atualizar)
 
                         if res.get("status") == "success":
