@@ -197,10 +197,6 @@ def enviar_atualizacao_conferencia(itens):
     return r.json()
 
 def formatar_data_br(data_val):
-    """
-    Converte qualquer formato de data (incluindo datas do JS como 'Tue Oct 21 2026...', 
-    ISO, strings em inglês ou timestamps) estritamente para o padrão brasileiro DD/MM/AAAA.
-    """
     if data_val is None or pd.isna(data_val):
         return datetime.now().strftime("%d/%m/%Y")
     
@@ -208,19 +204,16 @@ def formatar_data_br(data_val):
     if val_str in ["", "nan", "None"]:
         return datetime.now().strftime("%d/%m/%Y")
 
-    # Se já estiver em DD/MM/AAAA exato
     if len(val_str) == 10 and val_str[2] == "/" and val_str[5] == "/":
         return val_str
 
     try:
-        # Usa o parser inteligente do pandas com dayfirst prioritário
         dt = pd.to_datetime(val_str, errors="coerce", dayfirst=True)
         if pd.notna(dt):
             return dt.strftime("%d/%m/%Y")
     except Exception:
         pass
 
-    # Fallback caso venha com hora separada por espaço
     if " " in val_str:
         partes = val_str.split(" ")
         for p in partes:
@@ -339,8 +332,7 @@ menu = st.session_state.menu_selecionado
 # OPÇÃO: IMPORTAR REMESSA
 # ==============================================================================
 if menu == "Importar Remessa":
-    st.markdown('<div class="main-title">📥 Importação de Remessa via Planilha Excel</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Gravação automática na aba Conferencia (Local salvo em MAIÚSCULAS e Data em formato BR).</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">📥 Importação de Remessa</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -348,21 +340,20 @@ if menu == "Importar Remessa":
     with col2:
         nome_local_input = st.text_input("Local / Filial de Destino *", placeholder="Ex: ALMOXARIFADO CENTRAL")
 
-    arquivo_excel = st.file_uploader("Selecione o arquivo Excel da Remessa", type=["xlsx", "xls"])
+    arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa", type=["xlsx", "xls"])
 
-    if st.button("Processar e Salvar na Planilha Google", type="primary"):
+    if st.button("Processar e Salvar", type="primary"):
         if not num_remessa or not nome_local_input or not arquivo_excel:
-            st.error("Preencha todos os campos obrigatórios e anexe o arquivo Excel.")
+            st.error("Preencha todos os campos obrigatórios e anexe o arquivo.")
         else:
             nome_local = str(nome_local_input).strip().upper()
 
-            with st.spinner("Processando linhas do Excel a partir da coluna 'Produto'..."):
+            with st.spinner("Processando linhas a partir da coluna 'Produto'..."):
                 itens = extrair_excel(arquivo_excel)
 
             if not itens:
                 st.warning("Nenhum item válido encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
             else:
-                # Salva a data estritamente no formato DD/MM/AAAA
                 data_importacao = datetime.now().strftime("%d/%m/%Y")
                 
                 linhas_para_sheets = []
@@ -370,7 +361,7 @@ if menu == "Importar Remessa":
                     linhas_para_sheets.append([
                         num_remessa,          # Coluna A: Remessa
                         nome_local,           # Coluna B: Local (MAIÚSCULO)
-                        data_importacao,      # Coluna C: Data BR estrita (DD/MM/AAAA)
+                        data_importacao,      # Coluna C: Data BR (DD/MM/AAAA)
                         item["Produto"],      # Coluna D: Produto
                         item["Descricao"],    # Coluna E: Descrição
                         item["Quantidade"],   # Coluna F: Quantidade
@@ -379,7 +370,7 @@ if menu == "Importar Remessa":
                         ""                    # Coluna I: Conferente
                     ])
 
-                with st.spinner("Gravando linhas diretamente na planilha Google Sheets..."):
+                with st.spinner("Gravando linhas..."):
                     try:
                         res = enviar_importacao_planilha(linhas_para_sheets)
                         if res.get("status") == "success":
@@ -387,9 +378,9 @@ if menu == "Importar Remessa":
                             df_preview = pd.DataFrame(itens)
                             st.dataframe(df_preview, use_container_width=True)
                         else:
-                            st.error(f"Erro reportado pela planilha: {res.get('message')}")
+                            st.error(f"Erro: {res.get('message')}")
                     except Exception as e:
-                        st.error(f"Falha de conexão com a planilha: {e}")
+                        st.error(f"Falha de conexão: {e}")
 
 # ==============================================================================
 # OPÇÃO: FOLHA DE IMPRESSÃO CEGA
@@ -398,11 +389,11 @@ elif menu == "Folha de Impressão Cega":
     st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-title">Gere a folha física sem as quantidades esperadas para anotação em campo.</div>', unsafe_allow_html=True)
 
-    with st.spinner("Consultando dados na planilha Google..."):
+    with st.spinner("Consultando dados..."):
         df = carregar_dados_planilha()
 
     if df.empty:
-        st.info("Nenhuma remessa encontrada na planilha.")
+        st.info("Nenhuma remessa encontrada.")
     else:
         remessas_disponiveis = [r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
         remessa_selecionada = st.selectbox("Selecione a Remessa para Gerar a Impressão:", [""] + remessas_disponiveis)
@@ -536,11 +527,11 @@ elif menu == "Folha de Impressão Cega":
 elif menu == "Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
 
-    with st.spinner("Buscando registros na planilha Google..."):
+    with st.spinner("Buscando registros..."):
         df = carregar_dados_planilha()
 
     if df.empty:
-        st.info("Nenhuma remessa encontrada na planilha para conferência.")
+        st.info("Nenhuma remessa encontrada para conferência.")
     else:
         remessas = [r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
         remessa_pesquisa = st.selectbox("Pesquisar pelo Número da Remessa:", [""] + remessas)
@@ -571,7 +562,6 @@ elif menu == "Digitar Conferência Cega":
                 dados_trabalho = itens_remessa.copy()
                 st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
-            # Card exibindo estritamente a data no formato brasileiro DD/MM/AAAA
             st.markdown(f"""
             <div class="metric-container">
                 <div class="metric-card">
@@ -599,7 +589,7 @@ elif menu == "Digitar Conferência Cega":
                 conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
 
             if not lista_conferentes:
-                st.warning("⚠️ Nenhum conferente encontrado na lista da planilha. Cadastre um conferente no menu lateral.")
+                st.warning("⚠️ Nenhum conferente encontrado na lista. Cadastre um conferente no menu lateral.")
                 nome_conferente_final = ""
             else:
                 idx_default = 0
@@ -636,11 +626,11 @@ elif menu == "Digitar Conferência Cega":
                 key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
-            if st.button("⚖️ Comparar e Gravar Conferência na Planilha", type="primary"):
+            if st.button("⚖️ Comparar e Gravar", type="primary"):
                 if not nome_conferente_final:
                     st.error("⚠️ Selecione o **Nome do Conferente** na lista acima antes de gravar.")
                 else:
-                    with st.spinner("Gravando conferência e nome do conferente na Coluna I..."):
+                    with st.spinner("Gravando conferência..."):
                         mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
                         
                         itens_atualizar = []
@@ -672,7 +662,7 @@ elif menu == "Digitar Conferência Cega":
                         try:
                             res = enviar_atualizacao_conferencia(itens_atualizar)
                             if res.get("status") == "success":
-                                st.success(f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}** (Coluna I).")
+                                st.success(f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**.")
                                 
                                 df_resultado = pd.DataFrame(resultados_exibicao)
                                 
@@ -710,26 +700,25 @@ elif menu == "Digitar Conferência Cega":
                                 else:
                                     st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
                         else:
-                            st.error(f"Erro ao salvar na planilha: {res.get('message')}")
+                            st.error(f"Erro ao salvar: {res.get('message')}")
                     except Exception as e:
-                        st.error(f"Falha de conexão com a planilha: {e}")
+                        st.error(f"Falha de conexão: {e}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
     st.markdown('<div class="main-title">👤 Cadastro de Conferente</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Cadastre novos conferentes diretamente na Coluna D da aba correspondente da planilha.</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
     with col1:
         novo_conferente = st.text_input("Nome Completo do Conferente *", placeholder="Ex: JOÃO SILVA")
-        if st.button("Cadastrar Conferente na Planilha", type="primary"):
+        if st.button("Cadastrar Conferente", type="primary"):
             if not novo_conferente.strip():
                 st.error("Informe o nome do conferente para realizar o cadastro.")
             else:
                 nome_formatado = novo_conferente.strip().upper()
-                with st.spinner("Salvando novo conferente na planilha Google..."):
+                with st.spinner("Salvando novo conferente..."):
                     try:
                         res = enviar_cadastro_conferente(nome_formatado)
                         if res.get("status") == "success":
