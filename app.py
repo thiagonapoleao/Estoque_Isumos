@@ -12,15 +12,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Estilização Moderna Corporativa com Degradê Customizado
 st.markdown("""
 <style>
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
+    
+    /* Títulos */
     .main-title {
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 700;
-        color: #0f172a;
+        color: #0f134f;
         margin-bottom: 6px;
         padding-bottom: 8px;
         border-bottom: 2px solid #e2e8f0;
@@ -28,35 +31,84 @@ st.markdown("""
     .sub-title {
         font-size: 14px;
         color: #64748b;
-        margin-bottom: 20px;
+        margin-bottom: 22px;
     }
+
+    /* Cards com Design Moderno Corporativo */
     .metric-container {
         display: flex;
         gap: 16px;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         flex-wrap: wrap;
     }
     .metric-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 14px 18px;
-        border-radius: 8px;
+        border-left: 5px solid #273270;
+        padding: 16px 20px;
+        border-radius: 12px;
         flex: 1;
-        min-width: 180px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(15, 19, 79, 0.05);
+        transition: all 0.25s ease-in-out;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(15, 19, 79, 0.1);
     }
     .metric-card span {
         font-size: 12px;
         color: #64748b;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     .metric-card strong {
         display: block;
-        font-size: 18px;
-        color: #0f172a;
-        margin-top: 4px;
+        font-size: 19px;
+        color: #0f134f;
+        margin-top: 6px;
+        font-weight: 700;
     }
+
+    /* Degradê Aplicado em Todos os Botões do Streamlit */
+    div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
+        background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
+        background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 10px 22px !important;
+        font-size: 14px !important;
+        letter-spacing: 0.3px !important;
+        box-shadow: 0 4px 12px rgba(15, 19, 79, 0.2) !important;
+        transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
+    }
+    div.stButton > button:hover {
+        opacity: 0.95 !important;
+        transform: scale(1.01) !important;
+    }
+
+    /* Menu Lateral / Sidebar Estilizada */
+    [data-testid="stSidebar"] {
+        background-color: #f8fafc;
+        border-right: 1px solid #e2e8f0;
+    }
+    .sidebar-brand {
+        padding: 16px;
+        border-radius: 10px;
+        background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
+        color: #ffffff;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(15, 19, 79, 0.2);
+    }
+
+    /* Regras de Impressão */
     @media print {
         header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
@@ -95,7 +147,6 @@ def carregar_dados_planilha():
         st.error(f"Erro ao buscar registros da planilha: {e}")
         return pd.DataFrame()
 
-@st.cache_data(ttl=60)
 def carregar_lista_conferentes():
     try:
         r = requests.get(f"{API_URL}?action=get_conferentes", timeout=15)
@@ -105,6 +156,14 @@ def carregar_lista_conferentes():
         return []
     except Exception:
         return []
+
+def enviar_cadastro_conferente(nome):
+    payload = {
+        "action": "cadastrar_conferente",
+        "nome": nome
+    }
+    r = requests.post(API_URL, json=payload, timeout=20)
+    return r.json()
 
 def enviar_importacao_planilha(linhas):
     payload = {
@@ -121,6 +180,25 @@ def enviar_atualizacao_conferencia(itens):
     }
     r = requests.post(API_URL, json=payload, timeout=40)
     return r.json()
+
+# Função auxiliar para extrair apenas a data em formato BR (DD/MM/AAAA)
+def formatar_data_br(data_str):
+    if not data_str or str(data_str).strip() in ["", "nan", "None"]:
+        return datetime.now().strftime("%d/%m/%Y")
+    d_limpa = str(data_str).strip()
+    
+    # Se contém espaço ou 'T', pega apenas a primeira parte
+    if " " in d_limpa:
+        d_limpa = d_limpa.split(" ")[0]
+    elif "T" in d_limpa:
+        d_limpa = d_limpa.split("T")[0]
+        
+    # Se vier em formato YYYY-MM-DD
+    if "-" in d_limpa and len(d_limpa) >= 10:
+        partes = d_limpa.split("-")
+        if len(partes[0]) == 4:
+            return f"{partes[2]}/{partes[1]}/{partes[0]}"
+    return d_limpa
 
 # --- 4. EXTRAÇÃO DO EXCEL ---
 def extrair_excel(uploaded_file):
@@ -200,10 +278,15 @@ def extrair_excel(uploaded_file):
     return itens
 
 # --- 5. BARRA LATERAL ---
-st.sidebar.markdown("### 🏢 Logística & Estoque")
+st.sidebar.markdown('<div class="sidebar-brand">📦 ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
 menu = st.sidebar.radio(
     "Navegação:",
-    ["1. Importar Remessa (Excel)", "2. Folha de Impressão Cega", "3. Digitar Conferência Cega"]
+    [
+        "1. Importar Remessa (Excel)", 
+        "2. Folha de Impressão Cega", 
+        "3. Digitar Conferência Cega",
+        "4. Cadastrar Novo Conferente"
+    ]
 )
 
 # ==============================================================================
@@ -211,13 +294,13 @@ menu = st.sidebar.radio(
 # ==============================================================================
 if menu == "1. Importar Remessa (Excel)":
     st.markdown('<div class="main-title">📥 Importação de Remessa via Planilha Excel</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Gravação direta na aba Conferencia da Planilha Google (Local em MAIÚSCULAS).</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Gravação automática na aba Conferencia (Local salvo em MAIÚSCULAS).</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
         num_remessa = st.text_input("Número da Remessa *", placeholder="Ex: REM-2026-001")
     with col2:
-        nome_local_input = st.text_input("Local / Filial de Destino *", placeholder="Ex: Almoxarifado Central")
+        nome_local_input = st.text_input("Local / Filial de Destino *", placeholder="Ex: ALMOXARIFADO CENTRAL")
 
     arquivo_excel = st.file_uploader("Selecione o arquivo Excel da Remessa", type=["xlsx", "xls"])
 
@@ -225,7 +308,6 @@ if menu == "1. Importar Remessa (Excel)":
         if not num_remessa or not nome_local_input or not arquivo_excel:
             st.error("Preencha todos os campos obrigatórios e anexe o arquivo Excel.")
         else:
-            # Tratamento obrigatório: Sempre salvar em MAIÚSCULAS
             nome_local = str(nome_local_input).strip().upper()
 
             with st.spinner("Processando linhas do Excel a partir da coluna 'Produto'..."):
@@ -234,28 +316,27 @@ if menu == "1. Importar Remessa (Excel)":
             if not itens:
                 st.warning("Nenhum item válido encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
             else:
-                data_importacao = datetime.now().strftime("%d/%m/%Y %H:%M")
+                data_importacao = datetime.now().strftime("%d/%m/%Y")
                 
-                # Monta as colunas A até I
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
                         num_remessa,          # Coluna A: Remessa
                         nome_local,           # Coluna B: Local (MAIÚSCULO)
-                        data_importacao,      # Coluna C: Data
+                        data_importacao,      # Coluna C: Data (BR)
                         item["Produto"],      # Coluna D: Produto
                         item["Descricao"],    # Coluna E: Descrição
                         item["Quantidade"],   # Coluna F: Quantidade
                         "",                   # Coluna G: Conferência
                         "",                   # Coluna H: Divergência
-                        ""                    # Coluna I: Nome do Conferente (vazio na importação)
+                        ""                    # Coluna I: Conferente
                     ])
 
                 with st.spinner("Gravando linhas diretamente na planilha Google Sheets..."):
                     try:
                         res = enviar_importacao_planilha(linhas_para_sheets)
                         if res.get("status") == "success":
-                            st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso na planilha para a remessa **{num_remessa}** (Local: **{nome_local}**)!")
+                            st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Local: **{nome_local}**)!")
                             df_preview = pd.DataFrame(itens)
                             st.dataframe(df_preview, use_container_width=True)
                         else:
@@ -268,7 +349,7 @@ if menu == "1. Importar Remessa (Excel)":
 # ==============================================================================
 elif menu == "2. Folha de Impressão Cega":
     st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Gere a folha de contagem física sem as quantidades esperadas para anotação em campo.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Gere a folha física sem as quantidades esperadas para anotação em campo.</div>', unsafe_allow_html=True)
 
     with st.spinner("Consultando dados na planilha Google..."):
         df = carregar_dados_planilha()
@@ -282,8 +363,8 @@ elif menu == "2. Folha de Impressão Cega":
         if remessa_selecionada:
             dados_remessa = df[df["remessa"] == remessa_selecionada].copy()
 
-            data_cad = dados_remessa["data_importacao"].iloc[0] if not dados_remessa.empty else ""
-            local_cad = dados_remessa["local"].iloc[0] if not dados_remessa.empty else ""
+            data_cad = formatar_data_br(dados_remessa["data_importacao"].iloc[0]) if not dados_remessa.empty else ""
+            local_cad = str(dados_remessa["local"].iloc[0]).upper() if not dados_remessa.empty else ""
 
             linhas_tabela = ""
             for _, row in dados_remessa.iterrows():
@@ -310,7 +391,7 @@ elif menu == "2. Folha de Impressão Cega":
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 2px solid #0f172a;
+            border-bottom: 2px solid #0f134f;
             padding-bottom: 12px;
             margin-bottom: 16px;
         }}
@@ -318,7 +399,7 @@ elif menu == "2. Folha de Impressão Cega":
             font-size: 20px;
             font-weight: bold;
             margin: 0 0 10px 0;
-            color: #0f172a;
+            color: #0f134f;
         }}
         .header-meta {{
             display: flex;
@@ -332,7 +413,7 @@ elif menu == "2. Folha de Impressão Cega":
             margin-top: 15px;
         }}
         th {{
-            border: 1px solid #0f172a;
+            border: 1px solid #0f134f;
             background-color: #f1f5f9;
             padding: 10px;
             font-size: 13px;
@@ -347,7 +428,7 @@ elif menu == "2. Folha de Impressão Cega":
             padding-top: 10px;
         }}
         .btn-imprimir {{
-            background-color: #0f766e;
+            background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
             color: white;
             border: none;
             padding: 10px 18px;
@@ -356,9 +437,6 @@ elif menu == "2. Folha de Impressão Cega":
             border-radius: 6px;
             cursor: pointer;
             margin-bottom: 16px;
-        }}
-        .btn-imprimir:hover {{
-            background-color: #115e59;
         }}
         @media print {{
             .btn-imprimir {{
@@ -406,7 +484,7 @@ elif menu == "2. Folha de Impressão Cega":
             components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO 3: DIGITAÇÃO CEGA, SELEÇÃO DO CONFERENTE (COLUNA I) E RECONFERÊNCIA
+# OPÇÃO 3: DIGITAÇÃO CEGA, SELEÇÃO EXCLUSIVA DE CONFERENTE E VALIDAÇÃO
 # ==============================================================================
 elif menu == "3. Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
@@ -423,8 +501,8 @@ elif menu == "3. Digitar Conferência Cega":
         if remessa_pesquisa:
             itens_remessa = df[df["remessa"] == remessa_pesquisa].copy()
 
-            local_atual = itens_remessa["local"].iloc[0]
-            data_atual = itens_remessa["data_importacao"].iloc[0]
+            local_atual = str(itens_remessa["local"].iloc[0]).upper()
+            data_atual_br = formatar_data_br(itens_remessa["data_importacao"].iloc[0])
 
             itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
             itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
@@ -436,7 +514,7 @@ elif menu == "3. Digitar Conferência Cega":
             if ja_conferida and len(itens_divergentes) > 0:
                 modo_reconferencia = True
                 dados_trabalho = itens_divergentes.copy()
-                st.warning(f"⚠️ **Segunda Conferência (Apenas Divergências):** Foram identificados **{len(itens_divergentes)} item(ns)** com contagem divergente. Reconte apenas os itens listados abaixo.")
+                st.warning(f"⚠️ **Segunda Conferência (Apenas Divergências):** Foram identificados **{len(itens_divergentes)} item(ns)** divergentes. Reconte apenas os itens listados abaixo.")
             elif ja_conferida and len(itens_divergentes) == 0:
                 modo_reconferencia = False
                 dados_trabalho = itens_remessa.copy()
@@ -446,6 +524,7 @@ elif menu == "3. Digitar Conferência Cega":
                 dados_trabalho = itens_remessa.copy()
                 st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
+            # Cards com CSS Moderno e Data em Formato BR estrito
             st.markdown(f"""
             <div class="metric-container">
                 <div class="metric-card">
@@ -458,7 +537,7 @@ elif menu == "3. Digitar Conferência Cega":
                 </div>
                 <div class="metric-card">
                     <span>Data de Importação</span>
-                    <strong>{data_atual}</strong>
+                    <strong>{data_atual_br}</strong>
                 </div>
                 <div class="metric-card">
                     <span>Itens a Conferir</span>
@@ -467,38 +546,26 @@ elif menu == "3. Digitar Conferência Cega":
             </div>
             """, unsafe_allow_html=True)
 
-            # --- SELEÇÃO DO NOME DO CONFERENTE (COLUNA D DA ABA ESPECIFICADA) ---
+            # --- SELEÇÃO DE CONFERENTE APENAS PELA PRÉ-LISTA ---
             lista_conferentes = carregar_lista_conferentes()
             conferente_anterior = ""
             if "conferente" in dados_trabalho.columns and dados_trabalho["conferente"].dropna().any():
-                conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip()
+                conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
 
-            col_conf1, col_conf2 = st.columns([2, 2])
-            with col_conf1:
-                if lista_conferentes:
-                    idx_default = 0
-                    if conferente_anterior in lista_conferentes:
-                        idx_default = lista_conferentes.index(conferente_anterior) + 1
-                    nome_conferente_sel = st.selectbox(
-                        "Selecione o Conferente Responsável *",
-                        ["-- Selecione ou digite outro --"] + lista_conferentes,
-                        index=idx_default
-                    )
-                    if nome_conferente_sel == "-- Selecione ou digite outro --":
-                        nome_conferente = ""
-                    else:
-                        nome_conferente = nome_conferente_sel
-                else:
-                    nome_conferente = ""
-                    st.info("Carregando lista de conferentes da planilha...")
-
-            with col_conf2:
-                # Permite digitação manual caso não esteja na lista ou deseje complementar
-                conferente_manual = st.text_input("Ou digite o nome do conferente:", value=nome_conferente if nome_conferente else conferente_anterior)
-                if conferente_manual.strip():
-                    nome_conferente_final = conferente_manual.strip().upper()
-                else:
-                    nome_conferente_final = nome_conferente.strip().upper()
+            if not lista_conferentes:
+                st.warning("⚠️ Nenhum conferente encontrado na lista da planilha. Cadastre um conferente no menu lateral.")
+                nome_conferente_final = ""
+            else:
+                idx_default = 0
+                if conferente_anterior in lista_conferentes:
+                    idx_default = lista_conferentes.index(conferente_anterior) + 1
+                
+                nome_conferente_sel = st.selectbox(
+                    "Selecione o Conferente Responsável *",
+                    ["-- Selecione o conferente --"] + lista_conferentes,
+                    index=idx_default
+                )
+                nome_conferente_final = "" if nome_conferente_sel == "-- Selecione o conferente --" else nome_conferente_sel
 
             dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
             df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
@@ -523,10 +590,10 @@ elif menu == "3. Digitar Conferência Cega":
                 key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
-            # --- BOTÃO DE COMPARAÇÃO & GRAVAÇÃO NA PLANILHA ---
+            # Botão com Degradê para Comparação e Gravação
             if st.button("⚖️ Comparar e Gravar Conferência na Planilha", type="primary"):
                 if not nome_conferente_final:
-                    st.error("⚠️ Por favor, selecione ou informe o **Nome do Conferente** antes de salvar.")
+                    st.error("⚠️ Selecione o **Nome do Conferente** na lista acima antes de gravar.")
                 else:
                     with st.spinner("Gravando conferência e nome do conferente na Coluna I..."):
                         mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
@@ -540,12 +607,11 @@ elif menu == "3. Digitar Conferência Cega":
                             qtd_esp = mapa_esperado.get(r_id, 0.0)
                             div_val = conf_val - qtd_esp
 
-                            # Colunas G, H e I da planilha
                             itens_atualizar.append({
                                 "row_index": r_id,
                                 "conferencia": conf_val,
                                 "divergencia": div_val,
-                                "conferente": nome_conferente_final  # Coluna I
+                                "conferente": nome_conferente_final
                             })
 
                             status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
@@ -561,7 +627,7 @@ elif menu == "3. Digitar Conferência Cega":
                         try:
                             res = enviar_atualizacao_conferencia(itens_atualizar)
                             if res.get("status") == "success":
-                                st.success(f"✅ Dados gravados com sucesso! Conferente registrado: **{nome_conferente_final}** (Coluna I).")
+                                st.success(f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}** (Coluna I).")
                                 
                                 df_resultado = pd.DataFrame(resultados_exibicao)
                                 
@@ -598,7 +664,42 @@ elif menu == "3. Digitar Conferência Cega":
                                     st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
                                 else:
                                     st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
-                            else:
-                                st.error(f"Erro ao salvar na planilha: {res.get('message')}")
+                        else:
+                            st.error(f"Erro ao salvar na planilha: {res.get('message')}")
                         except Exception as e:
                             st.error(f"Falha de conexão com a planilha: {e}")
+
+# ==============================================================================
+# OPÇÃO 4: FORMULÁRIO DE CADASTRO DE NOVO CONFERENTE
+# ==============================================================================
+elif menu == "4. Cadastrar Novo Conferente":
+    st.markdown('<div class="main-title">👤 Cadastro de Conferente</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Cadastre novos conferentes diretamente na Coluna D da aba de produtos/colaboradores da planilha.</div>', unsafe_allow_html=True)
+
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        novo_conferente = st.text_input("Nome Completo do Conferente *", placeholder="Ex: JOÃO SILVA")
+        if st.button("Cadastrar Conferente na Planilha", type="primary"):
+            if not novo_conferente.strip():
+                st.error("Informe o nome do conferente para realizar o cadastro.")
+            else:
+                nome_formatado = novo_conferente.strip().upper()
+                with st.spinner("Salvando novo conferente na planilha Google..."):
+                    try:
+                        res = enviar_cadastro_conferente(nome_formatado)
+                        if res.get("status") == "success":
+                            st.success(f"✅ Conferente **{nome_formatado}** cadastrado com sucesso!")
+                            st.balloons()
+                        else:
+                            st.error(f"Erro ao cadastrar: {res.get('message')}")
+                    except Exception as e:
+                        st.error(f"Falha de conexão: {e}")
+
+    st.write("---")
+    st.write("#### 👥 Conferentes Atualmente Cadastrados:")
+    conferentes_atuais = carregar_lista_conferentes()
+    if conferentes_atuais:
+        df_conf = pd.DataFrame(conferentes_atuais, columns=["Nome do Conferente"])
+        st.dataframe(df_conf, use_container_width=True)
+    else:
+        st.info("Nenhum conferente localizado até o momento.")
