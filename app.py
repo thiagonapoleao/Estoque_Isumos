@@ -146,7 +146,7 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-# --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
+# --- 3. SERVIÇOS DE DADOS E CACHE ---
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
     session = get_session()
@@ -665,6 +665,7 @@ elif menu == "Digitar Conferência Cega":
                                 "_tem_erro": (div_val != 0)
                             })
 
+                        # Execução com validação limpa de status
                         res = enviar_atualizacao_conferencia(itens_atualizar)
 
                         if res.get("status") == "success":
@@ -706,7 +707,8 @@ elif menu == "Digitar Conferência Cega":
                             else:
                                 st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
                         else:
-                            st.error(f"Erro ao salvar: {res.get('message', 'Falha na comunicação com a planilha')}")
+                            mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                            st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE
@@ -728,7 +730,8 @@ elif menu == "Cadastrar Novo Conferente":
                         st.success(f"✅ Conferente **{nome_formatado}** cadastrado com sucesso!")
                         st.balloons()
                     else:
-                        st.error(f"Erro ao cadastrar: {res.get('message', 'Falha de comunicação')}")
+                        mensagem_erro = res.get("message", "Falha de comunicação")
+                        st.error(f"Erro ao cadastrar: {mensagem_erro}")
 
     st.write("---")
     st.write("#### 👥 Conferentes Atualmente Cadastrados:")
