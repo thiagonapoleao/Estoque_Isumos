@@ -359,15 +359,15 @@ if menu == "Importar Remessa":
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        num_remessa,          # Coluna A: Remessa
-                        nome_local,           # Coluna B: Local (MAIÚSCULO)
-                        data_importacao,      # Coluna C: Data BR (DD/MM/AAAA)
-                        item["Produto"],      # Coluna D: Produto
-                        item["Descricao"],    # Coluna E: Descrição
-                        item["Quantidade"],   # Coluna F: Quantidade
-                        "",                   # Coluna G: Conferência
-                        "",                   # Coluna H: Divergência
-                        ""                    # Coluna I: Conferente
+                        num_remessa,
+                        nome_local,
+                        data_importacao,
+                        item["Produto"],
+                        item["Descricao"],
+                        item["Quantidade"],
+                        "",
+                        "",
+                        ""
                     ])
 
                 with st.spinner("Gravando linhas..."):
@@ -699,10 +699,10 @@ elif menu == "Digitar Conferência Cega":
                                     st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
                                 else:
                                     st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
-                        else:
-                            st.error(f"Erro ao salvar: {res.get('message')}")
-                    except Exception as e:
-                        st.error(f"Falha de conexão: {e}")
+                            else:
+                                st.error(f"Erro ao salvar: {res.get('message')}")
+                        except Exception as e:
+                            st.error(f"Falha de conexão: {e}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE
