@@ -134,7 +134,6 @@ st.markdown("""
 API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
 
 def get_session():
-    """Cria uma sessão HTTP com retentativas automáticas e pool persistente."""
     session = requests.Session()
     retries = Retry(
         total=3,
@@ -147,7 +146,7 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-# --- 3. COMUNICAÇÃO COM CACHE (EVITA TIMEOUTS REPETIDOS) ---
+# --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
     session = get_session()
@@ -180,7 +179,7 @@ def enviar_cadastro_conferente(nome):
     session = get_session()
     payload = {"action": "cadastrar_conferente", "nome": nome}
     r = session.post(API_URL, json=payload, timeout=50)
-    carregar_lista_conferentes.clear() # Limpa o cache para carregar o novo nome
+    carregar_lista_conferentes.clear()
     return r.json()
 
 def enviar_importacao_planilha(linhas):
@@ -197,21 +196,38 @@ def enviar_atualizacao_conferencia(itens):
     carregar_dados_planilha_cached.clear()
     return r.json()
 
-def formatar_data_br(data_str):
-    if not data_str or str(data_str).strip() in ["", "nan", "None"]:
+def formatar_data_br(data_val):
+    """
+    Converte qualquer formato de data (incluindo datas do JS como 'Tue Oct 21 2026...', 
+    ISO, strings em inglês ou timestamps) estritamente para o padrão brasileiro DD/MM/AAAA.
+    """
+    if data_val is None or pd.isna(data_val):
         return datetime.now().strftime("%d/%m/%Y")
-    d_limpa = str(data_str).strip()
     
-    if " " in d_limpa:
-        d_limpa = d_limpa.split(" ")[0]
-    elif "T" in d_limpa:
-        d_limpa = d_limpa.split("T")[0]
-        
-    if "-" in d_limpa and len(d_limpa) >= 10:
-        partes = d_limpa.split("-")
-        if len(partes[0]) == 4:
-            return f"{partes[2]}/{partes[1]}/{partes[0]}"
-    return d_limpa
+    val_str = str(data_val).strip()
+    if val_str in ["", "nan", "None"]:
+        return datetime.now().strftime("%d/%m/%Y")
+
+    # Se já estiver em DD/MM/AAAA exato
+    if len(val_str) == 10 and val_str[2] == "/" and val_str[5] == "/":
+        return val_str
+
+    try:
+        # Usa o parser inteligente do pandas com dayfirst prioritário
+        dt = pd.to_datetime(val_str, errors="coerce", dayfirst=True)
+        if pd.notna(dt):
+            return dt.strftime("%d/%m/%Y")
+    except Exception:
+        pass
+
+    # Fallback caso venha com hora separada por espaço
+    if " " in val_str:
+        partes = val_str.split(" ")
+        for p in partes:
+            if "/" in p and len(p) == 10:
+                return p
+
+    return datetime.now().strftime("%d/%m/%Y")
 
 # --- 4. EXTRAÇÃO DO EXCEL ---
 def extrair_excel(uploaded_file):
@@ -324,7 +340,7 @@ menu = st.session_state.menu_selecionado
 # ==============================================================================
 if menu == "Importar Remessa":
     st.markdown('<div class="main-title">📥 Importação de Remessa via Planilha Excel</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Gravação automática na aba Conferencia (Local salvo em MAIÚSCULAS).</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Gravação automática na aba Conferencia (Local salvo em MAIÚSCULAS e Data em formato BR).</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -346,27 +362,28 @@ if menu == "Importar Remessa":
             if not itens:
                 st.warning("Nenhum item válido encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
             else:
+                # Salva a data estritamente no formato DD/MM/AAAA
                 data_importacao = datetime.now().strftime("%d/%m/%Y")
                 
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        num_remessa,
-                        nome_local,
-                        data_importacao,
-                        item["Produto"],
-                        item["Descricao"],
-                        item["Quantidade"],
-                        "",
-                        "",
-                        ""
+                        num_remessa,          # Coluna A: Remessa
+                        nome_local,           # Coluna B: Local (MAIÚSCULO)
+                        data_importacao,      # Coluna C: Data BR estrita (DD/MM/AAAA)
+                        item["Produto"],      # Coluna D: Produto
+                        item["Descricao"],    # Coluna E: Descrição
+                        item["Quantidade"],   # Coluna F: Quantidade
+                        "",                   # Coluna G: Conferência
+                        "",                   # Coluna H: Divergência
+                        ""                    # Coluna I: Conferente
                     ])
 
                 with st.spinner("Gravando linhas diretamente na planilha Google Sheets..."):
                     try:
                         res = enviar_importacao_planilha(linhas_para_sheets)
                         if res.get("status") == "success":
-                            st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Local: **{nome_local}**)!")
+                            st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Local: **{nome_local}** | Data: **{data_importacao}**)!")
                             df_preview = pd.DataFrame(itens)
                             st.dataframe(df_preview, use_container_width=True)
                         else:
@@ -554,6 +571,7 @@ elif menu == "Digitar Conferência Cega":
                 dados_trabalho = itens_remessa.copy()
                 st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
+            # Card exibindo estritamente a data no formato brasileiro DD/MM/AAAA
             st.markdown(f"""
             <div class="metric-container">
                 <div class="metric-card">
@@ -691,10 +709,10 @@ elif menu == "Digitar Conferência Cega":
                                     st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
                                 else:
                                     st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
-                            else:
-                                st.error(f"Erro ao salvar na planilha: {res.get('message')}")
-                        except Exception as e:
-                            st.error(f"Falha de conexão com a planilha: {e}")
+                        else:
+                            st.error(f"Erro ao salvar na planilha: {res.get('message')}")
+                    except Exception as e:
+                        st.error(f"Falha de conexão com a planilha: {e}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE
