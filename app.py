@@ -176,25 +176,34 @@ def carregar_lista_conferentes():
         return []
 
 def enviar_cadastro_conferente(nome):
-    session = get_session()
-    payload = {"action": "cadastrar_conferente", "nome": nome}
-    r = session.post(API_URL, json=payload, timeout=50)
-    carregar_lista_conferentes.clear()
-    return r.json()
+    try:
+        session = get_session()
+        payload = {"action": "cadastrar_conferente", "nome": nome}
+        r = session.post(API_URL, json=payload, timeout=50)
+        carregar_lista_conferentes.clear()
+        return r.json()
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 def enviar_importacao_planilha(linhas):
-    session = get_session()
-    payload = {"action": "importar", "linhas": linhas}
-    r = session.post(API_URL, json=payload, timeout=60)
-    carregar_dados_planilha_cached.clear()
-    return r.json()
+    try:
+        session = get_session()
+        payload = {"action": "importar", "linhas": linhas}
+        r = session.post(API_URL, json=payload, timeout=60)
+        carregar_dados_planilha_cached.clear()
+        return r.json()
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 def enviar_atualizacao_conferencia(itens):
-    session = get_session()
-    payload = {"action": "atualizar", "itens": itens}
-    r = session.post(API_URL, json=payload, timeout=60)
-    carregar_dados_planilha_cached.clear()
-    return r.json()
+    try:
+        session = get_session()
+        payload = {"action": "atualizar", "itens": itens}
+        r = session.post(API_URL, json=payload, timeout=60)
+        carregar_dados_planilha_cached.clear()
+        return r.json()
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 def formatar_data_br(data_val):
     if data_val is None or pd.isna(data_val):
@@ -371,16 +380,13 @@ if menu == "Importar Remessa":
                     ])
 
                 with st.spinner("Gravando linhas..."):
-                    try:
-                        res = enviar_importacao_planilha(linhas_para_sheets)
-                        if res.get("status") == "success":
-                            st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Local: **{nome_local}** | Data: **{data_importacao}**)!")
-                            df_preview = pd.DataFrame(itens)
-                            st.dataframe(df_preview, use_container_width=True)
-                        else:
-                            st.error(f"Erro: {res.get('message')}")
-                    except Exception as e:
-                        st.error(f"Falha de conexão: {e}")
+                    res = enviar_importacao_planilha(linhas_para_sheets)
+                    if res.get("status") == "success":
+                        st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Local: **{nome_local}** | Data: **{data_importacao}**)!")
+                        df_preview = pd.DataFrame(itens)
+                        st.dataframe(df_preview, use_container_width=True)
+                    else:
+                        st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
 
 # ==============================================================================
 # OPÇÃO: FOLHA DE IMPRESSÃO CEGA
@@ -659,50 +665,48 @@ elif menu == "Digitar Conferência Cega":
                                 "_tem_erro": (div_val != 0)
                             })
 
-                        try:
-                            res = enviar_atualizacao_conferencia(itens_atualizar)
-                            if res.get("status") == "success":
-                                st.success(f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**.")
-                                
-                                df_resultado = pd.DataFrame(resultados_exibicao)
-                                
-                                def colorir_status(val):
-                                    if "Divergente" in str(val):
-                                        return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
-                                    else:
-                                        return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+                        res = enviar_atualizacao_conferencia(itens_atualizar)
 
-                                st.write("### 📊 Resultado da Conferência")
-                                
-                                df_mostrar = df_resultado[["produto", "descricao", "conferencia", "conferente", "status"]]
-                                styler_res = df_mostrar.style
-                                if hasattr(styler_res, "map"):
-                                    styler_res = styler_res.map(colorir_status, subset=["status"])
+                        if res.get("status") == "success":
+                            st.success(f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**.")
+                            
+                            df_resultado = pd.DataFrame(resultados_exibicao)
+                            
+                            def colorir_status(val):
+                                if "Divergente" in str(val):
+                                    return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
                                 else:
-                                    styler_res = styler_res.applymap(colorir_status, subset=["status"])
+                                    return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
 
-                                st.dataframe(
-                                    styler_res,
-                                    column_config={
-                                        "produto": "Código",
-                                        "descricao": "Descrição",
-                                        "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
-                                        "conferente": "Conferente",
-                                        "status": "Situação da Contagem",
-                                    },
-                                    use_container_width=True
-                                )
-
-                                total_erros = df_resultado["_tem_erro"].sum()
-                                if total_erros == 0:
-                                    st.balloons()
-                                    st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
-                                else:
-                                    st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
+                            st.write("### 📊 Resultado da Conferência")
+                            
+                            df_mostrar = df_resultado[["produto", "descricao", "conferencia", "conferente", "status"]]
+                            styler_res = df_mostrar.style
+                            if hasattr(styler_res, "map"):
+                                styler_res = styler_res.map(colorir_status, subset=["status"])
                             else:
-                                st.error(f"Erro ao salvar: {res.get('message')}")
-                        except Exception as e:
-                            st.error(f"Falha de conexão: {e}")
+                                styler_res = styler_res.applymap(colorir_status, subset=["status"])
+
+                            st.dataframe(
+                                styler_res,
+                                column_config={
+                                    "produto": "Código",
+                                    "descricao": "Descrição",
+                                    "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
+                                    "conferente": "Conferente",
+                                    "status": "Situação da Contagem",
+                                },
+                                use_container_width=True
+                            )
+
+                            total_erros = df_resultado["_tem_erro"].sum()
+                            if total_erros == 0:
+                                st.balloons()
+                                st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
+                            else:
+                                st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
+                        else:
+                            st.error(f"Erro ao salvar: {res.get('message', 'Falha na comunicação com a planilha')}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE
@@ -719,15 +723,12 @@ elif menu == "Cadastrar Novo Conferente":
             else:
                 nome_formatado = novo_conferente.strip().upper()
                 with st.spinner("Salvando novo conferente..."):
-                    try:
-                        res = enviar_cadastro_conferente(nome_formatado)
-                        if res.get("status") == "success":
-                            st.success(f"✅ Conferente **{nome_formatado}** cadastrado com sucesso!")
-                            st.balloons()
-                        else:
-                            st.error(f"Erro ao cadastrar: {res.get('message')}")
-                    except Exception as e:
-                        st.error(f"Falha de conexão: {e}")
+                    res = enviar_cadastro_conferente(nome_formatado)
+                    if res.get("status") == "success":
+                        st.success(f"✅ Conferente **{nome_formatado}** cadastrado com sucesso!")
+                        st.balloons()
+                    else:
+                        st.error(f"Erro ao cadastrar: {res.get('message', 'Falha de comunicação')}")
 
     st.write("---")
     st.write("#### 👥 Conferentes Atualmente Cadastrados:")
