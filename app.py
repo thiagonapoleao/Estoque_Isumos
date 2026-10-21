@@ -181,19 +181,16 @@ def enviar_atualizacao_conferencia(itens):
     r = requests.post(API_URL, json=payload, timeout=40)
     return r.json()
 
-# Função auxiliar para extrair apenas a data em formato BR (DD/MM/AAAA)
 def formatar_data_br(data_str):
     if not data_str or str(data_str).strip() in ["", "nan", "None"]:
         return datetime.now().strftime("%d/%m/%Y")
     d_limpa = str(data_str).strip()
     
-    # Se contém espaço ou 'T', pega apenas a primeira parte
     if " " in d_limpa:
         d_limpa = d_limpa.split(" ")[0]
     elif "T" in d_limpa:
         d_limpa = d_limpa.split("T")[0]
         
-    # Se vier em formato YYYY-MM-DD
     if "-" in d_limpa and len(d_limpa) >= 10:
         partes = d_limpa.split("-")
         if len(partes[0]) == 4:
@@ -524,7 +521,6 @@ elif menu == "3. Digitar Conferência Cega":
                 dados_trabalho = itens_remessa.copy()
                 st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
-            # Cards com CSS Moderno e Data em Formato BR estrito
             st.markdown(f"""
             <div class="metric-container">
                 <div class="metric-card">
@@ -546,7 +542,6 @@ elif menu == "3. Digitar Conferência Cega":
             </div>
             """, unsafe_allow_html=True)
 
-            # --- SELEÇÃO DE CONFERENTE APENAS PELA PRÉ-LISTA ---
             lista_conferentes = carregar_lista_conferentes()
             conferente_anterior = ""
             if "conferente" in dados_trabalho.columns and dados_trabalho["conferente"].dropna().any():
@@ -590,7 +585,6 @@ elif menu == "3. Digitar Conferência Cega":
                 key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
-            # Botão com Degradê para Comparação e Gravação
             if st.button("⚖️ Comparar e Gravar Conferência na Planilha", type="primary"):
                 if not nome_conferente_final:
                     st.error("⚠️ Selecione o **Nome do Conferente** na lista acima antes de gravar.")
@@ -664,8 +658,8 @@ elif menu == "3. Digitar Conferência Cega":
                                     st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
                                 else:
                                     st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
-                        else:
-                            st.error(f"Erro ao salvar na planilha: {res.get('message')}")
+                            else:
+                                st.error(f"Erro ao salvar na planilha: {res.get('message')}")
                         except Exception as e:
                             st.error(f"Falha de conexão com a planilha: {e}")
 
@@ -674,7 +668,7 @@ elif menu == "3. Digitar Conferência Cega":
 # ==============================================================================
 elif menu == "4. Cadastrar Novo Conferente":
     st.markdown('<div class="main-title">👤 Cadastro de Conferente</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Cadastre novos conferentes diretamente na Coluna D da aba de produtos/colaboradores da planilha.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Cadastre novos conferentes diretamente na Coluna D da aba correspondente da planilha.</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
     with col1:
