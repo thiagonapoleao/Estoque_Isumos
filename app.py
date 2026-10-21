@@ -71,6 +71,35 @@ st.markdown("""
         font-weight: 700;
     }
 
+    .keyboard-hint {
+        background-color: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #334155;
+        display: inline-block;
+        margin-bottom: 12px;
+    }
+    .keyboard-hint kbd {
+        background: #ffffff;
+        border: 1px solid #94a3b8;
+        border-bottom-width: 2px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: #0f134f;
+    }
+
+    .divergence-box {
+        background-color: #fff7ed;
+        border: 1px solid #fdba74;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 14px;
+        margin-bottom: 14px;
+    }
+
     /* Degradê aplicado a todos os botões */
     div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
         background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
@@ -123,8 +152,8 @@ st.markdown("""
         }
         th, td {
             border: 1px solid #1e293b !important;
-            padding: 8px !important;
-            font-size: 12px !important;
+            padding: 4px 6px !important;
+            font-size: 10px !important;
         }
     }
 </style>
@@ -146,7 +175,7 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-# --- 3. SERVIÇOS DE DADOS E CACHE ---
+# --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
     session = get_session()
@@ -230,6 +259,38 @@ def formatar_data_br(data_val):
                 return p
 
     return datetime.now().strftime("%d/%m/%Y")
+
+def injetar_atalho_teclado_tab():
+    components.html("""
+    <script>
+    (function() {
+        const parentDoc = window.parent.document;
+        parentDoc.addEventListener('keydown', function(e) {
+            if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+                const active = parentDoc.activeElement;
+                if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+                    const downEvent = new KeyboardEvent('keydown', {
+                        key: 'ArrowDown',
+                        code: 'ArrowDown',
+                        keyCode: 40,
+                        which: 40,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+                        setTimeout(() => {
+                            parentDoc.dispatchEvent(downEvent);
+                        }, 20);
+                    }
+                }
+            }
+        }, true);
+    })();
+    </script>
+    """, height=0, width=0)
 
 # --- 4. EXTRAÇÃO DO EXCEL ---
 def extrair_excel(uploaded_file):
@@ -368,15 +429,16 @@ if menu == "Importar Remessa":
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        num_remessa,
-                        nome_local,
-                        data_importacao,
-                        item["Produto"],
-                        item["Descricao"],
-                        item["Quantidade"],
-                        "",
-                        "",
-                        ""
+                        num_remessa,          # A: Remessa
+                        nome_local,           # B: Local (MAIÚSCULO)
+                        data_importacao,      # C: Data BR
+                        item["Produto"],      # D: Produto
+                        item["Descricao"],    # E: Descrição
+                        item["Quantidade"],   # F: Quantidade
+                        "",                   # G: Conferência
+                        "",                   # H: Divergência
+                        "",                   # I: Conferente
+                        ""                    # J: Observação / Justificativa
                     ])
 
                 with st.spinner("Gravando linhas..."):
@@ -389,11 +451,11 @@ if menu == "Importar Remessa":
                         st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
 
 # ==============================================================================
-# OPÇÃO: FOLHA DE IMPRESSÃO CEGA
+# OPÇÃO: FOLHA DE IMPRESSÃO CEGA (ECONÔMICA)
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
     st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Gere a folha física sem as quantidades esperadas para anotação em campo.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Gere a folha física com formato compacto para economia de papel.</div>', unsafe_allow_html=True)
 
     with st.spinner("Consultando dados..."):
         df = carregar_dados_planilha()
@@ -416,9 +478,9 @@ elif menu == "Folha de Impressão Cega":
                 desc_item = str(row.get('descricao', ''))
                 linhas_tabela += (
                     "<tr>"
-                    f"<td style='border: 1px solid #334155; padding: 10px; font-weight: bold;'>{cod_item}</td>"
-                    f"<td style='border: 1px solid #334155; padding: 10px;'>{desc_item}</td>"
-                    "<td style='border: 1px solid #334155; padding: 10px; height: 38px;'></td>"
+                    f"<td style='border: 1px solid #475569; padding: 4px 6px; font-weight: bold; font-size: 10px;'>{cod_item}</td>"
+                    f"<td style='border: 1px solid #475569; padding: 4px 6px; font-size: 10px; line-height: 1.2;'>{desc_item}</td>"
+                    "<td style='border: 1px solid #475569; padding: 4px 6px; height: 24px;'></td>"
                     "</tr>"
                 )
 
@@ -428,59 +490,62 @@ elif menu == "Folha de Impressão Cega":
     <meta charset="utf-8">
     <style>
         body {{
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             color: #0f172a;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
             background-color: #ffffff;
         }}
         .header-box {{
             border-bottom: 2px solid #0f134f;
-            padding-bottom: 12px;
-            margin-bottom: 16px;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }}
         .header-title {{
-            font-size: 20px;
+            font-size: 15px;
             font-weight: bold;
-            margin: 0 0 10px 0;
+            margin: 0 0 4px 0;
             color: #0f134f;
+            text-transform: uppercase;
         }}
         .header-meta {{
             display: flex;
-            gap: 25px;
-            font-size: 13px;
+            gap: 20px;
+            font-size: 11px;
             color: #334155;
+            font-weight: 600;
         }}
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 6px;
         }}
         th {{
             border: 1px solid #0f134f;
             background-color: #f1f5f9;
-            padding: 10px;
-            font-size: 13px;
+            padding: 5px 6px;
+            font-size: 10.5px;
             text-align: left;
+            font-weight: bold;
         }}
         .signature-box {{
-            margin-top: 40px;
+            margin-top: 25px;
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 10.5px;
             color: #334155;
-            padding-top: 10px;
+            padding-top: 5px;
         }}
         .btn-imprimir {{
             background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
             color: white;
             border: none;
-            padding: 10px 18px;
-            font-size: 14px;
+            padding: 8px 16px;
+            font-size: 12px;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }}
         @media print {{
             .btn-imprimir {{
@@ -489,27 +554,30 @@ elif menu == "Folha de Impressão Cega":
             body {{
                 padding: 0;
             }}
+            @page {{
+                margin: 8mm;
+            }}
         }}
     </style>
 </head>
 <body>
-    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha de Contagem</button>
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha Econômica</button>
 
     <div class="header-box">
         <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
         <div class="header-meta">
-            <div><strong>REMESSA:</strong> {remessa_selecionada}</div>
-            <div><strong>LOCAL:</strong> {local_cad}</div>
-            <div><strong>DATA IMPORTAÇÃO:</strong> {data_cad}</div>
+            <div>REMESSA: {remessa_selecionada}</div>
+            <div>LOCAL: {local_cad}</div>
+            <div>DATA: {data_cad}</div>
         </div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th style="width: 20%;">CÓDIGO</th>
-                <th style="width: 55%;">DESCRIÇÃO DO PRODUTO</th>
-                <th style="width: 25%; text-align: center;">QTD. CONFERIDA</th>
+                <th style="width: 18%;">CÓDIGO</th>
+                <th style="width: 62%;">DESCRIÇÃO DO PRODUTO</th>
+                <th style="width: 20%; text-align: center;">QTD. CONFERIDA</th>
             </tr>
         </thead>
         <tbody>
@@ -524,11 +592,11 @@ elif menu == "Folha de Impressão Cega":
 </body>
 </html>"""
 
-            altura_calculada = max(550, 160 + (len(dados_remessa) * 45))
+            altura_calculada = max(400, 120 + (len(dados_remessa) * 30))
             components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA & JUSTIFICATIVA POR ITEM
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
@@ -612,7 +680,14 @@ elif menu == "Digitar Conferência Cega":
             dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
             df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-            st.write("Digite as quantidades físicas conferidas:")
+            st.markdown("""
+            <div class="keyboard-hint">
+                ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+            </div>
+            """, unsafe_allow_html=True)
+
+            injetar_atalho_teclado_tab()
+
             editado = st.data_editor(
                 df_editavel,
                 column_config={
@@ -632,83 +707,165 @@ elif menu == "Digitar Conferência Cega":
                 key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
-            if st.button("⚖️ Comparar e Gravar", type="primary"):
-                if not nome_conferente_final:
-                    st.error("⚠️ Selecione o **Nome do Conferente** na lista acima antes de gravar.")
+            # Mapeia quantidades esperadas para calcular divergência prévia
+            mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
+            itens_com_divergencia_detectada = []
+
+            for _, row in editado.iterrows():
+                r_id = int(row["row_index"])
+                conf_val = float(row["conferencia"])
+                qtd_esp = mapa_esperado.get(r_id, 0.0)
+                if conf_val - qtd_esp != 0:
+                    itens_com_divergencia_detectada.append({
+                        "row_index": r_id,
+                        "produto": str(row["produto"]),
+                        "descricao": str(row["descricao"]),
+                        "conferido": conf_val,
+                        "divergencia": conf_val - qtd_esp
+                    })
+
+            # --- SEÇÃO DE AUTORIZAÇÃO E JUSTIFICATIVAS INDIVIDUAIS POR ITEM ---
+            st.write("---")
+            autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência com divergência")
+            justificativas_itens = {}
+
+            if autorizar_divergencia:
+                if len(itens_com_divergencia_detectada) == 0:
+                    st.info("✨ Não há itens divergentes no momento. Ao salvar, todos os itens constarão como conferidos sem divergência.")
                 else:
-                    with st.spinner("Gravando conferência..."):
-                        mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
+                    st.markdown("""
+                    <div class="divergence-box">
+                        <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
+                        <span style="font-size: 13px; color: #431407;">
+                            Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
+                        </span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    for item_div in itens_com_divergencia_detectada:
+                        r_id = item_div["row_index"]
+                        label_item = f"Produto: {item_div['produto']} - {item_div['descricao']} (Qtd Físico: {item_div['conferido']:.2f})"
                         
-                        itens_atualizar = []
-                        resultados_exibicao = []
+                        # Recupera justificativa anterior se já existir na planilha
+                        obs_anterior = ""
+                        if "observacao" in dados_trabalho.columns:
+                            linha_orig = dados_trabalho[dados_trabalho["row_index"] == r_id]
+                            if not linha_orig.empty and pd.notna(linha_orig["observacao"].iloc[0]):
+                                obs_anterior = str(linha_orig["observacao"].iloc[0]).strip()
 
-                        for _, row in editado.iterrows():
-                            r_id = int(row["row_index"])
-                            conf_val = float(row["conferencia"])
-                            qtd_esp = mapa_esperado.get(r_id, 0.0)
-                            div_val = conf_val - qtd_esp
+                        justificativas_itens[r_id] = st.text_input(
+                            f"Justificativa para {label_item} *",
+                            value=obs_anterior,
+                            placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
+                            key=f"justificativa_item_{r_id}"
+                        )
 
-                            itens_atualizar.append({
-                                "row_index": r_id,
-                                "conferencia": conf_val,
-                                "divergencia": div_val,
-                                "conferente": nome_conferente_final
-                            })
+            # --- BOTÃO DE PROCESSAMENTO E GRAVAÇÃO ---
+            if st.button("⚖️ Comparar e Gravar", type="primary"):
+                # Validação de preenchimento do conferente
+                if not nome_conferente_final:
+                    st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
+                else:
+                    # Se marcou autorizar, valida se todos os itens divergentes têm justificativa
+                    justificativas_pendentes = False
+                    if autorizar_divergencia:
+                        for it in itens_com_divergencia_detectada:
+                            r_id = it["row_index"]
+                            if not str(justificativas_itens.get(r_id, "")).strip():
+                                justificativas_pendentes = True
+                                break
 
-                            status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
-                            resultados_exibicao.append({
-                                "produto": row["produto"],
-                                "descricao": row["descricao"],
-                                "conferencia": conf_val,
-                                "conferente": nome_conferente_final,
-                                "status": status,
-                                "_tem_erro": (div_val != 0)
-                            })
+                    if autorizar_divergencia and justificativas_pendentes:
+                        st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
+                    else:
+                        with st.spinner("Gravando conferência e justificativas por item..."):
+                            itens_atualizar = []
+                            resultados_exibicao = []
 
-                        # Execução com validação limpa de status
-                        res = enviar_atualizacao_conferencia(itens_atualizar)
+                            for _, row in editado.iterrows():
+                                r_id = int(row["row_index"])
+                                conf_val = float(row["conferencia"])
+                                qtd_esp = mapa_esperado.get(r_id, 0.0)
+                                div_val = conf_val - qtd_esp
 
-                        if res.get("status") == "success":
-                            st.success(f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**.")
-                            
-                            df_resultado = pd.DataFrame(resultados_exibicao)
-                            
-                            def colorir_status(val):
-                                if "Divergente" in str(val):
-                                    return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                # Se o item teve divergência e foi justificado, lança na Coluna J específica daquele item
+                                obs_do_item = ""
+                                if div_val != 0 and autorizar_divergencia:
+                                    obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
+
+                                itens_atualizar.append({
+                                    "row_index": r_id,
+                                    "conferencia": conf_val,
+                                    "divergencia": div_val,
+                                    "conferente": nome_conferente_final,
+                                    "observacao": obs_do_item  # Gravado na linha do item específico
+                                })
+
+                                status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
+                                resultados_exibicao.append({
+                                    "produto": row["produto"],
+                                    "descricao": row["descricao"],
+                                    "conferencia": conf_val,
+                                    "conferente": nome_conferente_final,
+                                    "status": status,
+                                    "justificativa": obs_do_item,
+                                    "_tem_erro": (div_val != 0)
+                                })
+
+                            res = enviar_atualizacao_conferencia(itens_atualizar)
+
+                            if res.get("status") == "success":
+                                msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
+                                if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
+                                    msg_sucesso += " Justificativas lançadas na linha de cada produto divergente (Coluna J)."
+                                st.success(msg_sucesso)
+                                
+                                df_resultado = pd.DataFrame(resultados_exibicao)
+                                
+                                def colorir_status(val):
+                                    if "Divergente" in str(val):
+                                        return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                    else:
+                                        return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+
+                                st.write("### 📊 Resultado da Conferência")
+                                
+                                colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
+                                if autorizar_divergencia:
+                                    colunas_tabela.append("justificativa")
+
+                                df_mostrar = df_resultado[colunas_tabela]
+                                styler_res = df_mostrar.style
+                                if hasattr(styler_res, "map"):
+                                    styler_res = styler_res.map(colorir_status, subset=["status"])
                                 else:
-                                    return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+                                    styler_res = styler_res.applymap(colorir_status, subset=["status"])
 
-                            st.write("### 📊 Resultado da Conferência")
-                            
-                            df_mostrar = df_resultado[["produto", "descricao", "conferencia", "conferente", "status"]]
-                            styler_res = df_mostrar.style
-                            if hasattr(styler_res, "map"):
-                                styler_res = styler_res.map(colorir_status, subset=["status"])
+                                st.dataframe(
+                                    styler_res,
+                                    column_config={
+                                        "produto": "Código",
+                                        "descricao": "Descrição",
+                                        "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
+                                        "conferente": "Conferente",
+                                        "status": "Situação da Contagem",
+                                        "justificativa": "Justificativa (Coluna J)"
+                                    },
+                                    use_container_width=True
+                                )
+
+                                total_erros = df_resultado["_tem_erro"].sum()
+                                if total_erros == 0:
+                                    st.balloons()
+                                    st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
+                                else:
+                                    if autorizar_divergencia:
+                                        st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
+                                    else:
+                                        st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
                             else:
-                                styler_res = styler_res.applymap(colorir_status, subset=["status"])
-
-                            st.dataframe(
-                                styler_res,
-                                column_config={
-                                    "produto": "Código",
-                                    "descricao": "Descrição",
-                                    "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
-                                    "conferente": "Conferente",
-                                    "status": "Situação da Contagem",
-                                },
-                                use_container_width=True
-                            )
-
-                            total_erros = df_resultado["_tem_erro"].sum()
-                            if total_erros == 0:
-                                st.balloons()
-                                st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
-                            else:
-                                st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente acima para realizar a segunda conferência apenas desses itens.")
-                        else:
-                            mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
-                            st.error(f"Erro ao salvar: {mensagem_erro}")
+                                mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                                st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE
