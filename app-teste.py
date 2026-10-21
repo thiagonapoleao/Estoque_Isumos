@@ -14,126 +14,163 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Moderna com Degradê e Cards Corporativos
+# Estilização Corporativa Compacta (Fontes Reduzidas, Tipografia Moderna Inter/Segoe UI)
 st.markdown("""
 <style>
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    html, body, [class*="css"], [class*="st-"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        font-size: 13px !important;
     }
     
+    /* Títulos e Subtítulos Compactos */
     .main-title {
-        font-size: 26px;
-        font-weight: 700;
-        color: #0f134f;
-        margin-bottom: 6px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #e2e8f0;
+        font-size: 19px !important;
+        font-weight: 700 !important;
+        color: #0f134f !important;
+        margin-bottom: 4px !important;
+        padding-bottom: 6px !important;
+        border-bottom: 1.5px solid #e2e8f0 !important;
+        letter-spacing: -0.2px !important;
     }
     .sub-title {
-        font-size: 14px;
-        color: #64748b;
-        margin-bottom: 22px;
+        font-size: 12px !important;
+        color: #64748b !important;
+        margin-bottom: 16px !important;
     }
 
+    /* Cards Corporativos Densos e Modernos */
     .metric-container {
         display: flex;
-        gap: 16px;
-        margin-bottom: 24px;
+        gap: 12px;
+        margin-bottom: 18px;
         flex-wrap: wrap;
     }
     .metric-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 5px solid #273270;
-        padding: 16px 20px;
-        border-radius: 12px;
+        border-left: 4px solid #273270;
+        padding: 10px 14px;
+        border-radius: 8px;
         flex: 1;
-        min-width: 200px;
-        box-shadow: 0 4px 12px rgba(15, 19, 79, 0.05);
-        transition: all 0.25s ease-in-out;
+        min-width: 170px;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.04);
+        transition: all 0.2s ease-in-out;
     }
     .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 18px rgba(15, 19, 79, 0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(15, 19, 79, 0.08);
     }
     .metric-card span {
-        font-size: 12px;
+        font-size: 10.5px !important;
         color: #64748b;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
     }
     .metric-card strong {
         display: block;
-        font-size: 19px;
+        font-size: 15px !important;
         color: #0f134f;
-        margin-top: 6px;
+        margin-top: 3px;
         font-weight: 700;
     }
 
     .keyboard-hint {
-        background-color: #f1f5f9;
+        background-color: #f8fafc;
         border: 1px solid #cbd5e1;
-        padding: 8px 14px;
-        border-radius: 6px;
-        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 5px;
+        font-size: 11px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     .keyboard-hint kbd {
         background: #ffffff;
         border: 1px solid #94a3b8;
         border-bottom-width: 2px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: bold;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-weight: 700;
+        font-size: 10.5px !important;
         color: #0f134f;
     }
 
     .divergence-box {
         background-color: #fff7ed;
         border: 1px solid #fdba74;
-        border-radius: 8px;
-        padding: 16px;
-        margin-top: 14px;
-        margin-bottom: 14px;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        font-size: 12px !important;
     }
 
-    /* Degradê aplicado a todos os botões */
+    /* Redução de Fontes em Inputs, Textarea, Select e Checkbox */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    input, textarea, select {
+        font-size: 12.5px !important;
+    }
+    label p {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+    }
+    div[data-testid="stCheckbox"] label p {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Degradê Aplicado aos Botões com Escala Compacta */
     div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
         background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         color: #ffffff !important;
         border: none !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         font-weight: 600 !important;
-        padding: 10px 22px !important;
-        font-size: 14px !important;
-        letter-spacing: 0.3px !important;
-        box-shadow: 0 4px 12px rgba(15, 19, 79, 0.2) !important;
+        padding: 7px 16px !important;
+        font-size: 12.5px !important;
+        letter-spacing: 0.2px !important;
+        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
         transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
     }
     div.stButton > button:hover {
         opacity: 0.95 !important;
-        transform: scale(1.01) !important;
+        transform: scale(1.005) !important;
     }
 
+    /* Barra Lateral com Fontes Corporativas */
     [data-testid="stSidebar"] {
         background-color: #f8fafc;
         border-right: 1px solid #e2e8f0;
     }
     .sidebar-brand {
-        padding: 16px;
-        border-radius: 10px;
+        padding: 10px 12px;
+        border-radius: 6px;
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
         color: #ffffff;
-        margin-bottom: 20px;
+        margin-bottom: 14px;
         text-align: center;
         font-weight: 700;
-        font-size: 16px;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 10px rgba(15, 19, 79, 0.2);
+        font-size: 13px !important;
+        letter-spacing: 0.4px;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.15);
+    }
+    .sidebar-menu-title {
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        margin-bottom: 6px !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    /* Redução de Fontes nas Tabelas e Data Editor */
+    [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
+        font-size: 12px !important;
     }
 
     @media print {
@@ -152,8 +189,8 @@ st.markdown("""
         }
         th, td {
             border: 1px solid #1e293b !important;
-            padding: 4px 6px !important;
-            font-size: 10px !important;
+            padding: 3px 5px !important;
+            font-size: 9.5px !important;
         }
     }
 </style>
@@ -374,7 +411,7 @@ if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Importar Remessa"
 
 st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
-st.sidebar.markdown("<p style='font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px;'>MENU DE NAVEGAÇÃO</p>", unsafe_allow_html=True)
+st.sidebar.markdown('<p class="sidebar-menu-title">MENU DE NAVEGAÇÃO</p>', unsafe_allow_html=True)
 
 opcoes_menu = [
     "Importar Remessa",
@@ -478,9 +515,9 @@ elif menu == "Folha de Impressão Cega":
                 desc_item = str(row.get('descricao', ''))
                 linhas_tabela += (
                     "<tr>"
-                    f"<td style='border: 1px solid #475569; padding: 4px 6px; font-weight: bold; font-size: 10px;'>{cod_item}</td>"
-                    f"<td style='border: 1px solid #475569; padding: 4px 6px; font-size: 10px; line-height: 1.2;'>{desc_item}</td>"
-                    "<td style='border: 1px solid #475569; padding: 4px 6px; height: 24px;'></td>"
+                    f"<td style='border: 1px solid #475569; padding: 3px 5px; font-weight: bold; font-size: 9.5px;'>{cod_item}</td>"
+                    f"<td style='border: 1px solid #475569; padding: 3px 5px; font-size: 9.5px; line-height: 1.15;'>{desc_item}</td>"
+                    "<td style='border: 1px solid #475569; padding: 3px 5px; height: 20px;'></td>"
                     "</tr>"
                 )
 
@@ -493,59 +530,59 @@ elif menu == "Folha de Impressão Cega":
             font-family: Arial, Helvetica, sans-serif;
             color: #0f172a;
             margin: 0;
-            padding: 5px;
+            padding: 4px;
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 2px solid #0f134f;
-            padding-bottom: 6px;
-            margin-bottom: 8px;
+            border-bottom: 1.5px solid #0f134f;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
         }}
         .header-title {{
-            font-size: 15px;
+            font-size: 13.5px;
             font-weight: bold;
-            margin: 0 0 4px 0;
+            margin: 0 0 3px 0;
             color: #0f134f;
             text-transform: uppercase;
         }}
         .header-meta {{
             display: flex;
-            gap: 20px;
-            font-size: 11px;
+            gap: 16px;
+            font-size: 10px;
             color: #334155;
             font-weight: 600;
         }}
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
+            margin-top: 5px;
         }}
         th {{
             border: 1px solid #0f134f;
             background-color: #f1f5f9;
-            padding: 5px 6px;
-            font-size: 10.5px;
+            padding: 4px 5px;
+            font-size: 10px;
             text-align: left;
             font-weight: bold;
         }}
         .signature-box {{
-            margin-top: 25px;
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
-            font-size: 10.5px;
+            font-size: 9.5px;
             color: #334155;
-            padding-top: 5px;
+            padding-top: 4px;
         }}
         .btn-imprimir {{
             background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
             color: white;
             border: none;
-            padding: 8px 16px;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 5px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }}
         @media print {{
             .btn-imprimir {{
@@ -555,7 +592,7 @@ elif menu == "Folha de Impressão Cega":
                 padding: 0;
             }}
             @page {{
-                margin: 8mm;
+                margin: 6mm;
             }}
         }}
     </style>
@@ -592,7 +629,7 @@ elif menu == "Folha de Impressão Cega":
 </body>
 </html>"""
 
-            altura_calculada = max(400, 120 + (len(dados_remessa) * 30))
+            altura_calculada = max(360, 100 + (len(dados_remessa) * 26))
             components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
@@ -707,7 +744,6 @@ elif menu == "Digitar Conferência Cega":
                 key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
             )
 
-            # Mapeia quantidades esperadas para calcular divergência prévia
             mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
             itens_com_divergencia_detectada = []
 
@@ -724,7 +760,6 @@ elif menu == "Digitar Conferência Cega":
                         "divergencia": conf_val - qtd_esp
                     })
 
-            # --- SEÇÃO DE AUTORIZAÇÃO E JUSTIFICATIVAS INDIVIDUAIS POR ITEM ---
             st.write("---")
             autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência com divergência")
             justificativas_itens = {}
@@ -736,7 +771,7 @@ elif menu == "Digitar Conferência Cega":
                     st.markdown("""
                     <div class="divergence-box">
                         <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
-                        <span style="font-size: 13px; color: #431407;">
+                        <span style="font-size: 11.5px; color: #431407;">
                             Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
                         </span>
                     </div>
@@ -746,7 +781,6 @@ elif menu == "Digitar Conferência Cega":
                         r_id = item_div["row_index"]
                         label_item = f"Produto: {item_div['produto']} - {item_div['descricao']} (Qtd Físico: {item_div['conferido']:.2f})"
                         
-                        # Recupera justificativa anterior se já existir na planilha
                         obs_anterior = ""
                         if "observacao" in dados_trabalho.columns:
                             linha_orig = dados_trabalho[dados_trabalho["row_index"] == r_id]
@@ -760,13 +794,10 @@ elif menu == "Digitar Conferência Cega":
                             key=f"justificativa_item_{r_id}"
                         )
 
-            # --- BOTÃO DE PROCESSAMENTO E GRAVAÇÃO ---
             if st.button("⚖️ Comparar e Gravar", type="primary"):
-                # Validação de preenchimento do conferente
                 if not nome_conferente_final:
                     st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
                 else:
-                    # Se marcou autorizar, valida se todos os itens divergentes têm justificativa
                     justificativas_pendentes = False
                     if autorizar_divergencia:
                         for it in itens_com_divergencia_detectada:
@@ -788,7 +819,6 @@ elif menu == "Digitar Conferência Cega":
                                 qtd_esp = mapa_esperado.get(r_id, 0.0)
                                 div_val = conf_val - qtd_esp
 
-                                # Se o item teve divergência e foi justificado, lança na Coluna J específica daquele item
                                 obs_do_item = ""
                                 if div_val != 0 and autorizar_divergencia:
                                     obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
@@ -798,7 +828,7 @@ elif menu == "Digitar Conferência Cega":
                                     "conferencia": conf_val,
                                     "divergencia": div_val,
                                     "conferente": nome_conferente_final,
-                                    "observacao": obs_do_item  # Gravado na linha do item específico
+                                    "observacao": obs_do_item
                                 })
 
                                 status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
