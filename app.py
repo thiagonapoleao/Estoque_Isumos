@@ -5,6 +5,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
+import altair as alt
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -14,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Corporativa Compacta (Fontes Reduzidas, Tipografia Moderna Inter/Segoe UI)
+# Estilização Corporativa Compacta e Degradê
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -24,7 +25,6 @@ st.markdown("""
         font-size: 13px !important;
     }
     
-    /* Títulos e Subtítulos Compactos */
     .main-title {
         font-size: 19px !important;
         font-weight: 700 !important;
@@ -40,7 +40,6 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
-    /* Cards Corporativos Densos e Modernos */
     .metric-container {
         display: flex;
         gap: 12px;
@@ -108,7 +107,6 @@ st.markdown("""
         font-size: 12px !important;
     }
 
-    /* Redução de Fontes em Inputs, Textarea, Select e Checkbox */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -119,12 +117,7 @@ st.markdown("""
         font-weight: 600 !important;
         color: #1e293b !important;
     }
-    div[data-testid="stCheckbox"] label p {
-        font-size: 12px !important;
-        font-weight: 600 !important;
-    }
 
-    /* Degradê Aplicado aos Botões com Escala Compacta */
     div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
         background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
@@ -143,7 +136,6 @@ st.markdown("""
         transform: scale(1.005) !important;
     }
 
-    /* Barra Lateral com Fontes Corporativas */
     [data-testid="stSidebar"] {
         background-color: #f8fafc;
         border-right: 1px solid #e2e8f0;
@@ -168,7 +160,6 @@ st.markdown("""
         letter-spacing: 0.5px !important;
     }
 
-    /* Redução de Fontes nas Tabelas e Data Editor */
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
         font-size: 12px !important;
     }
@@ -408,12 +399,13 @@ def extrair_excel(uploaded_file):
 
 # --- 5. NAVEGAÇÃO POR BOTÕES ---
 if "menu_selecionado" not in st.session_state:
-    st.session_state.menu_selecionado = "Importar Remessa"
+    st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
 st.sidebar.markdown('<p class="sidebar-menu-title">MENU DE NAVEGAÇÃO</p>', unsafe_allow_html=True)
 
 opcoes_menu = [
+    "Dashboard de Resumo",
     "Importar Remessa",
     "Folha de Impressão Cega",
     "Digitar Conferência Cega",
@@ -436,9 +428,189 @@ if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_widt
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
+# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS)
+# ==============================================================================
+if menu == "Dashboard de Resumo":
+    st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e índice de acuracidade em tempo real.</div>', unsafe_allow_html=True)
+
+    with st.spinner("Compilando indicadores..."):
+        df_raw = carregar_dados_planilha()
+
+    if df_raw.empty:
+        st.info("Nenhum registro encontrado na planilha para gerar o resumo.")
+    else:
+        df = df_raw.copy()
+        
+        # Tratamento seguro de datas
+        df["dt_parsed"] = pd.to_datetime(df["data_importacao"], format="%d/%m/%Y", errors="coerce")
+        df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(df["data_importacao"], errors="coerce", dayfirst=True))
+        df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
+        df["dia_str"] = df["dt_parsed"].dt.strftime("%d/%m/%Y")
+
+        df["quantidade"] = pd.to_numeric(df["quantidade"], errors="coerce").fillna(0.0)
+        df["conferencia"] = pd.to_numeric(df["conferencia"], errors="coerce")
+        df["divergencia"] = pd.to_numeric(df["divergencia"], errors="coerce")
+
+        # Filtros
+        col_f1, col_f2 = st.columns([2, 2])
+        with col_f1:
+            lista_confs = ["TODOS"] + sorted([c for c in df["conferente"].dropna().unique().tolist() if str(c).strip() != ""])
+            filtro_conf = st.selectbox("Filtrar por Conferente:", lista_confs)
+        with col_f2:
+            remessas_todas = ["TODAS"] + sorted([r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""])
+            filtro_rem = st.selectbox("Filtrar por Remessa:", remessas_todas)
+
+        df_filtrado = df.copy()
+        if filtro_conf != "TODOS":
+            df_filtrado = df_filtrado[df_filtrado["conferente"] == filtro_conf]
+        if filtro_rem != "TODAS":
+            df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
+
+        # Cálculos de Métricas
+        total_remessas = df_filtrado["remessa"].nunique()
+        total_itens = len(df_filtrado)
+        itens_conferidos = df_filtrado[df_filtrado["conferencia"].notna()]
+        total_conferidos = len(itens_conferidos)
+        
+        itens_sem_erro = df_filtrado[df_filtrado["divergencia"] == 0]
+        itens_com_erro = df_filtrado[(df_filtrado["divergencia"].notna()) & (df_filtrado["divergencia"] != 0)]
+        
+        taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
+
+        # Cards Modernos
+        st.markdown(f"""
+        <div class="metric-container">
+            <div class="metric-card">
+                <span>Remessas Auditadas</span>
+                <strong>{total_remessas}</strong>
+            </div>
+            <div class="metric-card">
+                <span>Itens Conferidos</span>
+                <strong>{total_conferidos} de {total_itens}</strong>
+            </div>
+            <div class="metric-card">
+                <span>Acuracidade Físico x Remessa</span>
+                <strong style="color: {'#16a34a' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
+            </div>
+            <div class="metric-card">
+                <span>Itens com Divergência</span>
+                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#16a34a'};">{len(itens_com_erro)}</strong>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.write("---")
+
+        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA COM VALORES VISÍVEIS EM BARRAS ---
+        col_g1, col_g2 = st.columns(2)
+
+        with col_g1:
+            st.markdown("##### 📅 Conferências Realizadas por Mês")
+            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
+            if not df_mes.empty:
+                max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
+                )
+                textos_mes = barras_mes.mark_text(
+                    align="center",
+                    baseline="bottom",
+                    dy=-4,
+                    fontSize=11,
+                    fontWeight=600,
+                    color="#0f134f"
+                ).encode(
+                    text="Qtd:Q"
+                )
+                chart_mes = (barras_mes + textos_mes).properties(height=260)
+                st.altair_chart(chart_mes, use_container_width=True)
+            else:
+                st.info("Sem dados suficientes para a evolução mensal.")
+
+        with col_g2:
+            st.markdown("##### 📊 Volume de Conferência por Dia")
+            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
+            if not df_dia.empty:
+                max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
+                barras_dia = alt.Chart(df_dia).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
+                )
+                textos_dia = barras_dia.mark_text(
+                    align="center",
+                    baseline="bottom",
+                    dy=-4,
+                    fontSize=11,
+                    fontWeight=600,
+                    color="#0f134f"
+                ).encode(
+                    text="Qtd:Q"
+                )
+                chart_dia = (barras_dia + textos_dia).properties(height=260)
+                st.altair_chart(chart_dia, use_container_width=True)
+            else:
+                st.info("Sem dados suficientes para a evolução diária.")
+
+        # --- DIAGNÓSTICO DE ERROS & PRODUTOS DIVERGENTES ---
+        st.write("---")
+        col_e1, col_e2 = st.columns(2)
+
+        with col_e1:
+            st.markdown("##### ⚠️ Diagnóstico Geral de Divergências")
+            
+            def classificar_erro(div):
+                if pd.isna(div):
+                    return "Pendente"
+                elif div == 0:
+                    return "Sem Divergência"
+                elif div < 0:
+                    return "Falta Física"
+                else:
+                    return "Sobra Física"
+
+            df_status = df_filtrado.copy()
+            df_status["Diagnóstico"] = df_status["divergencia"].apply(classificar_erro)
+            df_resumo_erros = df_status["Diagnóstico"].value_counts().reset_index()
+            df_resumo_erros.columns = ["Diagnóstico", "Qtd. Itens"]
+            df_resumo_erros["Percentual (%)"] = ((df_resumo_erros["Qtd. Itens"] / len(df_status)) * 100).round(1)
+
+            st.dataframe(
+                df_resumo_erros,
+                column_config={
+                    "Diagnóstico": "Diagnóstico",
+                    "Qtd. Itens": st.column_config.NumberColumn("Qtd. Itens", format="%d"),
+                    "Percentual (%)": st.column_config.NumberColumn("Percentual", format="%.1f%%")
+                },
+                hide_index=True,
+                use_container_width=True
+            )
+
+        with col_e2:
+            st.markdown("##### 🏷️ Ranking de Produtos com Maior Divergência")
+            df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
+            
+            if not df_erros_itens.empty:
+                df_top_erros = df_erros_itens.groupby(["produto", "descricao"])["divergencia"].count().reset_index(name="Ocorrências")
+                df_top_erros = df_top_erros.sort_values("Ocorrências", ascending=False).head(10)
+                st.dataframe(
+                    df_top_erros,
+                    column_config={
+                        "produto": "Código",
+                        "descricao": "Descrição do Produto",
+                        "Ocorrências": st.column_config.NumberColumn("Qtd. Divergências", format="%d")
+                    },
+                    hide_index=True,
+                    use_container_width=True
+                )
+            else:
+                st.success("🎉 Nenhuma divergência registrada no filtro atual!")
+
+# ==============================================================================
 # OPÇÃO: IMPORTAR REMESSA
 # ==============================================================================
-if menu == "Importar Remessa":
+elif menu == "Importar Remessa":
     st.markdown('<div class="main-title">📥 Importação de Remessa</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
