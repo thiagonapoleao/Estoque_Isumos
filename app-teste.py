@@ -5,6 +5,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
+import plotly.express as px
+import plotly.graph_objects as go
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -14,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Corporativa Compacta (Fontes Reduzidas, Tipografia Moderna Inter/Segoe UI)
+# Estilização Corporativa Compacta e Degradê
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -24,7 +26,6 @@ st.markdown("""
         font-size: 13px !important;
     }
     
-    /* Títulos e Subtítulos Compactos */
     .main-title {
         font-size: 19px !important;
         font-weight: 700 !important;
@@ -40,7 +41,6 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
-    /* Cards Corporativos Densos e Modernos */
     .metric-container {
         display: flex;
         gap: 12px;
@@ -108,7 +108,6 @@ st.markdown("""
         font-size: 12px !important;
     }
 
-    /* Redução de Fontes em Inputs, Textarea, Select e Checkbox */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -119,12 +118,7 @@ st.markdown("""
         font-weight: 600 !important;
         color: #1e293b !important;
     }
-    div[data-testid="stCheckbox"] label p {
-        font-size: 12px !important;
-        font-weight: 600 !important;
-    }
 
-    /* Degradê Aplicado aos Botões com Escala Compacta */
     div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
         background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
@@ -143,7 +137,6 @@ st.markdown("""
         transform: scale(1.005) !important;
     }
 
-    /* Barra Lateral com Fontes Corporativas */
     [data-testid="stSidebar"] {
         background-color: #f8fafc;
         border-right: 1px solid #e2e8f0;
@@ -168,7 +161,6 @@ st.markdown("""
         letter-spacing: 0.5px !important;
     }
 
-    /* Redução de Fontes nas Tabelas e Data Editor */
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
         font-size: 12px !important;
     }
@@ -408,12 +400,13 @@ def extrair_excel(uploaded_file):
 
 # --- 5. NAVEGAÇÃO POR BOTÕES ---
 if "menu_selecionado" not in st.session_state:
-    st.session_state.menu_selecionado = "Importar Remessa"
+    st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
 st.sidebar.markdown('<p class="sidebar-menu-title">MENU DE NAVEGAÇÃO</p>', unsafe_allow_html=True)
 
 opcoes_menu = [
+    "Dashboard de Resumo",
     "Importar Remessa",
     "Folha de Impressão Cega",
     "Digitar Conferência Cega",
@@ -436,9 +429,212 @@ if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_widt
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
+# OPÇÃO: DASHBOARD DE RESUMO (MODERNO & CORPORATIVO)
+# ==============================================================================
+if menu == "Dashboard de Resumo":
+    st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e índice de acuracidade em tempo real.</div>', unsafe_allow_html=True)
+
+    with st.spinner("Compilando indicadores..."):
+        df_raw = carregar_dados_planilha()
+
+    if df_raw.empty:
+        st.info("Nenhum registro encontrado na planilha para gerar o resumo.")
+    else:
+        df = df_raw.copy()
+        
+        # Tratamento seguro de datas
+        df["dt_parsed"] = pd.to_datetime(df["data_importacao"], format="%d/%m/%Y", errors="coerce")
+        df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(df["data_importacao"], errors="coerce", dayfirst=True))
+        df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
+        df["dia_str"] = df["dt_parsed"].dt.strftime("%d/%m/%Y")
+
+        df["quantidade"] = pd.to_numeric(df["quantidade"], errors="coerce").fillna(0.0)
+        df["conferencia"] = pd.to_numeric(df["conferencia"], errors="coerce")
+        df["divergencia"] = pd.to_numeric(df["divergencia"], errors="coerce")
+
+        # Filtros de Dashboard
+        col_f1, col_f2 = st.columns([2, 2])
+        with col_f1:
+            lista_confs = ["TODOS"] + sorted([c for c in df["conferente"].dropna().unique().tolist() if str(c).strip() != ""])
+            filtro_conf = st.selectbox("Filtrar por Conferente:", lista_confs)
+        with col_f2:
+            remessas_todas = ["TODAS"] + sorted([r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""])
+            filtro_rem = st.selectbox("Filtrar por Remessa:", remessas_todas)
+
+        df_filtrado = df.copy()
+        if filtro_conf != "TODOS":
+            df_filtrado = df_filtrado[df_filtrado["conferente"] == filtro_conf]
+        if filtro_rem != "TODAS":
+            df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
+
+        # Cálculos de Métricas
+        total_remessas = df_filtrado["remessa"].nunique()
+        total_itens = len(df_filtrado)
+        itens_conferidos = df_filtrado[df_filtrado["conferencia"].notna()]
+        total_conferidos = len(itens_conferidos)
+        
+        itens_sem_erro = df_filtrado[df_filtrado["divergencia"] == 0]
+        itens_com_erro = df_filtrado[(df_filtrado["divergencia"].notna()) & (df_filtrado["divergencia"] != 0)]
+        
+        taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
+
+        # Cards Modernos
+        st.markdown(f"""
+        <div class="metric-container">
+            <div class="metric-card">
+                <span>Remessas Auditadas</span>
+                <strong>{total_remessas}</strong>
+            </div>
+            <div class="metric-card">
+                <span>Itens Conferidos</span>
+                <strong>{total_conferidos} de {total_itens}</strong>
+            </div>
+            <div class="metric-card">
+                <span>Acuracidade Físico x Remessa</span>
+                <strong style="color: {'#16a34a' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
+            </div>
+            <div class="metric-card">
+                <span>Itens com Divergência</span>
+                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#16a34a'};">{len(itens_com_erro)}</strong>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.write("---")
+
+        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA COM VALORES VISÍVEIS ---
+        col_g1, col_g2 = st.columns(2)
+
+        with col_g1:
+            st.markdown("##### 📅 Conferências Realizadas por Mês")
+            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Total Itens")
+            if not df_mes.empty:
+                fig_mes = px.bar(
+                    df_mes,
+                    x="mes_ano",
+                    y="Total Itens",
+                    text_auto=True,
+                    color_discrete_sequence=["#273270"]
+                )
+                fig_mes.update_traces(textposition="outside", textfont_size=11, cliponaxis=False)
+                fig_mes.update_layout(
+                    margin=dict(l=10, r=10, t=25, b=10),
+                    height=280,
+                    xaxis_title="Mês/Ano",
+                    yaxis_title="Qtd. Itens",
+                    plot_bgcolor="#ffffff",
+                    font=dict(family="Inter", size=11)
+                )
+                st.plotly_chart(fig_mes, use_container_width=True)
+            else:
+                st.info("Sem dados suficientes para a evolução mensal.")
+
+        with col_g2:
+            st.markdown("##### 📈 Volume de Conferência por Dia")
+            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Total Itens").sort_values("dt_parsed")
+            if not df_dia.empty:
+                fig_dia = px.line(
+                    df_dia,
+                    x="dia_str",
+                    y="Total Itens",
+                    text="Total Itens",
+                    markers=True,
+                    color_discrete_sequence=["#0f134f"]
+                )
+                fig_dia.update_traces(textposition="top center", textfont_size=11)
+                fig_dia.update_layout(
+                    margin=dict(l=10, r=10, t=25, b=10),
+                    height=280,
+                    xaxis_title="Data",
+                    yaxis_title="Qtd. Itens",
+                    plot_bgcolor="#ffffff",
+                    font=dict(family="Inter", size=11)
+                )
+                st.plotly_chart(fig_dia, use_container_width=True)
+            else:
+                st.info("Sem dados suficientes para a evolução diária.")
+
+        # --- GRÁFICOS: DIAGNÓSTICO DE ERROS & PRODUTOS DIVERGENTES ---
+        st.write("---")
+        col_e1, col_e2 = st.columns(2)
+
+        with col_e1:
+            st.markdown("##### ⚠️ Diagnóstico de Divergências (Físico vs Esperado)")
+            
+            def classificar_erro(div):
+                if pd.isna(div):
+                    return "Pendente"
+                elif div == 0:
+                    return "Sem Divergência"
+                elif div < 0:
+                    return "Falta Física"
+                else:
+                    return "Sobra Física"
+
+            df_status = df_filtrado.copy()
+            df_status["Status"] = df_status["divergencia"].apply(classificar_erro)
+            df_pie = df_status["Status"].value_counts().reset_index()
+            df_pie.columns = ["Status", "Quantidade"]
+
+            cores_map = {
+                "Sem Divergência": "#16a34a",
+                "Falta Física": "#dc2626",
+                "Sobra Física": "#f59e0b",
+                "Pendente": "#94a3b8"
+            }
+
+            fig_erro = px.pie(
+                df_pie,
+                names="Status",
+                values="Quantidade",
+                color="Status",
+                color_discrete_map=cores_map,
+                hole=0.45
+            )
+            fig_erro.update_traces(textinfo="label+value+percent", textfont_size=11)
+            fig_erro.update_layout(
+                margin=dict(l=10, r=10, t=20, b=10),
+                height=280,
+                showlegend=False,
+                font=dict(family="Inter", size=11)
+            )
+            st.plotly_chart(fig_erro, use_container_width=True)
+
+        with col_e2:
+            st.markdown("##### 🏷️ Ranking de Produtos com Divergência")
+            df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
+            
+            if not df_erros_itens.empty:
+                df_top_erros = df_erros_itens.groupby(["produto", "descricao"])["divergencia"].count().reset_index(name="Ocorrências")
+                df_top_erros = df_top_erros.sort_values("Ocorrências", ascending=True).tail(7)
+                df_top_erros["Item"] = df_top_erros["produto"].astype(str) + " - " + df_top_erros["descricao"].str.slice(0, 22)
+
+                fig_top = px.bar(
+                    df_top_erros,
+                    x="Ocorrências",
+                    y="Item",
+                    orientation="h",
+                    text_auto=True,
+                    color_discrete_sequence=["#494c8c"]
+                )
+                fig_top.update_traces(textposition="outside", textfont_size=11, cliponaxis=False)
+                fig_top.update_layout(
+                    margin=dict(l=10, r=10, t=20, b=10),
+                    height=280,
+                    xaxis_title="Qtd. Ocorrências",
+                    yaxis_title="",
+                    plot_bgcolor="#ffffff",
+                    font=dict(family="Inter", size=11)
+                )
+                st.plotly_chart(fig_top, use_container_width=True)
+            else:
+                st.success("🎉 Nenhuma divergência registrada no filtro atual!")
+
+# ==============================================================================
 # OPÇÃO: IMPORTAR REMESSA
 # ==============================================================================
-if menu == "Importar Remessa":
+elif menu == "Importar Remessa":
     st.markdown('<div class="main-title">📥 Importação de Remessa</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
