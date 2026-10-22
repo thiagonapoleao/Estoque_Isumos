@@ -5,8 +5,6 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
-import plotly.express as px
-import plotly.graph_objects as go
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -429,7 +427,7 @@ if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_widt
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD DE RESUMO (MODERNO & CORPORATIVO)
+# OPÇÃO: DASHBOARD DE RESUMO (NATIVO, SEM DEPENDÊNCIA DO PLOTLY)
 # ==============================================================================
 if menu == "Dashboard de Resumo":
     st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
@@ -443,7 +441,7 @@ if menu == "Dashboard de Resumo":
     else:
         df = df_raw.copy()
         
-        # Tratamento seguro de datas
+        # Tratamento de datas
         df["dt_parsed"] = pd.to_datetime(df["data_importacao"], format="%d/%m/%Y", errors="coerce")
         df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(df["data_importacao"], errors="coerce", dayfirst=True))
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
@@ -453,7 +451,7 @@ if menu == "Dashboard de Resumo":
         df["conferencia"] = pd.to_numeric(df["conferencia"], errors="coerce")
         df["divergencia"] = pd.to_numeric(df["divergencia"], errors="coerce")
 
-        # Filtros de Dashboard
+        # Filtros
         col_f1, col_f2 = st.columns([2, 2])
         with col_f1:
             lista_confs = ["TODOS"] + sorted([c for c in df["conferente"].dropna().unique().tolist() if str(c).strip() != ""])
@@ -503,64 +501,33 @@ if menu == "Dashboard de Resumo":
 
         st.write("---")
 
-        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA COM VALORES VISÍVEIS ---
+        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA ---
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
             st.markdown("##### 📅 Conferências Realizadas por Mês")
-            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Total Itens")
+            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd. Itens Conferidos")
             if not df_mes.empty:
-                fig_mes = px.bar(
-                    df_mes,
-                    x="mes_ano",
-                    y="Total Itens",
-                    text_auto=True,
-                    color_discrete_sequence=["#273270"]
-                )
-                fig_mes.update_traces(textposition="outside", textfont_size=11, cliponaxis=False)
-                fig_mes.update_layout(
-                    margin=dict(l=10, r=10, t=25, b=10),
-                    height=280,
-                    xaxis_title="Mês/Ano",
-                    yaxis_title="Qtd. Itens",
-                    plot_bgcolor="#ffffff",
-                    font=dict(family="Inter", size=11)
-                )
-                st.plotly_chart(fig_mes, use_container_width=True)
+                st.bar_chart(df_mes.set_index("mes_ano"), color="#273270")
+                st.caption("Total de itens conferidos por mês.")
             else:
                 st.info("Sem dados suficientes para a evolução mensal.")
 
         with col_g2:
             st.markdown("##### 📈 Volume de Conferência por Dia")
-            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Total Itens").sort_values("dt_parsed")
+            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Itens Conferidos").sort_values("dt_parsed")
             if not df_dia.empty:
-                fig_dia = px.line(
-                    df_dia,
-                    x="dia_str",
-                    y="Total Itens",
-                    text="Total Itens",
-                    markers=True,
-                    color_discrete_sequence=["#0f134f"]
-                )
-                fig_dia.update_traces(textposition="top center", textfont_size=11)
-                fig_dia.update_layout(
-                    margin=dict(l=10, r=10, t=25, b=10),
-                    height=280,
-                    xaxis_title="Data",
-                    yaxis_title="Qtd. Itens",
-                    plot_bgcolor="#ffffff",
-                    font=dict(family="Inter", size=11)
-                )
-                st.plotly_chart(fig_dia, use_container_width=True)
+                st.line_chart(df_dia.set_index("dia_str")["Itens Conferidos"], color="#0f134f")
+                st.caption("Tendência de contagem dia a dia.")
             else:
                 st.info("Sem dados suficientes para a evolução diária.")
 
-        # --- GRÁFICOS: DIAGNÓSTICO DE ERROS & PRODUTOS DIVERGENTES ---
+        # --- DIAGNÓSTICO DE ERROS & PRODUTOS DIVERGENTES ---
         st.write("---")
         col_e1, col_e2 = st.columns(2)
 
         with col_e1:
-            st.markdown("##### ⚠️ Diagnóstico de Divergências (Físico vs Esperado)")
+            st.markdown("##### ⚠️ Diagnóstico Geral de Divergências")
             
             def classificar_erro(div):
                 if pd.isna(div):
@@ -573,61 +540,39 @@ if menu == "Dashboard de Resumo":
                     return "Sobra Física"
 
             df_status = df_filtrado.copy()
-            df_status["Status"] = df_status["divergencia"].apply(classificar_erro)
-            df_pie = df_status["Status"].value_counts().reset_index()
-            df_pie.columns = ["Status", "Quantidade"]
+            df_status["Diagnóstico"] = df_status["divergencia"].apply(classificar_erro)
+            df_resumo_erros = df_status["Diagnóstico"].value_counts().reset_index()
+            df_resumo_erros.columns = ["Diagnóstico", "Qtd. Itens"]
+            df_resumo_erros["Percentual (%)"] = ((df_resumo_erros["Qtd. Itens"] / len(df_status)) * 100).round(1)
 
-            cores_map = {
-                "Sem Divergência": "#16a34a",
-                "Falta Física": "#dc2626",
-                "Sobra Física": "#f59e0b",
-                "Pendente": "#94a3b8"
-            }
-
-            fig_erro = px.pie(
-                df_pie,
-                names="Status",
-                values="Quantidade",
-                color="Status",
-                color_discrete_map=cores_map,
-                hole=0.45
+            st.dataframe(
+                df_resumo_erros,
+                column_config={
+                    "Diagnóstico": "Diagnóstico",
+                    "Qtd. Itens": st.column_config.NumberColumn("Qtd. Itens", format="%d"),
+                    "Percentual (%)": st.column_config.NumberColumn("Percentual", format="%.1f%%")
+                },
+                hide_index=True,
+                use_container_width=True
             )
-            fig_erro.update_traces(textinfo="label+value+percent", textfont_size=11)
-            fig_erro.update_layout(
-                margin=dict(l=10, r=10, t=20, b=10),
-                height=280,
-                showlegend=False,
-                font=dict(family="Inter", size=11)
-            )
-            st.plotly_chart(fig_erro, use_container_width=True)
 
         with col_e2:
-            st.markdown("##### 🏷️ Ranking de Produtos com Divergência")
+            st.markdown("##### 🏷️ Ranking de Produtos com Maior Divergência")
             df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
             
             if not df_erros_itens.empty:
                 df_top_erros = df_erros_itens.groupby(["produto", "descricao"])["divergencia"].count().reset_index(name="Ocorrências")
-                df_top_erros = df_top_erros.sort_values("Ocorrências", ascending=True).tail(7)
-                df_top_erros["Item"] = df_top_erros["produto"].astype(str) + " - " + df_top_erros["descricao"].str.slice(0, 22)
-
-                fig_top = px.bar(
+                df_top_erros = df_top_erros.sort_values("Ocorrências", ascending=False).head(10)
+                st.dataframe(
                     df_top_erros,
-                    x="Ocorrências",
-                    y="Item",
-                    orientation="h",
-                    text_auto=True,
-                    color_discrete_sequence=["#494c8c"]
+                    column_config={
+                        "produto": "Código",
+                        "descricao": "Descrição do Produto",
+                        "Ocorrências": st.column_config.NumberColumn("Qtd. Divergências", format="%d")
+                    },
+                    hide_index=True,
+                    use_container_width=True
                 )
-                fig_top.update_traces(textposition="outside", textfont_size=11, cliponaxis=False)
-                fig_top.update_layout(
-                    margin=dict(l=10, r=10, t=20, b=10),
-                    height=280,
-                    xaxis_title="Qtd. Ocorrências",
-                    yaxis_title="",
-                    plot_bgcolor="#ffffff",
-                    font=dict(family="Inter", size=11)
-                )
-                st.plotly_chart(fig_top, use_container_width=True)
             else:
                 st.success("🎉 Nenhuma divergência registrada no filtro atual!")
 
