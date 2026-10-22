@@ -5,6 +5,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
+import altair as alt
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -427,7 +428,7 @@ if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_widt
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD DE RESUMO (NATIVO, SEM DEPENDÊNCIA DO PLOTLY)
+# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS)
 # ==============================================================================
 if menu == "Dashboard de Resumo":
     st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
@@ -441,7 +442,7 @@ if menu == "Dashboard de Resumo":
     else:
         df = df_raw.copy()
         
-        # Tratamento de datas
+        # Tratamento seguro de datas
         df["dt_parsed"] = pd.to_datetime(df["data_importacao"], format="%d/%m/%Y", errors="coerce")
         df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(df["data_importacao"], errors="coerce", dayfirst=True))
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
@@ -501,24 +502,54 @@ if menu == "Dashboard de Resumo":
 
         st.write("---")
 
-        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA ---
+        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA COM VALORES VISÍVEIS EM BARRAS ---
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
             st.markdown("##### 📅 Conferências Realizadas por Mês")
-            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd. Itens Conferidos")
+            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
             if not df_mes.empty:
-                st.bar_chart(df_mes.set_index("mes_ano"), color="#273270")
-                st.caption("Total de itens conferidos por mês.")
+                max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
+                )
+                textos_mes = barras_mes.mark_text(
+                    align="center",
+                    baseline="bottom",
+                    dy=-4,
+                    fontSize=11,
+                    fontWeight=600,
+                    color="#0f134f"
+                ).encode(
+                    text="Qtd:Q"
+                )
+                chart_mes = (barras_mes + textos_mes).properties(height=260)
+                st.altair_chart(chart_mes, use_container_width=True)
             else:
                 st.info("Sem dados suficientes para a evolução mensal.")
 
         with col_g2:
-            st.markdown("##### 📈 Volume de Conferência por Dia")
-            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Itens Conferidos").sort_values("dt_parsed")
+            st.markdown("##### 📊 Volume de Conferência por Dia")
+            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
             if not df_dia.empty:
-                st.line_chart(df_dia.set_index("dia_str")["Itens Conferidos"], color="#0f134f")
-                st.caption("Tendência de contagem dia a dia.")
+                max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
+                barras_dia = alt.Chart(df_dia).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
+                )
+                textos_dia = barras_dia.mark_text(
+                    align="center",
+                    baseline="bottom",
+                    dy=-4,
+                    fontSize=11,
+                    fontWeight=600,
+                    color="#0f134f"
+                ).encode(
+                    text="Qtd:Q"
+                )
+                chart_dia = (barras_dia + textos_dia).properties(height=260)
+                st.altair_chart(chart_dia, use_container_width=True)
             else:
                 st.info("Sem dados suficientes para a evolução diária.")
 
