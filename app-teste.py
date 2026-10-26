@@ -193,13 +193,9 @@ API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9
 
 def get_session():
     session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*"
-    })
     retries = Retry(
         total=3,
-        backoff_factor=1.5,
+        backoff_factor=1.0,
         status_forcelist=[500, 502, 503, 504],
         raise_on_status=False
     )
@@ -215,36 +211,20 @@ def parse_response_seguro(r):
         texto = r.text.strip()
         return {
             "status": "error",
-            "message": f"Retorno HTTP {r.status_code}: {texto[:250]}"
+            "message": f"Retorno HTTP {r.status_code}: {texto[:200]}"
         }
 
 def enviar_requisicao_dados(payload, timeout=90):
     session = get_session()
-    payload_json = json.dumps(payload)
-    
-    # 1. Envio seguro via GET com o payload serializado (passa limpo pelo Google)
     try:
-        r = session.get(
-            API_URL, 
-            params={"payload": payload_json}, 
-            timeout=timeout, 
+        r = session.post(
+            API_URL,
+            data=json.dumps(payload),
+            headers={"Content-Type": "text/plain;charset=utf-8"},
+            timeout=timeout,
             allow_redirects=True
         )
-        res = parse_response_seguro(r)
-        if res.get("status") != "error" or "<!doctype html>" not in str(res.get("message", "")).lower():
-            return res
-    except Exception:
-        pass
-
-    # 2. Fallback via POST com form-data se o volume for muito extenso
-    try:
-        r_post = session.post(
-            API_URL, 
-            data={"payload": payload_json}, 
-            timeout=timeout, 
-            allow_redirects=True
-        )
-        return parse_response_seguro(r_post)
+        return parse_response_seguro(r)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
