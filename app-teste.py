@@ -189,13 +189,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
-API_URL = "https://script.google.com/macros/s/AKfycbxCXnFLUv6PueItj_ZAjfyiUG81I0FlmqqJWiOyr-h5ZT2vVVqulZq4jCmVIXKwMbBA/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbw9XSazbvnjL6aIevH6fSwtqzOogk0N_qAlYdbniYwamWsiojsBYW4npCy-zIQsLL3q/exec"
 
 def get_session():
     session = requests.Session()
     session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
     })
     retries = Retry(
         total=3,
@@ -215,28 +216,19 @@ def parse_response_seguro(r):
         texto = r.text.strip()
         return {
             "status": "error",
-            "message": f"Retorno HTTP {r.status_code}: {texto[:300]}"
+            "message": f"Retorno HTTP {r.status_code}: {texto[:250]}"
         }
 
 def enviar_requisicao_post(payload, timeout=90):
     session = get_session()
     headers = {"Content-Type": "text/plain;charset=utf-8"}
-    
-    # 1. Envia o POST com o JSON serializado e sem seguir o redirecionamento automaticamente
     r = session.post(
         API_URL, 
         data=json.dumps(payload), 
         headers=headers, 
         timeout=timeout, 
-        allow_redirects=False
+        allow_redirects=True
     )
-    
-    # 2. O Apps Script executa o doPost e responde 302 com o JSON gravado no echo (URL de Location)
-    if r.status_code in [301, 302, 303, 307, 308] and "Location" in r.headers:
-        redirect_url = r.headers["Location"]
-        r_final = session.get(redirect_url, timeout=timeout)
-        return parse_response_seguro(r_final)
-    
     return parse_response_seguro(r)
 
 # --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
