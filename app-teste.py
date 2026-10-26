@@ -206,7 +206,7 @@ def get_session():
 
 # --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
 def enviar_dados_apps_script(payload: dict) -> dict:
-    """Envia requisições POST compatíveis com o comportamento de redirecionamento do Google."""
+    """Envia requisições POST com text/plain para contornar redirecionamentos do Google."""
     try:
         session = get_session()
         payload_str = json.dumps(payload, default=str)
@@ -262,7 +262,7 @@ def carregar_lista_conferentes():
             try:
                 lista = r.json()
                 if isinstance(lista, list) and len(lista) > 0:
-                    return sorted(lista)
+                    return sorted([str(x).strip() for x in lista if str(x).strip()])
             except Exception:
                 return []
         return []
@@ -463,7 +463,7 @@ if menu == "Dashboard de Resumo":
         df_raw = carregar_dados_planilha()
 
     if df_raw.empty:
-        st.info("Nenhum registro encontrado na planilha para gerar o resumo.")
+        st.info("Nenhum registro encontrado na aba Conferencia para gerar o resumo.")
     else:
         df = df_raw.copy()
         
@@ -635,16 +635,16 @@ if menu == "Dashboard de Resumo":
                 st.success("🎉 Nenhuma divergência registrada no filtro atual!")
 
 # ==============================================================================
-# OPÇÃO: IMPORTAR REMESSA
+# OPÇÃO: IMPORTAR REMESSA (Aba Conferencia)
 # ==============================================================================
 elif menu == "Importar Remessa":
     st.markdown('<div class="main-title">📥 Importação de Remessa</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        num_remessa = st.text_input("Número da Remessa *", placeholder="Ex: REM-2026-001")
+        num_remessa = st.text_input("Número da Remessa *", placeholder="Ex: 268326")
     with col2:
-        nome_local_input = st.text_input("Local / Filial de Destino *", placeholder="Ex: ALMOXARIFADO CENTRAL")
+        nome_local_input = st.text_input("Local / Estoque de Destino *", placeholder="Ex: S.R. EMBALAGENS")
 
     arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa", type=["xlsx", "xls"])
 
@@ -662,25 +662,26 @@ elif menu == "Importar Remessa":
             else:
                 data_importacao = datetime.now().strftime("%d/%m/%Y")
                 
+                # Monta as 10 colunas exatas da aba 'Conferencia'
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        num_remessa,          # A: Remessa
-                        nome_local,           # B: Local (MAIÚSCULO)
-                        data_importacao,      # C: Data BR
-                        str(item["Produto"]), # D: Produto
-                        str(item["Descricao"]),# E: Descrição
+                        num_remessa.strip(),       # A: Remessa
+                        nome_local,                # B: Estoque
+                        data_importacao,           # C: Horario / Data
+                        str(item["Produto"]),      # D: Codigo
+                        str(item["Descricao"]),    # E: Descrição
                         float(item["Quantidade"]), # F: Quantidade
-                        "",                   # G: Conferência
-                        "",                   # H: Divergência
-                        "",                   # I: Conferente
-                        ""                    # J: Observação / Justificativa
+                        "",                        # G: Conferencia
+                        "",                        # H: Divergencia
+                        "",                        # I: Conferente
+                        ""                         # J: Justificstiva para Divergencia
                     ])
 
-                with st.spinner("Gravando linhas no Google Sheets..."):
+                with st.spinner("Gravando linhas na aba Conferencia..."):
                     res = enviar_importacao_planilha(linhas_para_sheets)
                     if res.get("status") == "success":
-                        st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Local: **{nome_local}** | Data: **{data_importacao}**)!")
+                        st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Estoque: **{nome_local}**)!")
                         df_preview = pd.DataFrame(itens)
                         st.dataframe(df_preview, use_container_width=True)
                     else:
@@ -899,7 +900,7 @@ elif menu == "Digitar Conferência Cega":
                 conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
 
             if not lista_conferentes:
-                st.warning("⚠️ Nenhum conferente encontrado na lista. Cadastre um conferente no menu lateral.")
+                st.warning("⚠️ Nenhum conferente localizado na coluna D da aba 'Local-Estoque'.")
                 nome_conferente_final = ""
             else:
                 idx_default = 0
@@ -1008,7 +1009,7 @@ elif menu == "Digitar Conferência Cega":
                     if autorizar_divergencia and justificativas_pendentes:
                         st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
                     else:
-                        with st.spinner("Gravando conferência e justificativas por item..."):
+                        with st.spinner("Gravando conferência na aba Conferencia..."):
                             itens_atualizar = []
                             resultados_exibicao = []
 
@@ -1097,10 +1098,11 @@ elif menu == "Digitar Conferência Cega":
                                 st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
-# OPÇÃO: CADASTRAR NOVO CONFERENTE
+# OPÇÃO: CADASTRAR NOVO CONFERENTE (Aba Local-Estoque - Coluna D)
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
     st.markdown('<div class="main-title">👤 Cadastro de Conferente</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Os conferentes são lidos e gravados na Coluna D da aba <strong>Local-Estoque</strong>.</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
     with col1:
