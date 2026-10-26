@@ -11,16 +11,16 @@ import altair as alt
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    page_title="Master Café | Gestão & Conferência de Estoque",
-    page_icon="📦",
+    page_title="Master Café ∙ Gestão de Estoque e Insumos",
+    page_icon="☕",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS CORPORATIVO PADRONIZADO ---
+# --- 2. CSS CORPORATIVO COM NAVEGAÇÃO NO TOPO ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -28,46 +28,60 @@ st.markdown("""
         color: #1e293b;
     }
 
-    /* Container de Cabeçalho Superior */
-    .app-header {
-        background: linear-gradient(135deg, #0f134f 0%, #1e295f 50%, #273270 100%);
-        padding: 18px 24px;
-        border-radius: 10px;
-        margin-bottom: 20px;
+    /* Oculta barra lateral por padrão se não utilizada */
+    [data-testid="stSidebar"] {
+        display: none !important;
+    }
+
+    /* Cabeçalho Superior Corporativo */
+    .top-header {
+        background: linear-gradient(135deg, #0f134f 0%, #1e295f 55%, #273270 100%);
+        padding: 16px 24px;
+        border-radius: 12px;
+        margin-bottom: 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 14px rgba(15, 19, 79, 0.12);
+        box-shadow: 0 4px 14px rgba(15, 19, 79, 0.14);
         color: #ffffff;
     }
-    .app-header-left {
-        display: flex;
-        flex-direction: column;
-    }
-    .app-header-title {
+    .top-header-title {
         font-size: 20px !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
         letter-spacing: -0.3px;
         margin: 0;
-        color: #ffffff !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .app-header-subtitle {
+    .top-header-sub {
         font-size: 12px !important;
         color: #cbd5e1 !important;
-        margin-top: 3px;
+        margin-top: 2px;
         font-weight: 400;
     }
-    .app-header-badge {
-        background: rgba(255, 255, 255, 0.15);
+    .top-header-badge {
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.28);
         padding: 6px 14px;
         border-radius: 20px;
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         font-weight: 600;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(4px);
+        color: #ffffff;
     }
 
-    /* Cards de Métricas Estilizados */
+    /* Barra de Navegação Horizontal no Topo */
+    .nav-container {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 8px 12px;
+        margin-bottom: 22px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    }
+
+    /* Cards de Indicadores */
     .metric-container {
         display: flex;
         gap: 14px;
@@ -81,7 +95,7 @@ st.markdown("""
         padding: 12px 16px;
         border-radius: 8px;
         flex: 1;
-        min-width: 180px;
+        min-width: 175px;
         box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
@@ -90,64 +104,21 @@ st.markdown("""
         box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
     }
     .metric-card span {
-        font-size: 11px !important;
+        font-size: 10.5px !important;
         color: #64748b;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.5px;
     }
     .metric-card strong {
         display: block;
-        font-size: 17px !important;
+        font-size: 18px !important;
         color: #0f134f;
         margin-top: 4px;
         font-weight: 700;
     }
 
-    /* Barra Lateral */
-    [data-testid="stSidebar"] {
-        background-color: #f8fafc;
-        border-right: 1px solid #e2e8f0;
-    }
-    .sidebar-brand-box {
-        text-align: center;
-        padding: 14px 10px 10px 10px;
-        margin-bottom: 12px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .sidebar-brand-box img {
-        max-width: 140px;
-        margin-bottom: 8px;
-    }
-    .sidebar-brand-title {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: #0f134f;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
-    .sidebar-section-title {
-        font-size: 10.5px !important;
-        font-weight: 700 !important;
-        color: #64748b;
-        margin: 14px 0 8px 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-    }
-
-    /* Botões de Navegação */
-    div[data-testid="stSidebar"] div.stButton > button {
-        text-align: left !important;
-        justify-content: flex-start !important;
-        padding: 8px 14px !important;
-        border-radius: 6px !important;
-        font-size: 12.5px !important;
-        font-weight: 500 !important;
-        margin-bottom: 4px !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-
-    /* Estilo de Botões Principais */
+    /* Botões Principais */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(90deg, #0f134f, #273270) !important;
         color: #ffffff !important;
@@ -155,18 +126,19 @@ st.markdown("""
         border-radius: 6px !important;
         font-weight: 600 !important;
         padding: 8px 18px !important;
-        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.18) !important;
+        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
+        transition: all 0.15s ease-in-out !important;
     }
     div.stButton > button[kind="primary"]:hover {
         opacity: 0.95 !important;
         transform: translateY(-1px) !important;
     }
 
-    /* Dicas de Teclado */
+    /* Caixas de Alerta e Dicas */
     .keyboard-hint {
         background-color: #f1f5f9;
         border: 1px solid #cbd5e1;
-        padding: 7px 12px;
+        padding: 6px 12px;
         border-radius: 6px;
         font-size: 11.5px !important;
         color: #334155;
@@ -184,7 +156,6 @@ st.markdown("""
         color: #0f134f;
     }
 
-    /* Caixa de Alerta de Divergência */
     .divergence-box {
         background-color: #fff7ed;
         border: 1px solid #fdba74;
@@ -196,7 +167,7 @@ st.markdown("""
 
     /* Impressão */
     @media print {
-        header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
+        header, .top-header, .nav-container, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
         }
         .printable-area {
@@ -466,43 +437,39 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. LOGOTIPO & CABEÇALHO LATERAL PADRONIZADO ---
-def renderizar_logo_sidebar():
-    caminhos_logo = [
-        "assets/logo.png",
-        "assets/Mastercafe-logo.png",
-        "logo.png",
-        "Mastercafe-logo.png"
-    ]
-    logo_encontrado = None
-    for p in caminhos_logo:
-        if os.path.exists(p):
-            logo_encontrado = p
-            break
-
-    st.sidebar.markdown('<div class="sidebar-brand-box">', unsafe_allow_html=True)
-    if logo_encontrado:
-        st.sidebar.image(logo_encontrado, use_container_width=True)
+# --- 5. CABEÇALHO SUPERIOR UNIFICADO ---
+col_logo, col_desc = st.columns([1, 6])
+with col_logo:
+    caminhos_logo = ["assets/logo.png", "assets/Mastercafe-logo.png", "logo.png", "Mastercafe-logo.png"]
+    logo_file = next((p for p in caminhos_logo if os.path.exists(p)), None)
+    if logo_file:
+        st.image(logo_file, width=120)
     else:
-        # Fallback elegante em SVG/Texto caso o arquivo de imagem não esteja na pasta
-        st.sidebar.markdown("""
-        <div style="background: linear-gradient(135deg, #0f134f, #273270); padding: 12px; border-radius: 8px; color: white; margin-bottom: 6px;">
-            <div style="font-size: 16px; font-weight: 800; letter-spacing: 0.5px;">☕ MASTER CAFÉ</div>
-            <div style="font-size: 10px; opacity: 0.8; letter-spacing: 0.2px;">SUPPLY & INSUMOS</div>
+        st.markdown("""
+        <div style="background: #0f134f; color: white; border-radius: 8px; padding: 10px; text-align: center; font-weight: 800; font-size: 14px;">
+            ☕ MASTER CAFÉ
         </div>
         """, unsafe_allow_html=True)
-    
-    st.sidebar.markdown('<div class="sidebar-brand-title">Gestão de Insumos</div></div>', unsafe_allow_html=True)
 
-renderizar_logo_sidebar()
+with col_desc:
+    st.markdown("""
+    <div style="padding-top: 4px;">
+        <h2 style="margin: 0; color: #0f134f; font-weight: 800; font-size: 22px; letter-spacing: -0.4px;">
+            Painel de Gestão ∙ Conferência de Estoque & Insumos
+        </h2>
+        <div style="font-size: 12.5px; color: #64748b; margin-top: 2px;">
+            Sistema Integrado de Auditoria, Separação Cega e Conciliação Física de Mercadorias
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# --- 6. NAVEGAÇÃO LATERAL ---
+st.write("")
+
+# --- 6. BARRA DE NAVEGAÇÃO NO TOPO (TOP NAVBAR) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
-st.sidebar.markdown('<p class="sidebar-section-title">Menu Principal</p>', unsafe_allow_html=True)
-
-opcoes_menu = [
+opcoes_nav = [
     ("📊 Dashboard de Resumo", "Dashboard de Resumo"),
     ("📥 Importar Remessa", "Importar Remessa"),
     ("🖨️ Folha de Impressão Cega", "Folha de Impressão Cega"),
@@ -510,34 +477,24 @@ opcoes_menu = [
     ("👤 Cadastrar Conferente", "Cadastrar Novo Conferente")
 ]
 
-for label, opcao in opcoes_menu:
-    is_active = (st.session_state.menu_selecionado == opcao)
-    tipo_btn = "primary" if is_active else "secondary"
-    if st.sidebar.button(label, key=f"btn_nav_{opcao}", use_container_width=True, type=tipo_btn):
-        st.session_state.menu_selecionado = opcao
+cols_nav = st.columns([2, 2, 2.2, 2.2, 2, 0.8])
+for idx, (label, rota) in enumerate(opcoes_nav):
+    with cols_nav[idx]:
+        is_ativo = (st.session_state.menu_selecionado == rota)
+        tipo_botao = "primary" if is_ativo else "secondary"
+        if st.button(label, key=f"nav_top_{rota}", use_container_width=True, type=tipo_botao):
+            st.session_state.menu_selecionado = rota
+            st.rerun()
+
+with cols_nav[5]:
+    if st.button("🔄", help="Atualizar e sincronizar planilha", use_container_width=True):
+        carregar_dados_planilha_cached.clear()
+        carregar_lista_conferentes.clear()
         st.rerun()
 
-st.sidebar.write("---")
-st.sidebar.markdown('<p class="sidebar-section-title">Sincronização</p>', unsafe_allow_html=True)
-if st.sidebar.button("🔄 Atualizar Planilha", use_container_width=True):
-    carregar_dados_planilha_cached.clear()
-    carregar_lista_conferentes.clear()
-    st.rerun()
+st.write("---")
 
 menu = st.session_state.menu_selecionado
-
-# Cabeçalho Principal Unificado
-st.markdown(f"""
-<div class="app-header">
-    <div class="app-header-left">
-        <h1 class="app-header-title">Master Café ∙ Gestão de Insumos</h1>
-        <span class="app-header-subtitle">Módulo Operacional de Auditoria e Conferência Física</span>
-    </div>
-    <div class="app-header-badge">
-        📍 {menu}
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
 # ==============================================================================
 # OPÇÃO: DASHBOARD DE RESUMO
@@ -548,11 +505,11 @@ if menu == "Dashboard de Resumo":
 
     if df_raw.empty:
         st.info("Nenhum registro encontrado na aba Conferencia da planilha.")
-        st.caption("Verifique as permissões de acesso ou importe novas remessas.")
+        st.caption("Verifique o compartilhamento da planilha ou clique em 🔄 para sincronizar.")
     else:
         df = df_raw.copy()
 
-        # Tratamento tolerante para data/hora
+        # Tratamento tolerante para datas
         data_col = df["data_importacao"] if "data_importacao" in df.columns else pd.Series(index=df.index, dtype=str)
         dt_parsed = pd.to_datetime(data_col, format="%d/%m/%Y", errors="coerce")
         dt_parsed = dt_parsed.fillna(pd.to_datetime(data_col, errors="coerce", dayfirst=True))
@@ -584,7 +541,7 @@ if menu == "Dashboard de Resumo":
         if filtro_rem != "TODAS" and "remessa" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
 
-        # Cálculos de Métricas
+        # Métricas Consolidadas
         total_remessas = df_filtrado["remessa"].nunique() if "remessa" in df_filtrado.columns else 0
         total_itens = len(df_filtrado)
         itens_conferidos = df_filtrado[df_filtrado["conferencia"].notna()]
@@ -595,7 +552,6 @@ if menu == "Dashboard de Resumo":
         
         taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
 
-        # Cards Corporativos
         st.markdown(f"""
         <div class="metric-container">
             <div class="metric-card">
@@ -619,7 +575,6 @@ if menu == "Dashboard de Resumo":
 
         st.write("---")
 
-        # Gráficos
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
