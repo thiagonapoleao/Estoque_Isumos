@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import json
 import os
+import base64
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
@@ -11,16 +12,16 @@ import altair as alt
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    page_title="Master Café ∙ Gestão de Estoque e Insumos",
-    page_icon="☕",
+    page_title="Gestão de Insumos & Conferência",
+    page_icon="📦",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS CORPORATIVO COM NAVEGAÇÃO NO TOPO ---
+# --- 2. CSS CORPORATIVO PADRÃO SÓLIDO (SEM DEGRADÊ) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -28,146 +29,137 @@ st.markdown("""
         color: #1e293b;
     }
 
-    /* Oculta barra lateral por padrão se não utilizada */
+    /* Oculta sidebar não utilizada */
     [data-testid="stSidebar"] {
         display: none !important;
     }
 
-    /* Cabeçalho Superior Corporativo */
+    /* Top Bar Header Sólido */
     .top-header {
-        background: linear-gradient(135deg, #0f134f 0%, #1e295f 55%, #273270 100%);
-        padding: 16px 24px;
-        border-radius: 12px;
+        background-color: #0f134f;
+        padding: 12px 24px;
+        border-radius: 8px;
         margin-bottom: 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 14px rgba(15, 19, 79, 0.14);
         color: #ffffff;
+        border-bottom: 2px solid #273270;
     }
     .top-header-title {
-        font-size: 20px !important;
-        font-weight: 800 !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
         color: #ffffff !important;
-        letter-spacing: -0.3px;
         margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        letter-spacing: -0.2px;
     }
-    .top-header-sub {
-        font-size: 12px !important;
+    .top-header-subtitle {
+        font-size: 11.5px !important;
         color: #cbd5e1 !important;
-        margin-top: 2px;
-        font-weight: 400;
+        margin: 0;
     }
     .top-header-badge {
-        background: rgba(255, 255, 255, 0.16);
-        border: 1px solid rgba(255, 255, 255, 0.28);
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 11.5px !important;
+        background-color: #273270;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 11px !important;
         font-weight: 600;
         color: #ffffff;
     }
 
-    /* Barra de Navegação Horizontal no Topo */
-    .nav-container {
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 8px 12px;
-        margin-bottom: 22px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-    }
-
-    /* Cards de Indicadores */
+    /* Cards de Métricas Sólidos */
     .metric-container {
         display: flex;
-        gap: 14px;
-        margin-bottom: 22px;
+        gap: 12px;
+        margin-bottom: 20px;
         flex-wrap: wrap;
     }
     .metric-card {
-        background: #ffffff;
+        background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 4px solid #273270;
+        border-left: 4px solid #0f134f;
         padding: 12px 16px;
-        border-radius: 8px;
+        border-radius: 6px;
         flex: 1;
-        min-width: 175px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+        min-width: 170px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     .metric-card span {
         font-size: 10.5px !important;
         color: #64748b;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
     }
     .metric-card strong {
         display: block;
         font-size: 18px !important;
         color: #0f134f;
-        margin-top: 4px;
+        margin-top: 3px;
         font-weight: 700;
     }
 
-    /* Botões Principais */
+    /* Botões Padrão Sólido */
     div.stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, #0f134f, #273270) !important;
+        background-color: #0f134f !important;
         color: #ffffff !important;
-        border: none !important;
-        border-radius: 6px !important;
+        border: 1px solid #0f134f !important;
+        border-radius: 5px !important;
         font-weight: 600 !important;
-        padding: 8px 18px !important;
-        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
-        transition: all 0.15s ease-in-out !important;
+        padding: 7px 16px !important;
+        box-shadow: none !important;
     }
     div.stButton > button[kind="primary"]:hover {
-        opacity: 0.95 !important;
-        transform: translateY(-1px) !important;
+        background-color: #273270 !important;
+        border-color: #273270 !important;
+    }
+    div.stButton > button[kind="secondary"] {
+        background-color: #ffffff !important;
+        color: #334155 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 5px !important;
+        font-weight: 500 !important;
+    }
+    div.stButton > button[kind="secondary"]:hover {
+        background-color: #f8fafc !important;
+        border-color: #94a3b8 !important;
+        color: #0f134f !important;
     }
 
-    /* Caixas de Alerta e Dicas */
+    /* Box de Dicas e Divergências */
     .keyboard-hint {
-        background-color: #f1f5f9;
+        background-color: #f8fafc;
         border: 1px solid #cbd5e1;
         padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 11.5px !important;
+        border-radius: 5px;
+        font-size: 11px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     .keyboard-hint kbd {
         background: #ffffff;
         border: 1px solid #94a3b8;
         border-bottom-width: 2px;
-        padding: 1px 5px;
+        padding: 1px 4px;
         border-radius: 3px;
         font-weight: 700;
-        font-size: 11px !important;
+        font-size: 10.5px !important;
         color: #0f134f;
     }
 
     .divergence-box {
         background-color: #fff7ed;
         border: 1px solid #fdba74;
-        border-radius: 6px;
-        padding: 12px 14px;
-        margin: 12px 0;
+        border-radius: 5px;
+        padding: 10px 14px;
+        margin: 10px 0;
         font-size: 12px !important;
     }
 
     /* Impressão */
     @media print {
-        header, .top-header, .nav-container, .stButton, [data-testid="stToolbar"], footer, .no-print {
+        header, .top-header, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
         }
         .printable-area {
@@ -437,47 +429,64 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. CABEÇALHO SUPERIOR UNIFICADO ---
-col_logo, col_desc = st.columns([1, 6])
-with col_logo:
-    caminhos_logo = ["assets/logo.png", "assets/Mastercafe-logo.png", "logo.png", "Mastercafe-logo.png"]
-    logo_file = next((p for p in caminhos_logo if os.path.exists(p)), None)
-    if logo_file:
-        st.image(logo_file, width=120)
-    else:
-        st.markdown("""
-        <div style="background: #0f134f; color: white; border-radius: 8px; padding: 10px; text-align: center; font-weight: 800; font-size: 14px;">
-            ☕ MASTER CAFÉ
-        </div>
-        """, unsafe_allow_html=True)
+# --- 5. LOGOTIPO & CABEÇALHO SUPERIOR PADRONIZADO ---
+def obter_logo_base64():
+    possiveis_caminhos = [
+        "assets/Mastercafe-logo.png",
+        "assets/Mastercafe-logo1.png",
+        "assets/logo.png",
+        "Mastercafe-logo.png",
+        "Mastercafe-logo1.png",
+        "logo.png"
+    ]
+    for p in possiveis_caminhos:
+        if os.path.exists(p):
+            with open(p, "rb") as img_file:
+                return base64.b64encode(img_file.read()).decode("utf-8")
+    return None
 
-with col_desc:
+logo_b64 = obter_logo_base64()
+
+col_logo, col_titulo = st.columns([1.2, 5.8])
+
+with col_logo:
+    if logo_b64:
+        st.markdown(f'<img src="data:image/png;base64,{logo_b64}" style="max-height: 52px; margin-top: 4px;">', unsafe_allow_html=True)
+    else:
+        caminhos_img = ["assets/Mastercafe-logo.png", "Mastercafe-logo.png", "logo.png"]
+        logo_direto = next((p for p in caminhos_img if os.path.exists(p)), None)
+        if logo_direto:
+            st.image(logo_direto, width=150)
+        else:
+            st.markdown('<div style="height: 48px;"></div>', unsafe_allow_html=True)
+
+with col_titulo:
     st.markdown("""
     <div style="padding-top: 4px;">
-        <h2 style="margin: 0; color: #0f134f; font-weight: 800; font-size: 22px; letter-spacing: -0.4px;">
-            Painel de Gestão ∙ Conferência de Estoque & Insumos
+        <h2 style="margin: 0; color: #0f134f; font-weight: 700; font-size: 20px; letter-spacing: -0.3px;">
+            Gestão de Estoque ∙ Conferência de Mercadorias
         </h2>
-        <div style="font-size: 12.5px; color: #64748b; margin-top: 2px;">
-            Sistema Integrado de Auditoria, Separação Cega e Conciliação Física de Mercadorias
+        <div style="font-size: 12px; color: #64748b; margin-top: 1px;">
+            Auditoria, Separação Cega e Conciliação Física de Insumos
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 st.write("")
 
-# --- 6. BARRA DE NAVEGAÇÃO NO TOPO (TOP NAVBAR) ---
+# --- 6. BARRA DE NAVEGAÇÃO NO TOPO (PADRÃO HORIZONTAL) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 opcoes_nav = [
-    ("📊 Dashboard de Resumo", "Dashboard de Resumo"),
+    ("📊 Dashboard", "Dashboard de Resumo"),
     ("📥 Importar Remessa", "Importar Remessa"),
-    ("🖨️ Folha de Impressão Cega", "Folha de Impressão Cega"),
-    ("🔍 Digitar Conferência Cega", "Digitar Conferência Cega"),
-    ("👤 Cadastrar Conferente", "Cadastrar Novo Conferente")
+    ("🖨️ Folha Cega", "Folha de Impressão Cega"),
+    ("🔍 Conferência Física", "Digitar Conferência Cega"),
+    ("👤 Conferentes", "Cadastrar Novo Conferente")
 ]
 
-cols_nav = st.columns([2, 2, 2.2, 2.2, 2, 0.8])
+cols_nav = st.columns([2, 2, 2, 2.2, 1.8, 0.8])
 for idx, (label, rota) in enumerate(opcoes_nav):
     with cols_nav[idx]:
         is_ativo = (st.session_state.menu_selecionado == rota)
@@ -487,7 +496,7 @@ for idx, (label, rota) in enumerate(opcoes_nav):
             st.rerun()
 
 with cols_nav[5]:
-    if st.button("🔄", help="Atualizar e sincronizar planilha", use_container_width=True):
+    if st.button("🔄", help="Atualizar e sincronizar com Google Sheets", use_container_width=True):
         carregar_dados_planilha_cached.clear()
         carregar_lista_conferentes.clear()
         st.rerun()
@@ -509,7 +518,6 @@ if menu == "Dashboard de Resumo":
     else:
         df = df_raw.copy()
 
-        # Tratamento tolerante para datas
         data_col = df["data_importacao"] if "data_importacao" in df.columns else pd.Series(index=df.index, dtype=str)
         dt_parsed = pd.to_datetime(data_col, format="%d/%m/%Y", errors="coerce")
         dt_parsed = dt_parsed.fillna(pd.to_datetime(data_col, errors="coerce", dayfirst=True))
@@ -518,7 +526,6 @@ if menu == "Dashboard de Resumo":
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
         df["dia_str"] = df["dt_parsed"].dt.strftime("%d/%m/%Y")
 
-        # Filtros
         col_f1, col_f2 = st.columns([2, 2])
         with col_f1:
             confs_unicos = sorted([
@@ -541,7 +548,6 @@ if menu == "Dashboard de Resumo":
         if filtro_rem != "TODAS" and "remessa" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
 
-        # Métricas Consolidadas
         total_remessas = df_filtrado["remessa"].nunique() if "remessa" in df_filtrado.columns else 0
         total_itens = len(df_filtrado)
         itens_conferidos = df_filtrado[df_filtrado["conferencia"].notna()]
@@ -586,7 +592,7 @@ if menu == "Dashboard de Resumo":
             df_mes = base_grafico.groupby("mes_ano").size().reset_index(name="Qtd")
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#0f134f", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
                     x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
                 )
@@ -610,7 +616,7 @@ if menu == "Dashboard de Resumo":
             df_rem_graf = df_filtrado.groupby("remessa").size().reset_index(name="Qtd").sort_values("Qtd", ascending=False).head(10)
             if not df_rem_graf.empty:
                 max_val_rem = float(df_rem_graf["Qtd"].max() * 1.18) if df_rem_graf["Qtd"].max() > 0 else 10.0
-                barras_rem = alt.Chart(df_rem_graf).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                barras_rem = alt.Chart(df_rem_graf).mark_bar(color="#273270", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
                     x=alt.X("remessa:N", title="Remessa", sort=None, axis=alt.Axis(labelAngle=-45)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_rem]))
                 )
@@ -697,7 +703,7 @@ elif menu == "Importar Remessa":
 
     arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa", type=["xlsx", "xls"])
 
-    if st.button("🚀 Processar e Salvar Remessa", type="primary"):
+    if st.button("Salvar Remessa", type="primary"):
         if not num_remessa or not nome_local_input or not arquivo_excel:
             st.error("Preencha todos os campos obrigatórios e anexe o arquivo.")
         else:
@@ -830,15 +836,18 @@ elif menu == "Folha de Impressão Cega":
             padding-top: 6px;
         }}
         .btn-imprimir {{
-            background: linear-gradient(90deg, #0f134f, #273270);
+            background-color: #0f134f;
             color: white;
             border: none;
             padding: 7px 16px;
             font-size: 11px;
             font-weight: 600;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
             margin-bottom: 10px;
+        }}
+        .btn-imprimir:hover {{
+            background-color: #273270;
         }}
         @media print {{
             .btn-imprimir {{
@@ -854,10 +863,10 @@ elif menu == "Folha de Impressão Cega":
     </style>
 </head>
 <body>
-    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha de Contagem</button>
+    <button class="btn-imprimir" onclick="window.print()">Imprimir Folha de Contagem</button>
 
     <div class="header-box">
-        <div class="header-title">MASTER CAFÉ ∙ FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
+        <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
         <div class="header-meta">
             <div>REMESSA: {remessa_selecionada}</div>
             <div>LOCAL: {local_cad}</div>
@@ -1057,7 +1066,7 @@ elif menu == "Digitar Conferência Cega":
                                 key=f"justificativa_item_{r_id}"
                             )
 
-                if st.button("⚖️ Comparar e Gravar Conferência", type="primary"):
+                if st.button("Gravar Conferência", type="primary"):
                     if not nome_conferente_final:
                         st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
                     else:
@@ -1170,7 +1179,7 @@ elif menu == "Cadastrar Novo Conferente":
     col1, col2 = st.columns([2, 1])
     with col1:
         novo_conferente = st.text_input("Nome Completo do Conferente *", placeholder="Ex: JOÃO SILVA")
-        if st.button("Cadastrar Conferente", type="primary"):
+        if st.button("Cadastrar", type="primary"):
             if not novo_conferente.strip():
                 st.error("Informe o nome do conferente para realizar o cadastro.")
             else:
