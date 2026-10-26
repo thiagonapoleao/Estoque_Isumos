@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import json
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
@@ -15,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Corporativa Compacta e Degradê
+# Estilização Corporativa Compacta
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -188,7 +189,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
-API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9w1kx4Ie7mxrWcQnjjOj1rf0ND7JIGEb1Jk-yCi/exec"
 
 def get_session():
     session = requests.Session()
@@ -203,27 +204,47 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-# --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE & DECODIFICAÇÃO SEGURA ---
-def tratar_resposta_json(response):
-    """Lê a resposta com segurança e previne a quebra por HTML ou strings vazias."""
-    if response.status_code != 200:
-        return {"status": "error", "message": f"HTTP {response.status_code}: {response.text[:200]}"}
+# --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
+def enviar_dados_apps_script(payload: dict) -> dict:
+    """Envia requisições POST compatíveis com o comportamento de redirecionamento do Google."""
     try:
-        return response.json()
-    except Exception:
-        return {"status": "error", "message": f"A API retornou HTML ou texto não-JSON: {response.text[:250]}"}
+        session = get_session()
+        payload_str = json.dumps(payload, default=str)
+        headers = {"Content-Type": "text/plain;charset=utf-8"}
+        
+        response = session.post(
+            API_URL,
+            data=payload_str,
+            headers=headers,
+            allow_redirects=True,
+            timeout=60
+        )
+        
+        if response.status_code != 200:
+            return {"status": "error", "message": f"HTTP {response.status_code}: {response.text[:200]}"}
+        
+        try:
+            return response.json()
+        except Exception:
+            return {"status": "error", "message": f"Resposta inválida da API: {response.text[:250]}"}
+    except Exception as ex:
+        return {"status": "error", "message": f"Falha de conexão: {str(ex)}"}
 
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
-    session = get_session()
-    r = session.get(API_URL, timeout=60)
-    dados = tratar_resposta_json(r)
-    
-    if isinstance(dados, list):
-        return pd.DataFrame(dados)
-    elif isinstance(dados, dict) and dados.get("status") == "error":
-        st.error(f"Erro na API ao carregar dados: {dados.get('message')}")
-    return pd.DataFrame()
+    try:
+        session = get_session()
+        r = session.get(f"{API_URL}?action=listar", allow_redirects=True, timeout=60)
+        if r.status_code == 200:
+            try:
+                dados = r.json()
+                if isinstance(dados, list):
+                    return pd.DataFrame(dados)
+            except Exception:
+                pass
+        return pd.DataFrame()
+    except Exception:
+        return pd.DataFrame()
 
 def carregar_dados_planilha():
     try:
@@ -236,46 +257,35 @@ def carregar_dados_planilha():
 def carregar_lista_conferentes():
     try:
         session = get_session()
-        r = session.get(f"{API_URL}?action=get_conferentes", timeout=40)
-        dados = tratar_resposta_json(r)
-        
-        if isinstance(dados, list) and len(dados) > 0:
-            return sorted(dados)
-        elif isinstance(dados, dict) and dados.get("status") == "error":
-            st.error(f"Erro na API ao carregar conferentes: {dados.get('message')}")
+        r = session.get(f"{API_URL}?action=get_conferentes", allow_redirects=True, timeout=40)
+        if r.status_code == 200:
+            try:
+                lista = r.json()
+                if isinstance(lista, list) and len(lista) > 0:
+                    return sorted(lista)
+            except Exception:
+                return []
         return []
     except Exception:
         return []
 
 def enviar_cadastro_conferente(nome):
-    try:
-        session = get_session()
-        payload = {"action": "cadastrar_conferente", "nome": nome}
-        r = session.post(API_URL, json=payload, timeout=50)
-        carregar_lista_conferentes.clear()
-        return tratar_resposta_json(r)
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    payload = {"action": "cadastrar_conferente", "nome": nome}
+    res = enviar_dados_apps_script(payload)
+    carregar_lista_conferentes.clear()
+    return res
 
 def enviar_importacao_planilha(linhas):
-    try:
-        session = get_session()
-        payload = {"action": "importar", "linhas": linhas}
-        r = session.post(API_URL, json=payload, timeout=60)
-        carregar_dados_planilha_cached.clear()
-        return tratar_resposta_json(r)
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    payload = {"action": "importar", "linhas": linhas}
+    res = enviar_dados_apps_script(payload)
+    carregar_dados_planilha_cached.clear()
+    return res
 
 def enviar_atualizacao_conferencia(itens):
-    try:
-        session = get_session()
-        payload = {"action": "atualizar", "itens": itens}
-        r = session.post(API_URL, json=payload, timeout=60)
-        carregar_dados_planilha_cached.clear()
-        return tratar_resposta_json(r)
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    payload = {"action": "atualizar", "itens": itens}
+    res = enviar_dados_apps_script(payload)
+    carregar_dados_planilha_cached.clear()
+    return res
 
 def formatar_data_br(data_val):
     if data_val is None or pd.isna(data_val):
@@ -458,24 +468,25 @@ if menu == "Dashboard de Resumo":
         df = df_raw.copy()
         
         # Tratamento seguro de datas
-        df["dt_parsed"] = pd.to_datetime(df["data_importacao"], format="%d/%m/%Y", errors="coerce")
-        df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(df["data_importacao"], errors="coerce", dayfirst=True))
+        data_col = df["data_importacao"] if "data_importacao" in df.columns else pd.Series()
+        df["dt_parsed"] = pd.to_datetime(data_col, format="%d/%m/%Y", errors="coerce")
+        df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(data_col, errors="coerce", dayfirst=True))
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
         df["dia_str"] = df["dt_parsed"].dt.strftime("%d/%m/%Y")
 
-        df["quantidade"] = pd.to_numeric(df["quantidade"], errors="coerce").fillna(0.0)
-        df["conferencia"] = pd.to_numeric(df["conferencia"], errors="coerce")
-        df["divergencia"] = pd.to_numeric(df["divergencia"], errors="coerce")
+        df["quantidade"] = pd.to_numeric(df.get("quantidade", 0), errors="coerce").fillna(0.0)
+        df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
+        df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
         # Filtros
         col_f1, col_f2 = st.columns([2, 2])
         with col_f1:
-            conferentes_existentes = sorted([str(c).strip() for c in df.get("conferente", pd.Series()).dropna().unique() if str(c).strip() != ""])
-            lista_confs = ["TODOS"] + conferentes_existentes
+            confs_unicos = sorted([str(c).strip() for c in df.get("conferente", pd.Series()).dropna().unique() if str(c).strip() != ""])
+            lista_confs = ["TODOS"] + confs_unicos
             filtro_conf = st.selectbox("Filtrar por Conferente:", lista_confs)
         with col_f2:
-            remessas_existentes = sorted([str(r).strip() for r in df.get("remessa", pd.Series()).dropna().unique() if str(r).strip() != ""])
-            remessas_todas = ["TODAS"] + remessas_existentes
+            remessas_unicas = sorted([str(r).strip() for r in df.get("remessa", pd.Series()).dropna().unique() if str(r).strip() != ""])
+            remessas_todas = ["TODAS"] + remessas_unicas
             filtro_rem = st.selectbox("Filtrar por Remessa:", remessas_todas)
 
         df_filtrado = df.copy()
@@ -519,7 +530,7 @@ if menu == "Dashboard de Resumo":
 
         st.write("---")
 
-        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA COM VALORES VISÍVEIS EM BARRAS ---
+        # Gráficos
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
@@ -570,7 +581,6 @@ if menu == "Dashboard de Resumo":
             else:
                 st.info("Sem dados suficientes para a evolução diária.")
 
-        # --- DIAGNÓSTICO DE ERROS & PRODUTOS DIVERGENTES ---
         st.write("---")
         col_e1, col_e2 = st.columns(2)
 
@@ -658,16 +668,16 @@ elif menu == "Importar Remessa":
                         num_remessa,          # A: Remessa
                         nome_local,           # B: Local (MAIÚSCULO)
                         data_importacao,      # C: Data BR
-                        item["Produto"],      # D: Produto
-                        item["Descricao"],    # E: Descrição
-                        item["Quantidade"],   # F: Quantidade
+                        str(item["Produto"]), # D: Produto
+                        str(item["Descricao"]),# E: Descrição
+                        float(item["Quantidade"]), # F: Quantidade
                         "",                   # G: Conferência
                         "",                   # H: Divergência
                         "",                   # I: Conferente
                         ""                    # J: Observação / Justificativa
                     ])
 
-                with st.spinner("Gravando linhas..."):
+                with st.spinner("Gravando linhas no Google Sheets..."):
                     res = enviar_importacao_planilha(linhas_para_sheets)
                     if res.get("status") == "success":
                         st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Local: **{nome_local}** | Data: **{data_importacao}**)!")
