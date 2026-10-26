@@ -206,7 +206,6 @@ def get_session():
 
 # --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
 def enviar_dados_apps_script(payload: dict) -> dict:
-    """Envia requisições POST com text/plain para contornar redirecionamentos do Google."""
     try:
         session = get_session()
         payload_str = json.dumps(payload, default=str)
@@ -230,6 +229,23 @@ def enviar_dados_apps_script(payload: dict) -> dict:
     except Exception as ex:
         return {"status": "error", "message": f"Falha de conexão: {str(ex)}"}
 
+def normalizar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Padroniza tipos e remove anomalias de formatação vindas do Sheets."""
+    if df.empty:
+        return df
+
+    # Normaliza a coluna Remessa para texto sem '.0' e sem espaços
+    if "remessa" in df.columns:
+        df["remessa"] = df["remessa"].fillna("").astype(str)
+        df["remessa"] = df["remessa"].str.replace(r"\.0$", "", regex=True).str.strip()
+
+    # Normaliza campos de texto
+    for col in ["produto", "descricao", "local", "conferente", "observacao"]:
+        if col in df.columns:
+            df[col] = df[col].fillna("").astype(str).str.strip()
+
+    return df
+
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
     try:
@@ -239,7 +255,8 @@ def carregar_dados_planilha_cached():
             try:
                 dados = r.json()
                 if isinstance(dados, list):
-                    return pd.DataFrame(dados)
+                    df = pd.DataFrame(dados)
+                    return normalizar_dataframe(df)
             except Exception:
                 pass
         return pd.DataFrame()
@@ -467,7 +484,6 @@ if menu == "Dashboard de Resumo":
     else:
         df = df_raw.copy()
         
-        # Tratamento blindado de datas/horários (evita o erro Can only use .dt accessor)
         data_col = df["data_importacao"] if "data_importacao" in df.columns else pd.Series(index=df.index, dtype=str)
         dt_parsed = pd.to_datetime(data_col, format="%d/%m/%Y", errors="coerce")
         dt_parsed = dt_parsed.fillna(pd.to_datetime(data_col, errors="coerce", dayfirst=True))
@@ -482,24 +498,22 @@ if menu == "Dashboard de Resumo":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
-        # Filtros
         col_f1, col_f2 = st.columns([2, 2])
         with col_f1:
             confs_unicos = sorted([str(c).strip() for c in df.get("conferente", pd.Series()).dropna().unique() if str(c).strip() != ""])
             lista_confs = ["TODOS"] + confs_unicos
             filtro_conf = st.selectbox("Filtrar por Conferente:", lista_confs)
         with col_f2:
-            remessas_unicas = sorted([str(r).strip() for r in df.get("remessa", pd.Series()).dropna().unique() if str(r).strip() != ""])
+            remessas_unicas = sorted([str(r).strip() for r in df.get("remessa", pd.Series()).dropna().unique() if str(r).strip() not in ["", "nan", "None"]])
             remessas_todas = ["TODAS"] + remessas_unicas
             filtro_rem = st.selectbox("Filtrar por Remessa:", remessas_todas)
 
         df_filtrado = df.copy()
         if filtro_conf != "TODOS" and "conferente" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["conferente"] == filtro_conf]
-        if filtro_rem != "TODOS" and "remessa" in df_filtrado.columns:
+        if filtro_rem != "TODAS" and "remessa" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
 
-        # Cálculos de Métricas
         total_remessas = df_filtrado["remessa"].nunique() if "remessa" in df_filtrado.columns else 0
         total_itens = len(df_filtrado)
         itens_conferidos = df_filtrado[df_filtrado["conferencia"].notna()]
@@ -510,7 +524,6 @@ if menu == "Dashboard de Resumo":
         
         taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
 
-        # Cards Modernos
         st.markdown(f"""
         <div class="metric-container">
             <div class="metric-card">
@@ -534,7 +547,6 @@ if menu == "Dashboard de Resumo":
 
         st.write("---")
 
-        # Gráficos
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
@@ -657,6 +669,7 @@ elif menu == "Importar Remessa":
             st.error("Preencha todos os campos obrigatórios e anexe o arquivo.")
         else:
             nome_local = str(nome_local_input).strip().upper()
+            remessa_limpa = str(num_remessa).strip()
 
             with st.spinner("Processando linhas a partir da coluna 'Produto'..."):
                 itens = extrair_excel(arquivo_excel)
@@ -666,15 +679,14 @@ elif menu == "Importar Remessa":
             else:
                 data_importacao = datetime.now().strftime("%d/%m/%Y")
                 
-                # Monta as 10 colunas exatas da aba 'Conferencia'
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        num_remessa.strip(),       # A: Remessa
+                        remessa_limpa,             # A: Remessa
                         nome_local,                # B: Estoque
                         data_importacao,           # C: Horario / Data
-                        str(item["Produto"]),      # D: Codigo
-                        str(item["Descricao"]),    # E: Descrição
+                        str(item["Produto"]).strip(), # D: Codigo
+                        str(item["Descricao"]).strip(), # E: Descrição
                         float(item["Quantidade"]), # F: Quantidade
                         "",                        # G: Conferencia
                         "",                        # H: Divergencia
@@ -685,7 +697,7 @@ elif menu == "Importar Remessa":
                 with st.spinner("Gravando linhas na aba Conferencia..."):
                     res = enviar_importacao_planilha(linhas_para_sheets)
                     if res.get("status") == "success":
-                        st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{num_remessa}** (Estoque: **{nome_local}**)!")
+                        st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{remessa_limpa}** (Estoque: **{nome_local}**)!")
                         df_preview = pd.DataFrame(itens)
                         st.dataframe(df_preview, use_container_width=True)
                     else:
@@ -702,30 +714,38 @@ elif menu == "Folha de Impressão Cega":
         df = carregar_dados_planilha()
 
     if df.empty:
-        st.info("Nenhuma remessa encontrada.")
+        st.info("Nenhuma remessa encontrada na aba Conferencia.")
     else:
-        remessas_disponiveis = [str(r).strip() for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
+        # Extrai lista de remessas sem duplicatas e sem vazios
+        remessas_disponiveis = [
+            str(r).strip() for r in df["remessa"].dropna().unique().tolist()
+            if str(r).strip() not in ["", "nan", "None"]
+        ]
         remessa_selecionada = st.selectbox("Selecione a Remessa para Gerar a Impressão:", [""] + remessas_disponiveis)
 
         if remessa_selecionada:
-            dados_remessa = df[df["remessa"] == remessa_selecionada].copy()
+            remessa_busca = str(remessa_selecionada).strip()
+            dados_remessa = df[df["remessa"].astype(str).str.strip() == remessa_busca].copy()
 
-            data_cad = formatar_data_br(dados_remessa["data_importacao"].iloc[0]) if not dados_remessa.empty else ""
-            local_cad = str(dados_remessa["local"].iloc[0]).upper() if not dados_remessa.empty else ""
+            if dados_remessa.empty:
+                st.warning("Nenhum item localizado para a remessa selecionada.")
+            else:
+                data_cad = formatar_data_br(dados_remessa["data_importacao"].iloc[0])
+                local_cad = str(dados_remessa["local"].iloc[0]).upper()
 
-            linhas_tabela = ""
-            for _, row in dados_remessa.iterrows():
-                cod_item = str(row.get('produto', ''))
-                desc_item = str(row.get('descricao', ''))
-                linhas_tabela += (
-                    "<tr>"
-                    f"<td style='border: 1px solid #475569; padding: 3px 5px; font-weight: bold; font-size: 9.5px;'>{cod_item}</td>"
-                    f"<td style='border: 1px solid #475569; padding: 3px 5px; font-size: 9.5px; line-height: 1.15;'>{desc_item}</td>"
-                    "<td style='border: 1px solid #475569; padding: 3px 5px; height: 20px;'></td>"
-                    "</tr>"
-                )
+                linhas_tabela = ""
+                for _, row in dados_remessa.iterrows():
+                    cod_item = str(row.get('produto', ''))
+                    desc_item = str(row.get('descricao', ''))
+                    linhas_tabela += (
+                        "<tr>"
+                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-weight: bold; font-size: 9.5px;'>{cod_item}</td>"
+                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-size: 9.5px; line-height: 1.15;'>{desc_item}</td>"
+                        "<td style='border: 1px solid #475569; padding: 3px 5px; height: 20px;'></td>"
+                        "</tr>"
+                    )
 
-            documento_html = f"""<!DOCTYPE html>
+                documento_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -833,8 +853,8 @@ elif menu == "Folha de Impressão Cega":
 </body>
 </html>"""
 
-            altura_calculada = max(360, 100 + (len(dados_remessa) * 26))
-            components.html(documento_html, height=altura_calculada, scrolling=True)
+                altura_calculada = max(360, 100 + (len(dados_remessa) * 26))
+                components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
 # OPÇÃO: DIGITAR CONFERÊNCIA CEGA & JUSTIFICATIVA POR ITEM
@@ -848,258 +868,265 @@ elif menu == "Digitar Conferência Cega":
     if df.empty:
         st.info("Nenhuma remessa encontrada para conferência.")
     else:
-        remessas = [str(r).strip() for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
+        remessas = [
+            str(r).strip() for r in df["remessa"].dropna().unique().tolist()
+            if str(r).strip() not in ["", "nan", "None"]
+        ]
         remessa_pesquisa = st.selectbox("Pesquisar pelo Número da Remessa:", [""] + remessas)
 
         if remessa_pesquisa:
-            itens_remessa = df[df["remessa"] == remessa_pesquisa].copy()
+            remessa_alvo = str(remessa_pesquisa).strip()
+            itens_remessa = df[df["remessa"].astype(str).str.strip() == remessa_alvo].copy()
 
-            local_atual = str(itens_remessa["local"].iloc[0]).upper() if not itens_remessa.empty else ""
-            data_atual_br = formatar_data_br(itens_remessa["data_importacao"].iloc[0]) if not itens_remessa.empty else ""
-
-            itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
-            itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
-            itens_remessa["divergencia"] = pd.to_numeric(itens_remessa["divergencia"], errors="coerce")
-
-            ja_conferida = itens_remessa["conferencia"].notna().any()
-            itens_divergentes = itens_remessa[itens_remessa["divergencia"].fillna(1) != 0].copy()
-
-            if ja_conferida and len(itens_divergentes) > 0:
-                modo_reconferencia = True
-                dados_trabalho = itens_divergentes.copy()
-                st.warning(f"⚠️ **Segunda Conferência (Apenas Divergências):** Foram identificados **{len(itens_divergentes)} item(ns)** divergentes. Reconte apenas os itens listados abaixo.")
-            elif ja_conferida and len(itens_divergentes) == 0:
-                modo_reconferencia = False
-                dados_trabalho = itens_remessa.copy()
-                st.success("✨ **Remessa 100% Conferida e Sem Divergências!** Todos os itens foram validados com sucesso.")
+            if itens_remessa.empty:
+                st.warning("Nenhum item localizado para a remessa selecionada.")
             else:
-                modo_reconferencia = False
-                dados_trabalho = itens_remessa.copy()
-                st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
+                local_atual = str(itens_remessa["local"].iloc[0]).upper()
+                data_atual_br = formatar_data_br(itens_remessa["data_importacao"].iloc[0])
 
-            st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-card">
-                    <span>Remessa</span>
-                    <strong>{remessa_pesquisa}</strong>
-                </div>
-                <div class="metric-card">
-                    <span>Local / Depósito</span>
-                    <strong>{local_atual}</strong>
-                </div>
-                <div class="metric-card">
-                    <span>Data de Importação</span>
-                    <strong>{data_atual_br}</strong>
-                </div>
-                <div class="metric-card">
-                    <span>Itens a Conferir</span>
-                    <strong>{len(dados_trabalho)}</strong>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+                itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
+                itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
+                itens_remessa["divergencia"] = pd.to_numeric(itens_remessa["divergencia"], errors="coerce")
 
-            lista_conferentes = carregar_lista_conferentes()
-            conferente_anterior = ""
-            if "conferente" in dados_trabalho.columns and dados_trabalho["conferente"].dropna().any():
-                conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
+                ja_conferida = itens_remessa["conferencia"].notna().any()
+                itens_divergentes = itens_remessa[itens_remessa["divergencia"].fillna(1) != 0].copy()
 
-            if not lista_conferentes:
-                st.warning("⚠️ Nenhum conferente localizado na coluna D da aba 'Local-Estoque'.")
-                nome_conferente_final = ""
-            else:
-                idx_default = 0
-                if conferente_anterior in lista_conferentes:
-                    idx_default = lista_conferentes.index(conferente_anterior) + 1
-                
-                nome_conferente_sel = st.selectbox(
-                    "Selecione o Conferente Responsável *",
-                    ["-- Selecione o conferente --"] + lista_conferentes,
-                    index=idx_default
-                )
-                nome_conferente_final = "" if nome_conferente_sel == "-- Selecione o conferente --" else nome_conferente_sel
-
-            dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
-            df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
-
-            st.markdown("""
-            <div class="keyboard-hint">
-                ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
-            </div>
-            """, unsafe_allow_html=True)
-
-            injetar_atalho_teclado_tab()
-
-            editado = st.data_editor(
-                df_editavel,
-                column_config={
-                    "row_index": None,
-                    "produto": st.column_config.TextColumn("Código", disabled=True),
-                    "descricao": st.column_config.TextColumn("Descrição", disabled=True),
-                    "conferencia": st.column_config.NumberColumn(
-                        "Conferência (Físico)",
-                        min_value=0.0,
-                        step=1.0,
-                        format="%.2f",
-                        required=True
-                    ),
-                },
-                use_container_width=True,
-                hide_index=True,
-                key=f"editor_conferencia_{remessa_pesquisa}_{modo_reconferencia}"
-            )
-
-            mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
-            itens_com_divergencia_detectada = []
-
-            for _, row in editado.iterrows():
-                r_id = int(row["row_index"])
-                conf_val = float(row["conferencia"])
-                qtd_esp = mapa_esperado.get(r_id, 0.0)
-                if conf_val - qtd_esp != 0:
-                    itens_com_divergencia_detectada.append({
-                        "row_index": r_id,
-                        "produto": str(row["produto"]),
-                        "descricao": str(row["descricao"]),
-                        "conferido": conf_val,
-                        "divergencia": conf_val - qtd_esp
-                    })
-
-            st.write("---")
-            autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência com divergência")
-            justificativas_itens = {}
-
-            if autorizar_divergencia:
-                if len(itens_com_divergencia_detectada) == 0:
-                    st.info("✨ Não há itens divergentes no momento. Ao salvar, todos os itens constarão como conferidos sem divergência.")
+                if ja_conferida and len(itens_divergentes) > 0:
+                    modo_reconferencia = True
+                    dados_trabalho = itens_divergentes.copy()
+                    st.warning(f"⚠️ **Segunda Conferência (Apenas Divergências):** Foram identificados **{len(itens_divergentes)} item(ns)** divergentes. Reconte apenas os itens listados abaixo.")
+                elif ja_conferida and len(itens_divergentes) == 0:
+                    modo_reconferencia = False
+                    dados_trabalho = itens_remessa.copy()
+                    st.success("✨ **Remessa 100% Conferida e Sem Divergências!** Todos os itens foram validados com sucesso.")
                 else:
-                    st.markdown("""
-                    <div class="divergence-box">
-                        <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
-                        <span style="font-size: 11.5px; color: #431407;">
-                            Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
-                        </span>
+                    modo_reconferencia = False
+                    dados_trabalho = itens_remessa.copy()
+                    st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
+
+                st.markdown(f"""
+                <div class="metric-container">
+                    <div class="metric-card">
+                        <span>Remessa</span>
+                        <strong>{remessa_alvo}</strong>
                     </div>
-                    """, unsafe_allow_html=True)
+                    <div class="metric-card">
+                        <span>Local / Depósito</span>
+                        <strong>{local_atual}</strong>
+                    </div>
+                    <div class="metric-card">
+                        <span>Data de Importação</span>
+                        <strong>{data_atual_br}</strong>
+                    </div>
+                    <div class="metric-card">
+                        <span>Itens a Conferir</span>
+                        <strong>{len(dados_trabalho)}</strong>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                    for item_div in itens_com_divergencia_detectada:
-                        r_id = item_div["row_index"]
-                        label_item = f"Produto: {item_div['produto']} - {item_div['descricao']} (Qtd Físico: {item_div['conferido']:.2f})"
-                        
-                        obs_anterior = ""
-                        if "observacao" in dados_trabalho.columns:
-                            linha_orig = dados_trabalho[dados_trabalho["row_index"] == r_id]
-                            if not linha_orig.empty and pd.notna(linha_orig["observacao"].iloc[0]):
-                                obs_anterior = str(linha_orig["observacao"].iloc[0]).strip()
+                lista_conferentes = carregar_lista_conferentes()
+                conferente_anterior = ""
+                if "conferente" in dados_trabalho.columns and dados_trabalho["conferente"].dropna().any():
+                    conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
 
-                        justificativas_itens[r_id] = st.text_input(
-                            f"Justificativa para {label_item} *",
-                            value=obs_anterior,
-                            placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
-                            key=f"justificativa_item_{r_id}"
-                        )
-
-            if st.button("⚖️ Comparar e Gravar", type="primary"):
-                if not nome_conferente_final:
-                    st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
+                if not lista_conferentes:
+                    st.warning("⚠️ Nenhum conferente localizado na coluna D da aba 'Local-Estoque'.")
+                    nome_conferente_final = ""
                 else:
-                    justificativas_pendentes = False
-                    if autorizar_divergencia:
-                        for it in itens_com_divergencia_detectada:
-                            r_id = it["row_index"]
-                            if not str(justificativas_itens.get(r_id, "")).strip():
-                                justificativas_pendentes = True
-                                break
+                    idx_default = 0
+                    if conferente_anterior in lista_conferentes:
+                        idx_default = lista_conferentes.index(conferente_anterior) + 1
+                    
+                    nome_conferente_sel = st.selectbox(
+                        "Selecione o Conferente Responsável *",
+                        ["-- Selecione o conferente --"] + lista_conferentes,
+                        index=idx_default
+                    )
+                    nome_conferente_final = "" if nome_conferente_sel == "-- Selecione o conferente --" else nome_conferente_sel
 
-                    if autorizar_divergencia and justificativas_pendentes:
-                        st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
+                dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
+                df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
+
+                st.markdown("""
+                <div class="keyboard-hint">
+                    ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+                </div>
+                """, unsafe_allow_html=True)
+
+                injetar_atalho_teclado_tab()
+
+                editado = st.data_editor(
+                    df_editavel,
+                    column_config={
+                        "row_index": None,
+                        "produto": st.column_config.TextColumn("Código", disabled=True),
+                        "descricao": st.column_config.TextColumn("Descrição", disabled=True),
+                        "conferencia": st.column_config.NumberColumn(
+                            "Conferência (Físico)",
+                            min_value=0.0,
+                            step=1.0,
+                            format="%.2f",
+                            required=True
+                        ),
+                    },
+                    use_container_width=True,
+                    hide_index=True,
+                    key=f"editor_conferencia_{remessa_alvo}_{modo_reconferencia}"
+                )
+
+                mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
+                itens_com_divergencia_detectada = []
+
+                for _, row in editado.iterrows():
+                    r_id = int(row["row_index"])
+                    conf_val = float(row["conferencia"])
+                    qtd_esp = mapa_esperado.get(r_id, 0.0)
+                    if conf_val - qtd_esp != 0:
+                        itens_com_divergencia_detectada.append({
+                            "row_index": r_id,
+                            "produto": str(row["produto"]),
+                            "descricao": str(row["descricao"]),
+                            "conferido": conf_val,
+                            "divergencia": conf_val - qtd_esp
+                        })
+
+                st.write("---")
+                autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência com divergência")
+                justificativas_itens = {}
+
+                if autorizar_divergencia:
+                    if len(itens_com_divergencia_detectada) == 0:
+                        st.info("✨ Não há itens divergentes no momento. Ao salvar, todos os itens constarão como conferidos sem divergência.")
                     else:
-                        with st.spinner("Gravando conferência na aba Conferencia..."):
-                            itens_atualizar = []
-                            resultados_exibicao = []
+                        st.markdown("""
+                        <div class="divergence-box">
+                            <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
+                            <span style="font-size: 11.5px; color: #431407;">
+                                Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
+                            </span>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                            for _, row in editado.iterrows():
-                                r_id = int(row["row_index"])
-                                conf_val = float(row["conferencia"])
-                                qtd_esp = mapa_esperado.get(r_id, 0.0)
-                                div_val = conf_val - qtd_esp
+                        for item_div in itens_com_divergencia_detectada:
+                            r_id = item_div["row_index"]
+                            label_item = f"Produto: {item_div['produto']} - {item_div['descricao']} (Qtd Físico: {item_div['conferido']:.2f})"
+                            
+                            obs_anterior = ""
+                            if "observacao" in dados_trabalho.columns:
+                                linha_orig = dados_trabalho[dados_trabalho["row_index"] == r_id]
+                                if not linha_orig.empty and pd.notna(linha_orig["observacao"].iloc[0]):
+                                    obs_anterior = str(linha_orig["observacao"].iloc[0]).strip()
 
-                                obs_do_item = ""
-                                if div_val != 0 and autorizar_divergencia:
-                                    obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
+                            justificativas_itens[r_id] = st.text_input(
+                                f"Justificativa para {label_item} *",
+                                value=obs_anterior,
+                                placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
+                                key=f"justificativa_item_{r_id}"
+                            )
 
-                                itens_atualizar.append({
-                                    "row_index": r_id,
-                                    "conferencia": conf_val,
-                                    "divergencia": div_val,
-                                    "conferente": nome_conferente_final,
-                                    "observacao": obs_do_item
-                                })
+                if st.button("⚖️ Comparar e Gravar", type="primary"):
+                    if not nome_conferente_final:
+                        st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
+                    else:
+                        justificativas_pendentes = False
+                        if autorizar_divergencia:
+                            for it in itens_com_divergencia_detectada:
+                                r_id = it["row_index"]
+                                if not str(justificativas_itens.get(r_id, "")).strip():
+                                    justificativas_pendentes = True
+                                    break
 
-                                status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
-                                resultados_exibicao.append({
-                                    "produto": row["produto"],
-                                    "descricao": row["descricao"],
-                                    "conferencia": conf_val,
-                                    "conferente": nome_conferente_final,
-                                    "status": status,
-                                    "justificativa": obs_do_item,
-                                    "_tem_erro": (div_val != 0)
-                                })
+                        if autorizar_divergencia and justificativas_pendentes:
+                            st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
+                        else:
+                            with st.spinner("Gravando conferência na aba Conferencia..."):
+                                itens_atualizar = []
+                                resultados_exibicao = []
 
-                            res = enviar_atualizacao_conferencia(itens_atualizar)
+                                for _, row in editado.iterrows():
+                                    r_id = int(row["row_index"])
+                                    conf_val = float(row["conferencia"])
+                                    qtd_esp = mapa_esperado.get(r_id, 0.0)
+                                    div_val = conf_val - qtd_esp
 
-                            if res.get("status") == "success":
-                                msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
-                                if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
-                                    msg_sucesso += " Justificativas lançadas na linha de cada produto divergente (Coluna J)."
-                                st.success(msg_sucesso)
-                                
-                                df_resultado = pd.DataFrame(resultados_exibicao)
-                                
-                                def colorir_status(val):
-                                    if "Divergente" in str(val):
-                                        return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
-                                    else:
-                                        return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+                                    obs_do_item = ""
+                                    if div_val != 0 and autorizar_divergencia:
+                                        obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
 
-                                st.write("### 📊 Resultado da Conferência")
-                                
-                                colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
-                                if autorizar_divergencia:
-                                    colunas_tabela.append("justificativa")
+                                    itens_atualizar.append({
+                                        "row_index": r_id,
+                                        "conferencia": conf_val,
+                                        "divergencia": div_val,
+                                        "conferente": nome_conferente_final,
+                                        "observacao": obs_do_item
+                                    })
 
-                                df_mostrar = df_resultado[colunas_tabela]
-                                styler_res = df_mostrar.style
-                                if hasattr(styler_res, "map"):
-                                    styler_res = styler_res.map(colorir_status, subset=["status"])
-                                else:
-                                    styler_res = styler_res.applymap(colorir_status, subset=["status"])
+                                    status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
+                                    resultados_exibicao.append({
+                                        "produto": row["produto"],
+                                        "descricao": row["descricao"],
+                                        "conferencia": conf_val,
+                                        "conferente": nome_conferente_final,
+                                        "status": status,
+                                        "justificativa": obs_do_item,
+                                        "_tem_erro": (div_val != 0)
+                                    })
 
-                                st.dataframe(
-                                    styler_res,
-                                    column_config={
-                                        "produto": "Código",
-                                        "descricao": "Descrição",
-                                        "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
-                                        "conferente": "Conferente",
-                                        "status": "Situação da Contagem",
-                                        "justificativa": "Justificativa (Coluna J)"
-                                    },
-                                    use_container_width=True
-                                )
+                                res = enviar_atualizacao_conferencia(itens_atualizar)
 
-                                total_erros = df_resultado["_tem_erro"].sum()
-                                if total_erros == 0:
-                                    st.balloons()
-                                    st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
-                                else:
+                                if res.get("status") == "success":
+                                    msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
+                                    if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
+                                        msg_sucesso += " Justificativas lançadas na linha de cada produto divergente (Coluna J)."
+                                    st.success(msg_sucesso)
+                                    
+                                    df_resultado = pd.DataFrame(resultados_exibicao)
+                                    
+                                    def colorir_status(val):
+                                        if "Divergente" in str(val):
+                                            return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                        else:
+                                            return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+
+                                    st.write("### 📊 Resultado da Conferência")
+                                    
+                                    colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
                                     if autorizar_divergencia:
-                                        st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
+                                        colunas_tabela.append("justificativa")
+
+                                    df_mostrar = df_resultado[colunas_tabela]
+                                    styler_res = df_mostrar.style
+                                    if hasattr(styler_res, "map"):
+                                        styler_res = styler_res.map(colorir_status, subset=["status"])
                                     else:
-                                        st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
-                            else:
-                                mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
-                                st.error(f"Erro ao salvar: {mensagem_erro}")
+                                        styler_res = styler_res.applymap(colorir_status, subset=["status"])
+
+                                    st.dataframe(
+                                        styler_res,
+                                        column_config={
+                                            "produto": "Código",
+                                            "descricao": "Descrição",
+                                            "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
+                                            "conferente": "Conferente",
+                                            "status": "Situação da Contagem",
+                                            "justificativa": "Justificativa (Coluna J)"
+                                        },
+                                        use_container_width=True
+                                    )
+
+                                    total_erros = df_resultado["_tem_erro"].sum()
+                                    if total_erros == 0:
+                                        st.balloons()
+                                        st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
+                                    else:
+                                        if autorizar_divergencia:
+                                            st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
+                                        else:
+                                            st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
+                                else:
+                                    mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                                    st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE (Aba Local-Estoque - Coluna D)
