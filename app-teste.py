@@ -208,15 +208,28 @@ def parse_response_seguro(r):
         return r.json()
     except Exception:
         texto = r.text.strip()
-        if "accounts.google.com" in texto or "service login" in texto.lower():
+        if "accounts.google.com" in texto or "service login" in texto.lower() or "ppConfig" in texto:
             return {
                 "status": "error",
-                "message": "Erro de permissão no Google Apps Script: implante a Web App com acesso 'Qualquer pessoa' (Anyone)."
+                "message": "Permissão no Apps Script: Implante a Web App com acesso 'Qualquer pessoa' (Anyone)."
             }
         return {
             "status": "error",
             "message": f"Resposta inválida do servidor (HTTP {r.status_code}): {texto[:200]}"
         }
+
+def enviar_requisicao_post(payload, timeout=90):
+    session = get_session()
+    # 1. Realiza o POST inicial sem seguir redirecionamentos automaticamente
+    r = session.post(API_URL, json=payload, timeout=timeout, allow_redirects=False)
+    
+    # 2. O Apps Script processa o doPost e responde 302 com o resultado pronto na URL de Location
+    if r.status_code in [301, 302, 303, 307, 308] and "Location" in r.headers:
+        redirect_url = r.headers["Location"]
+        r_final = session.get(redirect_url, timeout=timeout)
+        return parse_response_seguro(r_final)
+    
+    return parse_response_seguro(r)
 
 # --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
 @st.cache_data(ttl=180, show_spinner=False)
@@ -249,31 +262,28 @@ def carregar_lista_conferentes():
 
 def enviar_cadastro_conferente(nome):
     try:
-        session = get_session()
         payload = {"action": "cadastrar_conferente", "nome": nome}
-        r = session.post(API_URL, json=payload, timeout=60, allow_redirects=True)
+        res = enviar_requisicao_post(payload, timeout=40)
         carregar_lista_conferentes.clear()
-        return parse_response_seguro(r)
+        return res
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 def enviar_importacao_planilha(linhas):
     try:
-        session = get_session()
         payload = {"action": "importar", "linhas": linhas}
-        r = session.post(API_URL, json=payload, timeout=120, allow_redirects=True)
+        res = enviar_requisicao_post(payload, timeout=120)
         carregar_dados_planilha_cached.clear()
-        return parse_response_seguro(r)
+        return res
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 def enviar_atualizacao_conferencia(itens):
     try:
-        session = get_session()
         payload = {"action": "atualizar", "itens": itens}
-        r = session.post(API_URL, json=payload, timeout=120, allow_redirects=True)
+        res = enviar_requisicao_post(payload, timeout=120)
         carregar_dados_planilha_cached.clear()
-        return parse_response_seguro(r)
+        return res
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
