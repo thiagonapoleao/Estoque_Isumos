@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import json
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
@@ -189,13 +188,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
-API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9w1kx4Ie7mxrWcQnjjOj1rf0ND7JIGEb1Jk-yCi/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
 
 def get_session():
     session = requests.Session()
     retries = Retry(
         total=3,
-        backoff_factor=1.0,
+        backoff_factor=1.5,
         status_forcelist=[500, 502, 503, 504],
         raise_on_status=False
     )
@@ -204,38 +203,26 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-def parse_response_seguro(r):
+# --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE & DECODIFICAÇÃO SEGURA ---
+def tratar_resposta_json(response):
+    """Lê a resposta com segurança e previne a quebra por HTML ou strings vazias."""
+    if response.status_code != 200:
+        return {"status": "error", "message": f"HTTP {response.status_code}: {response.text[:200]}"}
     try:
-        return r.json()
+        return response.json()
     except Exception:
-        texto = r.text.strip()
-        return {
-            "status": "error",
-            "message": f"Retorno HTTP {r.status_code}: {texto[:200]}"
-        }
+        return {"status": "error", "message": f"A API retornou HTML ou texto não-JSON: {response.text[:250]}"}
 
-def enviar_requisicao_dados(payload, timeout=90):
-    session = get_session()
-    try:
-        r = session.post(
-            API_URL,
-            data=json.dumps(payload),
-            headers={"Content-Type": "text/plain;charset=utf-8"},
-            timeout=timeout,
-            allow_redirects=True
-        )
-        return parse_response_seguro(r)
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-# --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
     session = get_session()
-    r = session.get(API_URL, timeout=60, allow_redirects=True)
-    dados = parse_response_seguro(r)
+    r = session.get(API_URL, timeout=60)
+    dados = tratar_resposta_json(r)
+    
     if isinstance(dados, list):
         return pd.DataFrame(dados)
+    elif isinstance(dados, dict) and dados.get("status") == "error":
+        st.error(f"Erro na API ao carregar dados: {dados.get('message')}")
     return pd.DataFrame()
 
 def carregar_dados_planilha():
@@ -249,38 +236,44 @@ def carregar_dados_planilha():
 def carregar_lista_conferentes():
     try:
         session = get_session()
-        r = session.get(f"{API_URL}?action=get_conferentes", timeout=40, allow_redirects=True)
-        lista = parse_response_seguro(r)
-        if isinstance(lista, list) and len(lista) > 0:
-            return sorted(lista)
+        r = session.get(f"{API_URL}?action=get_conferentes", timeout=40)
+        dados = tratar_resposta_json(r)
+        
+        if isinstance(dados, list) and len(dados) > 0:
+            return sorted(dados)
+        elif isinstance(dados, dict) and dados.get("status") == "error":
+            st.error(f"Erro na API ao carregar conferentes: {dados.get('message')}")
         return []
     except Exception:
         return []
 
 def enviar_cadastro_conferente(nome):
     try:
+        session = get_session()
         payload = {"action": "cadastrar_conferente", "nome": nome}
-        res = enviar_requisicao_dados(payload, timeout=40)
+        r = session.post(API_URL, json=payload, timeout=50)
         carregar_lista_conferentes.clear()
-        return res
+        return tratar_resposta_json(r)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 def enviar_importacao_planilha(linhas):
     try:
+        session = get_session()
         payload = {"action": "importar", "linhas": linhas}
-        res = enviar_requisicao_dados(payload, timeout=120)
+        r = session.post(API_URL, json=payload, timeout=60)
         carregar_dados_planilha_cached.clear()
-        return res
+        return tratar_resposta_json(r)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 def enviar_atualizacao_conferencia(itens):
     try:
+        session = get_session()
         payload = {"action": "atualizar", "itens": itens}
-        res = enviar_requisicao_dados(payload, timeout=120)
+        r = session.post(API_URL, json=payload, timeout=60)
         carregar_dados_planilha_cached.clear()
-        return res
+        return tratar_resposta_json(r)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -464,6 +457,7 @@ if menu == "Dashboard de Resumo":
     else:
         df = df_raw.copy()
         
+        # Tratamento seguro de datas
         df["dt_parsed"] = pd.to_datetime(df["data_importacao"], format="%d/%m/%Y", errors="coerce")
         df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(df["data_importacao"], errors="coerce", dayfirst=True))
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
@@ -473,21 +467,25 @@ if menu == "Dashboard de Resumo":
         df["conferencia"] = pd.to_numeric(df["conferencia"], errors="coerce")
         df["divergencia"] = pd.to_numeric(df["divergencia"], errors="coerce")
 
+        # Filtros
         col_f1, col_f2 = st.columns([2, 2])
         with col_f1:
-            lista_confs = ["TODOS"] + sorted([c for c in df["conferente"].dropna().unique().tolist() if str(c).strip() != ""])
+            conferentes_existentes = sorted([str(c).strip() for c in df.get("conferente", pd.Series()).dropna().unique() if str(c).strip() != ""])
+            lista_confs = ["TODOS"] + conferentes_existentes
             filtro_conf = st.selectbox("Filtrar por Conferente:", lista_confs)
         with col_f2:
-            remessas_todas = ["TODAS"] + sorted([r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""])
+            remessas_existentes = sorted([str(r).strip() for r in df.get("remessa", pd.Series()).dropna().unique() if str(r).strip() != ""])
+            remessas_todas = ["TODAS"] + remessas_existentes
             filtro_rem = st.selectbox("Filtrar por Remessa:", remessas_todas)
 
         df_filtrado = df.copy()
-        if filtro_conf != "TODOS":
+        if filtro_conf != "TODOS" and "conferente" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["conferente"] == filtro_conf]
-        if filtro_rem != "TODAS":
+        if filtro_rem != "TODAS" and "remessa" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
 
-        total_remessas = df_filtrado["remessa"].nunique()
+        # Cálculos de Métricas
+        total_remessas = df_filtrado["remessa"].nunique() if "remessa" in df_filtrado.columns else 0
         total_itens = len(df_filtrado)
         itens_conferidos = df_filtrado[df_filtrado["conferencia"].notna()]
         total_conferidos = len(itens_conferidos)
@@ -497,6 +495,7 @@ if menu == "Dashboard de Resumo":
         
         taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
 
+        # Cards Modernos
         st.markdown(f"""
         <div class="metric-container">
             <div class="metric-card">
@@ -520,6 +519,7 @@ if menu == "Dashboard de Resumo":
 
         st.write("---")
 
+        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA COM VALORES VISÍVEIS EM BARRAS ---
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
@@ -570,6 +570,7 @@ if menu == "Dashboard de Resumo":
             else:
                 st.info("Sem dados suficientes para a evolução diária.")
 
+        # --- DIAGNÓSTICO DE ERROS & PRODUTOS DIVERGENTES ---
         st.write("---")
         col_e1, col_e2 = st.columns(2)
 
@@ -607,7 +608,7 @@ if menu == "Dashboard de Resumo":
             st.markdown("##### 🏷️ Ranking de Produtos com Maior Divergência")
             df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
             
-            if not df_erros_itens.empty:
+            if not df_erros_itens.empty and "produto" in df_erros_itens.columns:
                 df_top_erros = df_erros_itens.groupby(["produto", "descricao"])["divergencia"].count().reset_index(name="Ocorrências")
                 df_top_erros = df_top_erros.sort_values("Ocorrências", ascending=False).head(10)
                 st.dataframe(
@@ -688,7 +689,7 @@ elif menu == "Folha de Impressão Cega":
     if df.empty:
         st.info("Nenhuma remessa encontrada.")
     else:
-        remessas_disponiveis = [r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
+        remessas_disponiveis = [str(r).strip() for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
         remessa_selecionada = st.selectbox("Selecione a Remessa para Gerar a Impressão:", [""] + remessas_disponiveis)
 
         if remessa_selecionada:
@@ -832,14 +833,14 @@ elif menu == "Digitar Conferência Cega":
     if df.empty:
         st.info("Nenhuma remessa encontrada para conferência.")
     else:
-        remessas = [r for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
+        remessas = [str(r).strip() for r in df["remessa"].dropna().unique().tolist() if str(r).strip() != ""]
         remessa_pesquisa = st.selectbox("Pesquisar pelo Número da Remessa:", [""] + remessas)
 
         if remessa_pesquisa:
             itens_remessa = df[df["remessa"] == remessa_pesquisa].copy()
 
-            local_atual = str(itens_remessa["local"].iloc[0]).upper()
-            data_atual_br = formatar_data_br(itens_remessa["data_importacao"].iloc[0])
+            local_atual = str(itens_remessa["local"].iloc[0]).upper() if not itens_remessa.empty else ""
+            data_atual_br = formatar_data_br(itens_remessa["data_importacao"].iloc[0]) if not itens_remessa.empty else ""
 
             itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
             itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
