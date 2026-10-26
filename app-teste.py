@@ -12,13 +12,13 @@ import altair as alt
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    page_title="Gestão de Insumos & Conferência",
+    page_title="Master Café ∙ Gestão de Estoque & Insumos",
     page_icon="📦",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS CORPORATIVO PADRÃO SÓLIDO (SEM DEGRADÊ) ---
+# --- 2. CSS CORPORATIVO SÓLIDO (PADRÃO PAINEL MASTER CAFÉ) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -29,89 +29,95 @@ st.markdown("""
         color: #1e293b;
     }
 
-    /* Oculta sidebar não utilizada */
+    /* Oculta barra lateral para focar na navbar superior */
     [data-testid="stSidebar"] {
         display: none !important;
     }
 
-    /* Top Bar Header Sólido */
-    .top-header {
-        background-color: #0f134f;
-        padding: 12px 24px;
+    /* Bloco Superior Sólido */
+    .brand-header {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 8px;
-        margin-bottom: 14px;
+        padding: 12px 20px;
+        margin-bottom: 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        color: #ffffff;
-        border-bottom: 2px solid #273270;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
-    .top-header-title {
-        font-size: 18px !important;
+    .brand-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .brand-title {
+        font-size: 19px !important;
         font-weight: 700 !important;
-        color: #ffffff !important;
+        color: #240004 !important;
         margin: 0;
-        letter-spacing: -0.2px;
+        letter-spacing: -0.3px;
     }
-    .top-header-subtitle {
-        font-size: 11.5px !important;
-        color: #cbd5e1 !important;
-        margin: 0;
+    .brand-subtitle {
+        font-size: 12px !important;
+        color: #64748b !important;
+        margin: 2px 0 0 0;
     }
-    .top-header-badge {
-        background-color: #273270;
-        padding: 5px 12px;
+    .brand-badge {
+        background-color: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        color: #240004;
+        padding: 6px 14px;
         border-radius: 6px;
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         font-weight: 600;
-        color: #ffffff;
     }
 
-    /* Cards de Métricas Sólidos */
+    /* Cards de Indicadores / Métricas Sólidos */
     .metric-container {
         display: flex;
         gap: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 22px;
         flex-wrap: wrap;
     }
     .metric-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 4px solid #0f134f;
+        border-left: 4px solid #4a0e17;
         padding: 12px 16px;
         border-radius: 6px;
         flex: 1;
-        min-width: 170px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        min-width: 175px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
     .metric-card span {
         font-size: 10.5px !important;
         color: #64748b;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.5px;
     }
     .metric-card strong {
         display: block;
         font-size: 18px !important;
-        color: #0f134f;
-        margin-top: 3px;
+        color: #240004;
+        margin-top: 4px;
         font-weight: 700;
     }
 
     /* Botões Padrão Sólido */
     div.stButton > button[kind="primary"] {
-        background-color: #0f134f !important;
+        background-color: #4a0e17 !important;
         color: #ffffff !important;
-        border: 1px solid #0f134f !important;
+        border: 1px solid #4a0e17 !important;
         border-radius: 5px !important;
         font-weight: 600 !important;
         padding: 7px 16px !important;
         box-shadow: none !important;
     }
     div.stButton > button[kind="primary"]:hover {
-        background-color: #273270 !important;
-        border-color: #273270 !important;
+        background-color: #240004 !important;
+        border-color: #240004 !important;
     }
     div.stButton > button[kind="secondary"] {
         background-color: #ffffff !important;
@@ -123,19 +129,27 @@ st.markdown("""
     div.stButton > button[kind="secondary"]:hover {
         background-color: #f8fafc !important;
         border-color: #94a3b8 !important;
-        color: #0f134f !important;
+        color: #240004 !important;
     }
 
-    /* Box de Dicas e Divergências */
+    /* Formulários e Inputs */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    input, textarea, select {
+        border-radius: 5px !important;
+        font-size: 12.5px !important;
+    }
+
+    /* Dicas e Caixas de Alerta */
     .keyboard-hint {
         background-color: #f8fafc;
         border: 1px solid #cbd5e1;
         padding: 6px 12px;
         border-radius: 5px;
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
     .keyboard-hint kbd {
         background: #ffffff;
@@ -145,7 +159,7 @@ st.markdown("""
         border-radius: 3px;
         font-weight: 700;
         font-size: 10.5px !important;
-        color: #0f134f;
+        color: #240004;
     }
 
     .divergence-box {
@@ -157,9 +171,9 @@ st.markdown("""
         font-size: 12px !important;
     }
 
-    /* Impressão */
+    /* Impressão Limpa */
     @media print {
-        header, .top-header, .stButton, [data-testid="stToolbar"], footer, .no-print {
+        header, .brand-header, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
         }
         .printable-area {
@@ -430,63 +444,53 @@ def extrair_excel(uploaded_file):
     return itens
 
 # --- 5. LOGOTIPO & CABEÇALHO SUPERIOR PADRONIZADO ---
-def obter_logo_base64():
-    possiveis_caminhos = [
-        "assets/Mastercafe-logo.png",
-        "assets/Mastercafe-logo1.png",
-        "assets/logo.png",
+def carregar_logotipo():
+    caminhos = [
+        "logotipo.png",
+        "assets/logotipo.png",
         "Mastercafe-logo.png",
-        "Mastercafe-logo1.png",
+        "assets/Mastercafe-logo.png",
         "logo.png"
     ]
-    for p in possiveis_caminhos:
-        if os.path.exists(p):
-            with open(p, "rb") as img_file:
-                return base64.b64encode(img_file.read()).decode("utf-8")
+    for c in caminhos:
+        if os.path.exists(c):
+            with open(c, "rb") as f:
+                return base64.b64encode(f.read()).decode("utf-8")
     return None
 
-logo_b64 = obter_logo_base64()
+logo_base64 = carregar_logotipo()
 
-col_logo, col_titulo = st.columns([1.2, 5.8])
+# Render do Top Header
+html_logo = f'<img src="data:image/png;base64,{logo_base64}" style="max-height: 48px; object-fit: contain;">' if logo_base64 else ''
 
-with col_logo:
-    if logo_b64:
-        st.markdown(f'<img src="data:image/png;base64,{logo_b64}" style="max-height: 52px; margin-top: 4px;">', unsafe_allow_html=True)
-    else:
-        caminhos_img = ["assets/Mastercafe-logo.png", "Mastercafe-logo.png", "logo.png"]
-        logo_direto = next((p for p in caminhos_img if os.path.exists(p)), None)
-        if logo_direto:
-            st.image(logo_direto, width=150)
-        else:
-            st.markdown('<div style="height: 48px;"></div>', unsafe_allow_html=True)
-
-with col_titulo:
-    st.markdown("""
-    <div style="padding-top: 4px;">
-        <h2 style="margin: 0; color: #0f134f; font-weight: 700; font-size: 20px; letter-spacing: -0.3px;">
-            Gestão de Estoque ∙ Conferência de Mercadorias
-        </h2>
-        <div style="font-size: 12px; color: #64748b; margin-top: 1px;">
-            Auditoria, Separação Cega e Conciliação Física de Insumos
+st.markdown(f"""
+<div class="brand-header">
+    <div class="brand-header-left">
+        {html_logo}
+        <div>
+            <h1 class="brand-title">Gestão de Estoque ∙ Conferência de Mercadorias</h1>
+            <p class="brand-subtitle">Auditoria de Carga, Separação Cega e Conciliação Física de Insumos</p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    <div class="brand-badge">
+        Módulo Operacional
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-st.write("")
-
-# --- 6. BARRA DE NAVEGAÇÃO NO TOPO (PADRÃO HORIZONTAL) ---
+# --- 6. BARRA DE NAVEGAÇÃO SUPERIOR (NAVBAR) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 opcoes_nav = [
-    ("📊 Dashboard", "Dashboard de Resumo"),
+    ("📊 Dashboard de Resumo", "Dashboard de Resumo"),
     ("📥 Importar Remessa", "Importar Remessa"),
-    ("🖨️ Folha Cega", "Folha de Impressão Cega"),
-    ("🔍 Conferência Física", "Digitar Conferência Cega"),
-    ("👤 Conferentes", "Cadastrar Novo Conferente")
+    ("🖨️ Folha de Impressão Cega", "Folha de Impressão Cega"),
+    ("🔍 Digitar Conferência Cega", "Digitar Conferência Cega"),
+    ("👤 Cadastrar Conferente", "Cadastrar Novo Conferente")
 ]
 
-cols_nav = st.columns([2, 2, 2, 2.2, 1.8, 0.8])
+cols_nav = st.columns([2.1, 2, 2.2, 2.2, 2, 0.7])
 for idx, (label, rota) in enumerate(opcoes_nav):
     with cols_nav[idx]:
         is_ativo = (st.session_state.menu_selecionado == rota)
@@ -496,7 +500,7 @@ for idx, (label, rota) in enumerate(opcoes_nav):
             st.rerun()
 
 with cols_nav[5]:
-    if st.button("🔄", help="Atualizar e sincronizar com Google Sheets", use_container_width=True):
+    if st.button("🔄", help="Sincronizar dados da planilha", use_container_width=True):
         carregar_dados_planilha_cached.clear()
         carregar_lista_conferentes.clear()
         st.rerun()
@@ -514,7 +518,7 @@ if menu == "Dashboard de Resumo":
 
     if df_raw.empty:
         st.info("Nenhum registro encontrado na aba Conferencia da planilha.")
-        st.caption("Verifique o compartilhamento da planilha ou clique em 🔄 para sincronizar.")
+        st.caption("Verifique o compartilhamento da planilha ou clique no botão 🔄 para sincronizar.")
     else:
         df = df_raw.copy()
 
@@ -573,7 +577,7 @@ if menu == "Dashboard de Resumo":
                 <strong style="color: {'#16a34a' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
             </div>
             <div class="metric-card">
-                <span>Itens Divergentes</span>
+                <span>Itens com Divergência</span>
                 <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#16a34a'};">{len(itens_com_erro)}</strong>
             </div>
         </div>
@@ -584,7 +588,7 @@ if menu == "Dashboard de Resumo":
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
-            st.markdown("##### 📅 Volume por Mês")
+            st.markdown("##### 📅 Volume de Conferência por Mês")
             base_grafico = df_filtrado[df_filtrado["conferencia"].notna()]
             if base_grafico.empty:
                 base_grafico = df_filtrado
@@ -592,7 +596,7 @@ if menu == "Dashboard de Resumo":
             df_mes = base_grafico.groupby("mes_ano").size().reset_index(name="Qtd")
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                barras_mes = alt.Chart(df_mes).mark_bar(color="#0f134f", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#4a0e17", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
                     x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
                 )
@@ -602,7 +606,7 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#240004"
                 ).encode(
                     text="Qtd:Q"
                 )
@@ -612,11 +616,11 @@ if menu == "Dashboard de Resumo":
                 st.info("Sem dados para a evolução mensal.")
 
         with col_g2:
-            st.markdown("##### 📊 Top 10 Remessas por Volume")
+            st.markdown("##### 📊 Top 10 Remessas por Volume de Itens")
             df_rem_graf = df_filtrado.groupby("remessa").size().reset_index(name="Qtd").sort_values("Qtd", ascending=False).head(10)
             if not df_rem_graf.empty:
                 max_val_rem = float(df_rem_graf["Qtd"].max() * 1.18) if df_rem_graf["Qtd"].max() > 0 else 10.0
-                barras_rem = alt.Chart(df_rem_graf).mark_bar(color="#273270", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
+                barras_rem = alt.Chart(df_rem_graf).mark_bar(color="#240004", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
                     x=alt.X("remessa:N", title="Remessa", sort=None, axis=alt.Axis(labelAngle=-45)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_rem]))
                 )
@@ -626,7 +630,7 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#240004"
                 ).encode(
                     text="Qtd:Q"
                 )
@@ -669,7 +673,7 @@ if menu == "Dashboard de Resumo":
             )
 
         with col_e2:
-            st.markdown("##### 🏷️ Ranking de Produtos com Maior Divergência")
+            st.markdown("##### 🏷️ Ranking de Produtos com Divergência")
             df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
             
             if not df_erros_itens.empty and "produto" in df_erros_itens.columns:
@@ -693,7 +697,7 @@ if menu == "Dashboard de Resumo":
 # ==============================================================================
 elif menu == "Importar Remessa":
     st.markdown("#### 📥 Importação de Arquivo de Remessa")
-    st.markdown("Selecione o arquivo Excel e informe os dados da remessa para gravação direta na aba **Conferencia**.")
+    st.markdown("Carregue o arquivo Excel e defina os parâmetros para gravação na aba **Conferencia**.")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -701,7 +705,7 @@ elif menu == "Importar Remessa":
     with col2:
         nome_local_input = st.text_input("Local / Estoque de Destino *", placeholder="Ex: S.R. EMBALAGENS")
 
-    arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa", type=["xlsx", "xls"])
+    arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa (.xlsx ou .xls)", type=["xlsx", "xls"])
 
     if st.button("Salvar Remessa", type="primary"):
         if not num_remessa or not nome_local_input or not arquivo_excel:
@@ -747,7 +751,7 @@ elif menu == "Importar Remessa":
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
     st.markdown("#### 🖨️ Folha de Separação / Contagem Cega")
-    st.markdown("Gere a folha física com formato compacto para economia de papel e conferência física.")
+    st.markdown("Gere a folha de contagem física formatada e pronta para impressão.")
 
     with st.spinner("Consultando dados..."):
         df = carregar_dados_planilha()
@@ -759,7 +763,7 @@ elif menu == "Folha de Impressão Cega":
             str(r).strip() for r in df["remessa"].dropna().unique().tolist()
             if str(r).strip() not in ["", "nan", "None"]
         ]
-        remessa_selecionada = st.selectbox("Selecione a Remessa para Gerar a Impressão:", [""] + remessas_disponiveis)
+        remessa_selecionada = st.selectbox("Selecione a Remessa:", [""] + remessas_disponiveis)
 
         if remessa_selecionada:
             remessa_busca = str(remessa_selecionada).strip()
@@ -796,15 +800,15 @@ elif menu == "Folha de Impressão Cega":
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 2px solid #0f134f;
+            border-bottom: 2px solid #240004;
             padding-bottom: 6px;
             margin-bottom: 8px;
         }}
         .header-title {{
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: bold;
             margin: 0 0 4px 0;
-            color: #0f134f;
+            color: #240004;
             text-transform: uppercase;
         }}
         .header-meta {{
@@ -820,10 +824,10 @@ elif menu == "Folha de Impressão Cega":
             margin-top: 6px;
         }}
         th {{
-            border: 1px solid #0f134f;
-            background-color: #f1f5f9;
+            border: 1px solid #240004;
+            background-color: #f8fafc;
             padding: 5px 6px;
-            font-size: 10.5px;
+            font-size: 10px;
             text-align: left;
             font-weight: bold;
         }}
@@ -836,7 +840,7 @@ elif menu == "Folha de Impressão Cega":
             padding-top: 6px;
         }}
         .btn-imprimir {{
-            background-color: #0f134f;
+            background-color: #4a0e17;
             color: white;
             border: none;
             padding: 7px 16px;
@@ -847,7 +851,7 @@ elif menu == "Folha de Impressão Cega":
             margin-bottom: 10px;
         }}
         .btn-imprimir:hover {{
-            background-color: #273270;
+            background-color: #240004;
         }}
         @media print {{
             .btn-imprimir {{
