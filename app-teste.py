@@ -292,7 +292,7 @@ def formatar_data_br(data_val):
         return datetime.now().strftime("%d/%m/%Y")
     
     val_str = str(data_val).strip()
-    if val_str in ["", "nan", "None"]:
+    if val_str in ["", "nan", "None", "00:00:00"]:
         return datetime.now().strftime("%d/%m/%Y")
 
     if len(val_str) == 10 and val_str[2] == "/" and val_str[5] == "/":
@@ -467,10 +467,14 @@ if menu == "Dashboard de Resumo":
     else:
         df = df_raw.copy()
         
-        # Tratamento seguro de datas
-        data_col = df["data_importacao"] if "data_importacao" in df.columns else pd.Series()
-        df["dt_parsed"] = pd.to_datetime(data_col, format="%d/%m/%Y", errors="coerce")
-        df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(data_col, errors="coerce", dayfirst=True))
+        # Tratamento blindado de datas/horários (evita o erro Can only use .dt accessor)
+        data_col = df["data_importacao"] if "data_importacao" in df.columns else pd.Series(index=df.index, dtype=str)
+        dt_parsed = pd.to_datetime(data_col, format="%d/%m/%Y", errors="coerce")
+        dt_parsed = dt_parsed.fillna(pd.to_datetime(data_col, errors="coerce", dayfirst=True))
+        
+        df["dt_parsed"] = pd.to_datetime(dt_parsed, errors="coerce")
+        df["dt_parsed"] = df["dt_parsed"].fillna(pd.Timestamp.now().normalize())
+
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
         df["dia_str"] = df["dt_parsed"].dt.strftime("%d/%m/%Y")
 
@@ -492,7 +496,7 @@ if menu == "Dashboard de Resumo":
         df_filtrado = df.copy()
         if filtro_conf != "TODOS" and "conferente" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["conferente"] == filtro_conf]
-        if filtro_rem != "TODAS" and "remessa" in df_filtrado.columns:
+        if filtro_rem != "TODOS" and "remessa" in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
 
         # Cálculos de Métricas
