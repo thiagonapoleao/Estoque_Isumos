@@ -213,26 +213,30 @@ def parse_response_seguro(r):
         return r.json()
     except Exception:
         texto = r.text.strip()
-        if "accounts.google.com" in texto or "service login" in texto.lower() or "ppconfig" in texto.lower():
-            return {
-                "status": "error",
-                "message": "Permissão no Apps Script: Implante a Web App com acesso 'Qualquer pessoa' (Anyone)."
-            }
         return {
             "status": "error",
-            "message": f"Resposta inválida do servidor (HTTP {r.status_code}): {texto[:200]}"
+            "message": f"Retorno HTTP {r.status_code}: {texto[:300]}"
         }
 
 def enviar_requisicao_post(payload, timeout=90):
     session = get_session()
     headers = {"Content-Type": "text/plain;charset=utf-8"}
+    
+    # 1. Envia o POST com o JSON serializado e sem seguir o redirecionamento automaticamente
     r = session.post(
         API_URL, 
         data=json.dumps(payload), 
         headers=headers, 
         timeout=timeout, 
-        allow_redirects=True
+        allow_redirects=False
     )
+    
+    # 2. O Apps Script executa o doPost e responde 302 com o JSON gravado no echo (URL de Location)
+    if r.status_code in [301, 302, 303, 307, 308] and "Location" in r.headers:
+        redirect_url = r.headers["Location"]
+        r_final = session.get(redirect_url, timeout=timeout)
+        return parse_response_seguro(r_final)
+    
     return parse_response_seguro(r)
 
 # --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
