@@ -203,12 +203,27 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
+def parse_response_seguro(r):
+    try:
+        return r.json()
+    except Exception:
+        texto = r.text.strip()
+        if "accounts.google.com" in texto or "service login" in texto.lower():
+            return {
+                "status": "error",
+                "message": "Erro de permissão no Google Apps Script: implante a Web App com acesso 'Qualquer pessoa' (Anyone)."
+            }
+        return {
+            "status": "error",
+            "message": f"Resposta inválida do servidor (HTTP {r.status_code}): {texto[:200]}"
+        }
+
 # --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
 @st.cache_data(ttl=180, show_spinner=False)
 def carregar_dados_planilha_cached():
     session = get_session()
-    r = session.get(API_URL, timeout=60)
-    dados = r.json()
+    r = session.get(API_URL, timeout=60, allow_redirects=True)
+    dados = parse_response_seguro(r)
     if isinstance(dados, list):
         return pd.DataFrame(dados)
     return pd.DataFrame()
@@ -224,8 +239,8 @@ def carregar_dados_planilha():
 def carregar_lista_conferentes():
     try:
         session = get_session()
-        r = session.get(f"{API_URL}?action=get_conferentes", timeout=40)
-        lista = r.json()
+        r = session.get(f"{API_URL}?action=get_conferentes", timeout=40, allow_redirects=True)
+        lista = parse_response_seguro(r)
         if isinstance(lista, list) and len(lista) > 0:
             return sorted(lista)
         return []
@@ -236,9 +251,9 @@ def enviar_cadastro_conferente(nome):
     try:
         session = get_session()
         payload = {"action": "cadastrar_conferente", "nome": nome}
-        r = session.post(API_URL, json=payload, timeout=50)
+        r = session.post(API_URL, json=payload, timeout=60, allow_redirects=True)
         carregar_lista_conferentes.clear()
-        return r.json()
+        return parse_response_seguro(r)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -246,9 +261,9 @@ def enviar_importacao_planilha(linhas):
     try:
         session = get_session()
         payload = {"action": "importar", "linhas": linhas}
-        r = session.post(API_URL, json=payload, timeout=60)
+        r = session.post(API_URL, json=payload, timeout=120, allow_redirects=True)
         carregar_dados_planilha_cached.clear()
-        return r.json()
+        return parse_response_seguro(r)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -256,9 +271,9 @@ def enviar_atualizacao_conferencia(itens):
     try:
         session = get_session()
         payload = {"action": "atualizar", "itens": itens}
-        r = session.post(API_URL, json=payload, timeout=60)
+        r = session.post(API_URL, json=payload, timeout=120, allow_redirects=True)
         carregar_dados_planilha_cached.clear()
-        return r.json()
+        return parse_response_seguro(r)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -442,7 +457,6 @@ if menu == "Dashboard de Resumo":
     else:
         df = df_raw.copy()
         
-        # Tratamento seguro de datas
         df["dt_parsed"] = pd.to_datetime(df["data_importacao"], format="%d/%m/%Y", errors="coerce")
         df["dt_parsed"] = df["dt_parsed"].fillna(pd.to_datetime(df["data_importacao"], errors="coerce", dayfirst=True))
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
@@ -452,7 +466,6 @@ if menu == "Dashboard de Resumo":
         df["conferencia"] = pd.to_numeric(df["conferencia"], errors="coerce")
         df["divergencia"] = pd.to_numeric(df["divergencia"], errors="coerce")
 
-        # Filtros
         col_f1, col_f2 = st.columns([2, 2])
         with col_f1:
             lista_confs = ["TODOS"] + sorted([c for c in df["conferente"].dropna().unique().tolist() if str(c).strip() != ""])
@@ -467,7 +480,6 @@ if menu == "Dashboard de Resumo":
         if filtro_rem != "TODAS":
             df_filtrado = df_filtrado[df_filtrado["remessa"] == filtro_rem]
 
-        # Cálculos de Métricas
         total_remessas = df_filtrado["remessa"].nunique()
         total_itens = len(df_filtrado)
         itens_conferidos = df_filtrado[df_filtrado["conferencia"].notna()]
@@ -478,7 +490,6 @@ if menu == "Dashboard de Resumo":
         
         taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
 
-        # Cards Modernos
         st.markdown(f"""
         <div class="metric-container">
             <div class="metric-card">
@@ -502,7 +513,6 @@ if menu == "Dashboard de Resumo":
 
         st.write("---")
 
-        # --- GRÁFICOS: EVOLUÇÃO POR MÊS E POR DIA COM VALORES VISÍVEIS EM BARRAS ---
         col_g1, col_g2 = st.columns(2)
 
         with col_g1:
@@ -553,7 +563,6 @@ if menu == "Dashboard de Resumo":
             else:
                 st.info("Sem dados suficientes para a evolução diária.")
 
-        # --- DIAGNÓSTICO DE ERROS & PRODUTOS DIVERGENTES ---
         st.write("---")
         col_e1, col_e2 = st.columns(2)
 
