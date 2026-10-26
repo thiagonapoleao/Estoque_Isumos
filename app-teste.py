@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import json
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
@@ -192,6 +193,10 @@ API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLia
 
 def get_session():
     session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*"
+    })
     retries = Retry(
         total=3,
         backoff_factor=1.5,
@@ -208,7 +213,7 @@ def parse_response_seguro(r):
         return r.json()
     except Exception:
         texto = r.text.strip()
-        if "accounts.google.com" in texto or "service login" in texto.lower() or "ppConfig" in texto:
+        if "accounts.google.com" in texto or "service login" in texto.lower() or "ppconfig" in texto.lower():
             return {
                 "status": "error",
                 "message": "Permissão no Apps Script: Implante a Web App com acesso 'Qualquer pessoa' (Anyone)."
@@ -220,15 +225,15 @@ def parse_response_seguro(r):
 
 def enviar_requisicao_post(payload, timeout=90):
     session = get_session()
-    # 1. Realiza o POST inicial sem seguir redirecionamentos automaticamente
-    r = session.post(API_URL, json=payload, timeout=timeout, allow_redirects=False)
-    
-    # 2. O Apps Script processa o doPost e responde 302 com o resultado pronto na URL de Location
-    if r.status_code in [301, 302, 303, 307, 308] and "Location" in r.headers:
-        redirect_url = r.headers["Location"]
-        r_final = session.get(redirect_url, timeout=timeout)
-        return parse_response_seguro(r_final)
-    
+    # O uso de text/plain evita requisições OPTIONS (preflight) desnecessárias no Apps Script
+    headers = {"Content-Type": "text/plain;charset=utf-8"}
+    r = session.post(
+        API_URL, 
+        data=json.dumps(payload), 
+        headers=headers, 
+        timeout=timeout, 
+        allow_redirects=True
+    )
     return parse_response_seguro(r)
 
 # --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
