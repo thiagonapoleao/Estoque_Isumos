@@ -189,14 +189,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
-API_URL = "https://script.google.com/macros/s/AKfycbw9XSazbvnjL6aIevH6fSwtqzOogk0N_qAlYdbniYwamWsiojsBYW4npCy-zIQsLL3q/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9w1kx4Ie7mxrWcQnjjOj1rf0ND7JIGEb1Jk-yCi/exec"
 
 def get_session():
     session = requests.Session()
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+        "Accept": "application/json, text/plain, */*"
     })
     retries = Retry(
         total=3,
@@ -219,17 +218,35 @@ def parse_response_seguro(r):
             "message": f"Retorno HTTP {r.status_code}: {texto[:250]}"
         }
 
-def enviar_requisicao_post(payload, timeout=90):
+def enviar_requisicao_dados(payload, timeout=90):
     session = get_session()
-    headers = {"Content-Type": "text/plain;charset=utf-8"}
-    r = session.post(
-        API_URL, 
-        data=json.dumps(payload), 
-        headers=headers, 
-        timeout=timeout, 
-        allow_redirects=True
-    )
-    return parse_response_seguro(r)
+    payload_json = json.dumps(payload)
+    
+    # 1. Envio seguro via GET com o payload serializado (passa limpo pelo Google)
+    try:
+        r = session.get(
+            API_URL, 
+            params={"payload": payload_json}, 
+            timeout=timeout, 
+            allow_redirects=True
+        )
+        res = parse_response_seguro(r)
+        if res.get("status") != "error" or "<!doctype html>" not in str(res.get("message", "")).lower():
+            return res
+    except Exception:
+        pass
+
+    # 2. Fallback via POST com form-data se o volume for muito extenso
+    try:
+        r_post = session.post(
+            API_URL, 
+            data={"payload": payload_json}, 
+            timeout=timeout, 
+            allow_redirects=True
+        )
+        return parse_response_seguro(r_post)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # --- 3. COMUNICAÇÃO COM CACHE INTELIGENTE ---
 @st.cache_data(ttl=180, show_spinner=False)
@@ -263,7 +280,7 @@ def carregar_lista_conferentes():
 def enviar_cadastro_conferente(nome):
     try:
         payload = {"action": "cadastrar_conferente", "nome": nome}
-        res = enviar_requisicao_post(payload, timeout=40)
+        res = enviar_requisicao_dados(payload, timeout=40)
         carregar_lista_conferentes.clear()
         return res
     except Exception as e:
@@ -272,7 +289,7 @@ def enviar_cadastro_conferente(nome):
 def enviar_importacao_planilha(linhas):
     try:
         payload = {"action": "importar", "linhas": linhas}
-        res = enviar_requisicao_post(payload, timeout=120)
+        res = enviar_requisicao_dados(payload, timeout=120)
         carregar_dados_planilha_cached.clear()
         return res
     except Exception as e:
@@ -281,7 +298,7 @@ def enviar_importacao_planilha(linhas):
 def enviar_atualizacao_conferencia(itens):
     try:
         payload = {"action": "atualizar", "itens": itens}
-        res = enviar_requisicao_post(payload, timeout=120)
+        res = enviar_requisicao_dados(payload, timeout=120)
         carregar_dados_planilha_cached.clear()
         return res
     except Exception as e:
