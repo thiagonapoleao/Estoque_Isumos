@@ -189,7 +189,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
-API_URL = "https://script.google.com/macros/s/AKfycbz59wGY8R9S3j-jOv0sbxIjwKSLiakWrFBPez9VZWGoMhxdDWpdsTazsjBXsxm9hYMC/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbxCXnFLUv6PueItj_ZAjfyiUG81I0FlmqqJWiOyr-h5ZT2vVVqulZq4jCmVIXKwMbBA/exec"
 
 def get_session():
     session = requests.Session()
@@ -225,7 +225,6 @@ def parse_response_seguro(r):
 
 def enviar_requisicao_post(payload, timeout=90):
     session = get_session()
-    # O uso de text/plain evita requisições OPTIONS (preflight) desnecessárias no Apps Script
     headers = {"Content-Type": "text/plain;charset=utf-8"}
     r = session.post(
         API_URL, 
