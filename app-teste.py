@@ -99,17 +99,37 @@ st.markdown("""
         padding: 14px 18px !important;
     }
 
-    /* Ajuste para botões dentro do header ficarem no mesmo tamanho e alinhamento */
-    div[data-testid="column"] button {
+    /* Estilo Exclusivo do Botão Sincronizar (Verde Claro com Destaque no Clique) */
+    div[data-testid="column"] button[kind="secondary"] {
         height: 48px !important;
         min-height: 48px !important;
+        background-color: #dcfce7 !important;
+        color: #15803d !important;
+        border: 1.5px solid #86efac !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        transition: all 0.2s ease-in-out !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        border: 1px solid #e2e8f0 !important;
-        margin-top: 0px !important;
+        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.08) !important;
+    }
+
+    div[data-testid="column"] button[kind="secondary"]:hover {
+        background-color: #bbf7d0 !important;
+        border-color: #4ade80 !important;
+        color: #166534 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 6px rgba(22, 163, 74, 0.16) !important;
+    }
+
+    div[data-testid="column"] button[kind="secondary"]:active,
+    div[data-testid="column"] button[kind="secondary"]:focus {
+        background-color: #86efac !important;
+        border-color: #22c55e !important;
+        color: #14532d !important;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3) !important;
     }
 
     /* KPI Cards */
@@ -498,34 +518,40 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER INTEGRADO COM FUNDO BRANCO E BOTÕES ALINHADOS ---
+# --- 4. HEADER: CONTAINER PRINCIPAL BRANCO E NAVEGAÇÃO CINZA CLARO ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-logo_tag = f'<img src="{logo_src_b64}" style="max-height: 44px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 40px; height: 40px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px;">📦</div>'
+logo_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 44px; height: 44px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px;">📦</div>'
 
+# Container Principal 100% Branco
 with st.container(border=True):
-    col_header_left, col_header_right = st.columns([1.0, 2.0], gap="medium")
+    col_header_left, col_header_right = st.columns([1.15, 1.85], gap="medium")
 
     with col_header_left:
         st.markdown(f"""
-        <div style="background: #ffffff; padding: 2px 0; display: flex; align-items: center; gap: 12px; height: 50px;">
-            <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; height: 46px; min-width: 46px;">
+        <div style="background: #ffffff; padding: 2px 0; display: flex; align-items: center; gap: 14px; height: 56px;">
+            <div style="display: flex; align-items: center; justify-content: center; padding: 3px; background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; height: 50px; min-width: 50px;">
                 {logo_tag}
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center;">
-                <h1 style="font-size: 14.5px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2;">
+                <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.3px;">
                     Gestão de Conferência
                 </h1>
-                <p style="font-size: 11px; color: #64748b; font-weight: 500; margin: 2px 0 0 0;">
-                    Controle Operacional · <strong style="color: #0f172a;">{total_itens_carregados}</strong> registros
+                <p style="font-size: 11.5px; color: #64748b; font-weight: 500; margin: 3px 0 0 0;">
+                    Controle Operacional & Estoque · <strong style="color: #0284c7;">{total_itens_carregados}</strong> registros na base
                 </p>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
     with col_header_right:
-        col_menu, col_sync = st.columns([5.2, 0.8], gap="small")
+        # Container com fundo cinza claro para abrigar botões de navegação e sincronização
+        st.markdown("""
+        <div style="background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4px 6px;">
+        """, unsafe_allow_html=True)
+        
+        col_menu, col_sync = st.columns([4.8, 1.2], gap="small")
         with col_menu:
             selecionado = option_menu(
                 menu_title=None,
@@ -535,28 +561,29 @@ with st.container(border=True):
                 orientation="horizontal",
                 styles={
                     "container": {
-                        "padding": "3px",
-                        "background-color": "#f8fafc",
-                        "border-radius": "10px",
-                        "border": "1px solid #e2e8f0",
+                        "padding": "0px",
+                        "background-color": "transparent",
+                        "border": "none",
                         "height": "48px",
                         "display": "flex",
                         "align-items": "center",
-                        "width": "100%"
+                        "width": "100%",
+                        "gap": "3px"
                     },
                     "nav-link": {
                         "font-size": "11.5px",
                         "font-weight": "600",
                         "color": "#64748b",
-                        "padding": "8px 6px",
-                        "border-radius": "8px",
-                        "margin": "0 2px",
+                        "padding": "8px 4px",
+                        "border-radius": "9px",
+                        "margin": "0",
                         "border": "1px solid transparent",
                         "white-space": "nowrap",
                         "display": "flex",
                         "align-items": "center",
                         "justify-content": "center",
-                        "flex": "1 1 auto",
+                        "flex": "1 1 0%",
+                        "height": "42px",
                         "text-align": "center"
                     },
                     "nav-link-selected": {
@@ -564,7 +591,7 @@ with st.container(border=True):
                         "color": "#0369a1",
                         "font-weight": "700",
                         "border": "1.5px solid #7dd3fc",
-                        "box-shadow": "0 1px 3px rgba(2, 132, 199, 0.12)"
+                        "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12)"
                     },
                 }
             )
@@ -573,9 +600,11 @@ with st.container(border=True):
                 st.rerun()
 
         with col_sync:
-            if st.button("⟳ Sync", help="Recarregar dados da planilha", use_container_width=True):
+            if st.button("⟳ Sincronizar", help="Recarregar dados atualizados da planilha", use_container_width=True):
                 st.cache_data.clear()
                 st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
