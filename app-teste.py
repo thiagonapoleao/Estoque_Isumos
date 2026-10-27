@@ -77,7 +77,7 @@ st.markdown("""
         padding-bottom: 2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
-        max-width: 1420px !important;
+        max-width: 1440px !important;
         margin: 0 auto !important;
     }
 
@@ -88,60 +88,60 @@ st.markdown("""
         border-radius: 12px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         margin-bottom: 12px !important;
-        padding: 10px 14px !important;
+        padding: 12px 16px !important;
     }
 
-    /* ESTRUTURA DA MARCA: LOGOTIPO & TÍTULOS */
+    /* ESTRUTURA DA MARCA: LOGOTIPO & TÍTULOS AMPLIADOS */
     .brand-cluster {
         display: flex;
         align-items: center;
-        gap: 14px;
-        min-height: 58px;
+        gap: 16px;
+        min-height: 66px;
     }
     .brand-logo-frame {
-        height: 54px;
-        max-width: 145px;
+        height: 64px;
+        max-width: 160px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     .brand-logo-frame img {
-        max-height: 52px;
+        max-height: 62px;
         width: auto;
         max-width: 100%;
         object-fit: contain;
     }
     .brand-fallback-badge {
-        width: 48px;
-        height: 48px;
+        width: 56px;
+        height: 56px;
         background: #0284c7;
         color: #ffffff;
-        border-radius: 10px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
-        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.2);
+        font-size: 28px;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
     }
     .brand-text-block {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.2;
+        line-height: 1.22;
     }
     .brand-title {
-        font-size: 18.5px !important;
-        font-weight: 750 !important;
+        font-size: 21px !important;
+        font-weight: 800 !important;
         color: #0f172a !important;
-        letter-spacing: -0.4px;
+        letter-spacing: -0.5px;
         margin: 0 !important;
     }
     .brand-subtitle {
-        font-size: 12px !important;
+        font-size: 13px !important;
         color: #64748b !important;
-        margin: 2px 0 0 0 !important;
-        font-weight: 450;
+        margin: 3px 0 0 0 !important;
+        font-weight: 500;
     }
 
     /* SUBCONTAINER CINZA DOS BOTÕES */
@@ -157,11 +157,11 @@ st.markdown("""
     /* BASE DE TODOS OS BOTÕES DO SUBCONTAINER */
     div.subnav-wrapper-native button {
         border-radius: 7px !important;
-        font-size: 11.5px !important;
+        font-size: 12px !important;
         font-weight: 600 !important;
         padding: 4px 8px !important;
-        height: 32px !important;
-        min-height: 32px !important;
+        height: 34px !important;
+        min-height: 34px !important;
         transition: all 0.18s ease-in-out !important;
         white-space: nowrap !important;
         width: 100% !important;
@@ -169,18 +169,23 @@ st.markdown("""
     }
 
     /* BOTÃO INATIVO (type="secondary") */
-    div.subnav-wrapper-native button[kind="secondary"] {
+    div.subnav-wrapper-native button[kind="secondary"],
+    div.subnav-wrapper-native button[data-testid="baseButton-secondary"] {
         background-color: #ffffff !important;
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         box-shadow: none !important;
     }
     div.subnav-wrapper-native button[kind="secondary"] p,
-    div.subnav-wrapper-native button[kind="secondary"] span {
+    div.subnav-wrapper-native button[kind="secondary"] span,
+    div.subnav-wrapper-native button[kind="secondary"] div,
+    div.subnav-wrapper-native button[data-testid="baseButton-secondary"] p,
+    div.subnav-wrapper-native button[data-testid="baseButton-secondary"] span {
         color: #64748b !important;
         font-weight: 600 !important;
     }
-    div.subnav-wrapper-native button[kind="secondary"]:hover {
+    div.subnav-wrapper-native button[kind="secondary"]:hover,
+    div.subnav-wrapper-native button[data-testid="baseButton-secondary"]:hover {
         background-color: #f8fafc !important;
         border-color: #cbd5e1 !important;
     }
@@ -189,34 +194,41 @@ st.markdown("""
         color: #0f172a !important;
     }
 
-    /* BOTÃO ATIVO: FUNDO PREENCHIDO EM AZUL CLARO (Tailwind Sky-100) */
+    /* BOTÃO ATIVO: FUNDO PREENCHIDO EM AZUL CLARO TOTALMENTE FORÇADO */
     div.subnav-wrapper-native button[kind="primary"],
+    div.subnav-wrapper-native button[data-testid="baseButton-primary"],
     div.subnav-wrapper-native button[kind="primary"]:hover,
     div.subnav-wrapper-native button[kind="primary"]:focus,
-    div.subnav-wrapper-native button[kind="primary"]:active {
+    div.subnav-wrapper-native button[kind="primary"]:active,
+    div.subnav-wrapper-native button[data-testid="baseButton-primary"]:hover,
+    div.subnav-wrapper-native button[data-testid="baseButton-primary"]:focus,
+    div.subnav-wrapper-native button[data-testid="baseButton-primary"]:active {
         background-color: #bae6fd !important;
         background: #bae6fd !important;
         border: 1.5px solid #0284c7 !important;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.20) !important;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.22) !important;
     }
+    
+    div.subnav-wrapper-native button[kind="primary"] *,
+    div.subnav-wrapper-native button[data-testid="baseButton-primary"] *,
     div.subnav-wrapper-native button[kind="primary"] p,
     div.subnav-wrapper-native button[kind="primary"] span,
-    div.subnav-wrapper-native button[kind="primary"]:hover p,
-    div.subnav-wrapper-native button[kind="primary"]:hover span,
-    div.subnav-wrapper-native button[kind="primary"]:focus p,
-    div.subnav-wrapper-native button[kind="primary"]:focus span {
+    div.subnav-wrapper-native button[data-testid="baseButton-primary"] p,
+    div.subnav-wrapper-native button[data-testid="baseButton-primary"] span {
         color: #0369a1 !important;
         font-weight: 800 !important;
     }
 
     /* BOTÃO SINCRONIZAR (EMERALD) */
-    div.btn-sync-box button {
+    div.btn-sync-box button,
+    div.btn-sync-box button[data-testid="baseButton-secondary"] {
         background-color: #ecfdf5 !important;
         background: #ecfdf5 !important;
         border: 1px solid #a7f3d0 !important;
     }
     div.btn-sync-box button p,
-    div.btn-sync-box button span {
+    div.btn-sync-box button span,
+    div.btn-sync-box button * {
         color: #065f46 !important;
         font-weight: 700 !important;
     }
@@ -226,7 +238,8 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
     div.btn-sync-box button:hover p,
-    div.btn-sync-box button:hover span {
+    div.btn-sync-box button:hover span,
+    div.btn-sync-box button:hover * {
         color: #047857 !important;
     }
 
@@ -636,7 +649,7 @@ else:
 
 # Container Principal Superior
 with st.container(border=True):
-    col_marca, col_nav = st.columns([4.2, 5.8], vertical_alignment="center")
+    col_marca, col_nav = st.columns([4.4, 5.6], vertical_alignment="center")
 
     with col_marca:
         st.markdown(f"""
@@ -662,7 +675,7 @@ with st.container(border=True):
                 (cb5, "Cadastrar Novo Conferente", "Conferentes")
             ]
 
-            # type="primary" garante o fundo preenchido em azul claro para a página ativa
+            # type="primary" força o preenchimento azul claro no selecionado
             for col_btn, nome_menu, label_btn in opcoes_nav:
                 with col_btn:
                     is_active = (st.session_state.menu_selecionado == nome_menu)
