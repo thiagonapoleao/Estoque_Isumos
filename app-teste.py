@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 import altair as alt
 import os
 from pathlib import Path
-import base64
+from PIL import Image
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -19,30 +19,29 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Carregamento do Logotipo local
-def obter_logotipo_base64():
-    locais = [
-        Path("logotipo.png"),
+# Carregamento seguro da imagem com PIL
+def carregar_imagem_logotipo():
+    diretorios = [
+        Path.cwd() / "logotipo.png",
         Path(__file__).parent / "logotipo.png" if "__file__" in locals() else None,
-        Path.cwd() / "logotipo.png"
+        Path("logotipo.png")
     ]
-    for loc in locais:
-        if loc and loc.is_file():
+    for d in diretorios:
+        if d and d.exists() and d.is_file():
             try:
-                with open(loc, "rb") as f:
-                    return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+                return Image.open(d)
             except Exception:
                 pass
-    return ""
+    return None
 
-logo_src = obter_logotipo_base64()
+img_logo_obj = carregar_imagem_logotipo()
 
-# --- 2. CSS TEMA CLARO & BARRA SUPERIOR UNIFICADA ---
+# --- 2. CSS CORPORATIVO ULTRA-COMPACTO E MODERNO (TEMA CLARO) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Oculta Sidebar e Header padrão */
+    /* Ocultar elementos padrão do Streamlit */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
@@ -54,65 +53,71 @@ st.markdown("""
     }
 
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 3rem !important;
+        padding-top: 0.8rem !important;
+        padding-bottom: 2.5rem !important;
         max-width: 96% !important;
     }
 
-    /* BARRA SUPERIOR UNIFICADA */
-    div[data-testid="stVerticalBlock"] > div:has(.navbar-marker) {
+    /* ESTILIZAÇÃO DO CONTAINER DE NAVEGAÇÃO SUPERIOR */
+    div[data-testid="stVerticalBlock"] > div.nav-card-container {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 14px !important;
-        padding: 10px 16px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-        margin-bottom: 20px !important;
+        border-radius: 12px !important;
+        padding: 8px 16px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+        margin-bottom: 18px !important;
     }
 
-    .brand-box {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    /* Ajuste da imagem do logo para que fique compacta e proporcional */
+    [data-testid="stImage"] img {
+        max-height: 44px !important;
+        width: auto !important;
+        object-fit: contain !important;
+        border-radius: 6px;
     }
-    .brand-logo-img {
-        max-height: 48px;
-        max-width: 140px;
-        object-fit: contain;
-    }
-    .brand-logo-fallback {
-        width: 44px;
-        height: 44px;
+
+    .brand-fallback-box {
+        width: 42px;
+        height: 42px;
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
+    }
+
+    .brand-text-col {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     .brand-title {
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         margin: 0 !important;
-        line-height: 1.2;
+        line-height: 1.2 !important;
+        letter-spacing: -0.2px;
     }
     .brand-subtitle {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         color: #64748b !important;
         margin: 2px 0 0 0 !important;
+        font-weight: 500;
     }
 
-    /* ESTILIZAÇÃO DOS BOTÕES NA BARRA */
+    /* BOTÕES DA BARRA DE NAVEGAÇÃO */
     div.nav-btn-box div.stButton > button {
         border-radius: 8px !important;
         font-size: 12px !important;
         font-weight: 600 !important;
-        padding: 6px 10px !important;
-        height: 38px !important;
+        padding: 5px 10px !important;
+        height: 36px !important;
         transition: all 0.15s ease-in-out !important;
-        box-shadow: none !important;
         white-space: nowrap !important;
+        box-shadow: none !important;
     }
 
     div.nav-inactive div.stButton > button {
@@ -144,19 +149,19 @@ st.markdown("""
         color: #047857 !important;
     }
 
-    /* CARDS DE INDICADORES */
+    /* KPI METRICS */
     .metric-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 14px;
-        margin-bottom: 22px;
+        gap: 12px;
+        margin-bottom: 20px;
     }
     .metric-card-pro {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 14px 18px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+        padding: 12px 16px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         position: relative;
         overflow: hidden;
     }
@@ -173,15 +178,15 @@ st.markdown("""
     .metric-card-pro.red::before { background: #dc2626; }
 
     .metric-card-pro .kpi-label {
-        font-size: 11px !important;
+        font-size: 10.5px !important;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: #64748b;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
     }
     .metric-card-pro .kpi-value {
-        font-size: 20px !important;
+        font-size: 19px !important;
         font-weight: 700;
         color: #0f172a;
     }
@@ -189,21 +194,21 @@ st.markdown("""
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 8px 12px;
+        padding: 6px 10px;
         border-radius: 6px;
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     .keyboard-hint kbd {
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
-        padding: 2px 5px;
-        border-radius: 4px;
+        padding: 1px 4px;
+        border-radius: 3px;
         font-weight: 700;
-        font-size: 11px !important;
+        font-size: 10.5px !important;
         color: #0f172a;
     }
 
@@ -212,21 +217,21 @@ st.markdown("""
         border: 1px solid #fed7aa;
         border-left: 4px solid #ea580c;
         border-radius: 8px;
-        padding: 14px 16px;
-        margin: 14px 0;
-        font-size: 12.5px !important;
+        padding: 12px 14px;
+        margin: 12px 0;
+        font-size: 12px !important;
     }
 
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
         background-color: #ffffff !important;
-        border-radius: 8px !important;
-        font-size: 13px !important;
+        border-radius: 6px !important;
+        font-size: 12.5px !important;
     }
 
     @media print {
-        header, .no-print, [data-testid="stToolbar"], footer, div[data-testid="stVerticalBlock"] > div:has(.navbar-marker) {
+        header, .no-print, [data-testid="stToolbar"], footer, .nav-card-container {
             display: none !important;
         }
         .printable-area {
@@ -485,54 +490,58 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. CABEÇALHO UNIFICADO (LOGO + TÍTULO + MENU DE NAVEGAÇÃO) ---
+# --- 4. BARRA SUPERIOR TOTALMENTE UNIFICADA E COMPACTA ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-logo_html = f'<img src="{logo_src}" alt="Logo" class="brand-logo-img">' if logo_src else '<div class="brand-logo-fallback">📦</div>'
+# Container Único e com borda nativa do Streamlit
+header_container = st.container(border=True)
 
-# Container único que agrupa Marca e Menus lado a lado
-with st.container():
-    col_marca, col_n1, col_n2, col_n3, col_n4, col_n5, col_sync = st.columns(
-        [2.7, 1.1, 1.0, 1.2, 1.3, 1.2, 1.1],
+with header_container:
+    # 8 Colunas alinhadas verticalmente no centro
+    c_logo, c_title, c_btn1, c_btn2, c_btn3, c_btn4, c_btn5, c_sync = st.columns(
+        [0.45, 2.35, 1.05, 0.95, 1.15, 1.25, 1.15, 1.05],
         vertical_alignment="center"
     )
 
-    with col_marca:
+    with c_logo:
+        if img_logo_obj:
+            st.image(img_logo_obj, use_container_width=True)
+        else:
+            st.markdown('<div class="brand-fallback-box">📦</div>', unsafe_allow_html=True)
+
+    with c_title:
         st.markdown(f"""
-        <div class="navbar-marker brand-box">
-            {logo_html}
-            <div>
-                <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
-                <p class="brand-subtitle">Remessas, Auditoria Cega & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
-            </div>
+        <div class="brand-text-col">
+            <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
+            <p class="brand-subtitle">Remessas, Auditoria Cega & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
         </div>
         """, unsafe_allow_html=True)
 
-    opcoes = [
-        (col_n1, "Dashboard de Resumo", "📊 Resumo"),
-        (col_n2, "Importar Remessa", "📥 Importar"),
-        (col_n3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
-        (col_n4, "Digitar Conferência Cega", "🔍 Conferência"),
-        (col_n5, "Cadastrar Novo Conferente", "👤 Conferentes")
+    opcoes_nav = [
+        (c_btn1, "Dashboard de Resumo", "📊 Resumo"),
+        (c_btn2, "Importar Remessa", "📥 Importar"),
+        (c_btn3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
+        (c_btn4, "Digitar Conferência Cega", "🔍 Conferência"),
+        (c_btn5, "Cadastrar Novo Conferente", "👤 Conferentes")
     ]
 
-    for col_btn, nome_menu, label_btn in opcoes:
+    for col_btn, nome_menu, label_btn in opcoes_nav:
         with col_btn:
             is_active = (st.session_state.menu_selecionado == nome_menu)
             classe = "nav-active" if is_active else "nav-inactive"
             st.markdown(f'<div class="nav-btn-box {classe}">', unsafe_allow_html=True)
-            if st.button(label_btn, key=f"btn_nav_{nome_menu}", use_container_width=True):
+            if st.button(label_btn, key=f"top_nav_{nome_menu}", use_container_width=True):
                 st.session_state.menu_selecionado = nome_menu
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
-    with col_sync:
+    with c_sync:
         st.markdown('<div class="nav-btn-box btn-sync">', unsafe_allow_html=True)
-        if st.button("🔄 Sincronizar", key="btn_nav_sync", use_container_width=True):
+        if st.button("🔄 Sincronizar", key="top_nav_sync", use_container_width=True):
             carregar_dados_planilha_cached.clear()
             carregar_lista_conferentes.clear()
             st.rerun()
@@ -666,7 +675,7 @@ if menu == "Dashboard de Resumo":
             else:
                 st.info("Sem dados suficientes para a evolução diária.")
 
-        st.markdown("<hr style='margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
+        st.markdown("<hr style='margin: 18px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
         col_e1, col_e2 = st.columns(2)
 
         with col_e1:
@@ -1216,7 +1225,7 @@ elif menu == "Cadastrar Novo Conferente":
                         mensagem_erro = res.get("message", "Falha de comunicação")
                         st.error(f"Erro ao cadastrar: {mensagem_erro}")
 
-    st.markdown("<hr style='margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 18px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
     st.write("#### 👥 Conferentes Atualmente Cadastrados:")
     conferentes_atuais = carregar_lista_conferentes()
     if conferentes_atuais:
