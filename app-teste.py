@@ -19,35 +19,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Carregamento resiliente do logotipo local em Base64
-def carregar_logotipo_base64():
-    locais_possiveis = [
+# Carregamento do Logotipo local
+def obter_logotipo_base64():
+    locais = [
         Path("logotipo.png"),
         Path(__file__).parent / "logotipo.png" if "__file__" in locals() else None,
         Path.cwd() / "logotipo.png"
     ]
-    for p in locais_possiveis:
-        if p and p.is_file():
+    for loc in locais:
+        if loc and loc.is_file():
             try:
-                with open(p, "rb") as f:
-                    encoded = base64.b64encode(f.read()).decode()
-                    return f"data:image/png;base64,{encoded}"
+                with open(loc, "rb") as f:
+                    return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
             except Exception:
                 pass
     return ""
 
-logo_base64_src = carregar_logotipo_base64()
+logo_src = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL TEMA CLARO & NAVBAR ---
+# --- 2. CSS TEMA CLARO & BARRA SUPERIOR UNIFICADA ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Ocultar barra lateral e cabeçalho nativo */
-    [data-testid="stSidebar"], section[data-testid="stSidebar"] {
-        display: none !important;
-    }
-    header[data-testid="stHeader"] {
+    /* Oculta Sidebar e Header padrão */
+    [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
     
@@ -60,27 +56,27 @@ st.markdown("""
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 3rem !important;
-        max-width: 95% !important;
+        max-width: 96% !important;
     }
 
-    /* Estilização da Faixa Superior (Container Nativo) */
-    div[data-testid="stVerticalBlock"] > div:has(div.top-brand-marker) {
+    /* BARRA SUPERIOR UNIFICADA */
+    div[data-testid="stVerticalBlock"] > div:has(.navbar-marker) {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         padding: 10px 16px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
         margin-bottom: 20px !important;
     }
 
-    .brand-section {
+    .brand-box {
         display: flex;
         align-items: center;
         gap: 12px;
     }
     .brand-logo-img {
-        max-height: 46px;
-        max-width: 130px;
+        max-height: 48px;
+        max-width: 140px;
         object-fit: contain;
     }
     .brand-logo-fallback {
@@ -98,62 +94,57 @@ st.markdown("""
         font-size: 16px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
-        letter-spacing: -0.3px;
         margin: 0 !important;
         line-height: 1.2;
     }
     .brand-subtitle {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         color: #64748b !important;
         margin: 2px 0 0 0 !important;
-        font-weight: 400;
     }
 
-    /* Botões do Menu Superior */
+    /* ESTILIZAÇÃO DOS BOTÕES NA BARRA */
     div.nav-btn-box div.stButton > button {
         border-radius: 8px !important;
         font-size: 12px !important;
         font-weight: 600 !important;
-        padding: 5px 8px !important;
-        height: 36px !important;
+        padding: 6px 10px !important;
+        height: 38px !important;
         transition: all 0.15s ease-in-out !important;
         box-shadow: none !important;
         white-space: nowrap !important;
     }
 
-    /* Botão Inativo */
-    div.nav-btn-inactive div.stButton > button {
+    div.nav-inactive div.stButton > button {
         background-color: transparent !important;
         color: #475569 !important;
         border: 1px solid transparent !important;
     }
-    div.nav-btn-inactive div.stButton > button:hover {
+    div.nav-inactive div.stButton > button:hover {
         background-color: #f1f5f9 !important;
         color: #0f172a !important;
         border-color: #cbd5e1 !important;
     }
 
-    /* Botão Ativo */
-    div.nav-btn-active div.stButton > button {
+    div.nav-active div.stButton > button {
         background-color: #f8fafc !important;
         color: #0f172a !important;
         border: 1px solid #94a3b8 !important;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
     }
 
-    /* Botão de Sincronizar */
-    div.sync-btn div.stButton > button {
+    div.btn-sync div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
         border: 1px solid #a7f3d0 !important;
     }
-    div.sync-btn div.stButton > button:hover {
+    div.btn-sync div.stButton > button:hover {
         background-color: #d1fae5 !important;
         border-color: #6ee7b7 !important;
         color: #047857 !important;
     }
 
-    /* KPI Cards */
+    /* CARDS DE INDICADORES */
     .metric-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -235,7 +226,7 @@ st.markdown("""
     }
 
     @media print {
-        header, .no-print, [data-testid="stToolbar"], footer, div[data-testid="stVerticalBlock"] > div:has(div.top-brand-marker) {
+        header, .no-print, [data-testid="stToolbar"], footer, div[data-testid="stVerticalBlock"] > div:has(.navbar-marker) {
             display: none !important;
         }
         .printable-area {
@@ -248,7 +239,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
+# --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
 API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9w1kx4Ie7mxrWcQnjjOj1rf0ND7JIGEb1Jk-yCi/exec"
 
 def get_session():
@@ -494,26 +485,26 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. HEADER SUPERIOR NATIVO COM LOGO E MENU UNIFICADO ---
+# --- 4. CABEÇALHO UNIFICADO (LOGO + TÍTULO + MENU DE NAVEGAÇÃO) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-tag_img_logo = f'<img src="{logo_base64_src}" alt="Logotipo" class="brand-logo-img">' if logo_base64_src else '<div class="brand-logo-fallback">📦</div>'
+logo_html = f'<img src="{logo_src}" alt="Logo" class="brand-logo-img">' if logo_src else '<div class="brand-logo-fallback">📦</div>'
 
-# Container delimitado sem div fantasma
+# Container único que agrupa Marca e Menus lado a lado
 with st.container():
     col_marca, col_n1, col_n2, col_n3, col_n4, col_n5, col_sync = st.columns(
-        [2.8, 1.1, 1.0, 1.2, 1.3, 1.2, 1.0], 
+        [2.7, 1.1, 1.0, 1.2, 1.3, 1.2, 1.1],
         vertical_alignment="center"
     )
 
     with col_marca:
         st.markdown(f"""
-        <div class="top-brand-marker brand-section">
-            {tag_img_logo}
+        <div class="navbar-marker brand-box">
+            {logo_html}
             <div>
                 <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
                 <p class="brand-subtitle">Remessas, Auditoria Cega & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
@@ -532,16 +523,16 @@ with st.container():
     for col_btn, nome_menu, label_btn in opcoes:
         with col_btn:
             is_active = (st.session_state.menu_selecionado == nome_menu)
-            classe = "nav-btn-active" if is_active else "nav-btn-inactive"
+            classe = "nav-active" if is_active else "nav-inactive"
             st.markdown(f'<div class="nav-btn-box {classe}">', unsafe_allow_html=True)
-            if st.button(label_btn, key=f"nav_top_{nome_menu}", use_container_width=True):
+            if st.button(label_btn, key=f"btn_nav_{nome_menu}", use_container_width=True):
                 st.session_state.menu_selecionado = nome_menu
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
     with col_sync:
-        st.markdown('<div class="nav-btn-box sync-btn">', unsafe_allow_html=True)
-        if st.button("🔄 Sincronizar", key="nav_top_sync", use_container_width=True):
+        st.markdown('<div class="nav-btn-box btn-sync">', unsafe_allow_html=True)
+        if st.button("🔄 Sincronizar", key="btn_nav_sync", use_container_width=True):
             carregar_dados_planilha_cached.clear()
             carregar_lista_conferentes.clear()
             st.rerun()
