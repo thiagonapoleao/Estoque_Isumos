@@ -53,16 +53,17 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS CORPORATIVO ULTRA-COMPACTO (SLATE & SKY DESIGN) ---
+# --- 2. CSS CORPORATIVO: AZUL CLARO MODERNO & COMPACTAÇÃO ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* Oculta Sidebar e Header padrão */
+    /* Oculta Sidebar e Header nativos do Streamlit */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
 
+    /* Base da Aplicação: Fundo Slate-50 Suave */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #f8fafc !important;
@@ -70,101 +71,102 @@ st.markdown("""
         font-size: 12.5px !important;
     }
 
-    /* Container Global Ultracompacto */
+    /* Container Global Centralizado */
     .block-container {
-        padding-top: 0.4rem !important;
-        padding-bottom: 1.5rem !important;
-        padding-left: 1.2rem !important;
-        padding-right: 1.2rem !important;
-        max-width: 1400px !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        max-width: 1420px !important;
         margin: 0 auto !important;
     }
 
-    /* Redução de margens de todos os containers brancos */
+    /* TODOS OS CONTAINERS PRINCIPAIS BRANCOS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
-        margin-bottom: 10px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        margin-bottom: 12px !important;
         padding: 10px 14px !important;
     }
 
-    /* Header Compacto */
+    /* ESTRUTURA DA MARCA: LOGOTIPO & TÍTULOS AMPLIADOS PROPORCIONALMENTE */
     .brand-cluster {
         display: flex;
         align-items: center;
-        gap: 10px;
-        min-height: 42px;
+        gap: 14px;
+        min-height: 58px;
     }
     .brand-logo-frame {
-        height: 38px;
-        max-width: 100px;
+        height: 54px;
+        max-width: 145px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     .brand-logo-frame img {
-        max-height: 38px;
+        max-height: 52px;
         width: auto;
         max-width: 100%;
         object-fit: contain;
     }
     .brand-fallback-badge {
-        width: 36px;
-        height: 36px;
+        width: 48px;
+        height: 48px;
         background: #0284c7;
         color: #ffffff;
-        border-radius: 8px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 24px;
+        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.2);
     }
     .brand-text-block {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.15;
+        line-height: 1.2;
     }
     .brand-title {
-        font-size: 14.5px !important;
-        font-weight: 700 !important;
+        font-size: 18.5px !important;
+        font-weight: 750 !important;
         color: #0f172a !important;
-        letter-spacing: -0.2px;
+        letter-spacing: -0.4px;
         margin: 0 !important;
     }
     .brand-subtitle {
-        font-size: 10.5px !important;
+        font-size: 12px !important;
         color: #64748b !important;
-        margin: 1px 0 0 0 !important;
-        font-weight: 400;
+        margin: 2px 0 0 0 !important;
+        font-weight: 450;
     }
 
-    /* Subcontainer Cinza da Barra de Navegação */
+    /* SUBCONTAINER CINZA DOS BOTÕES */
     div.subnav-wrapper-native div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #f1f5f9 !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 3px 4px !important;
+        border-radius: 10px !important;
+        padding: 4px 6px !important;
         box-shadow: none !important;
         margin-bottom: 0px !important;
     }
 
-    /* BOTÕES MODERNOS, MENORES E ULTRACOMPACTOS */
+    /* PADRONIZAÇÃO DOS BOTÕES DE NAVEGAÇÃO */
     div.subnav-wrapper-native div.stButton > button {
-        border-radius: 6px !important;
-        font-size: 11px !important;
+        border-radius: 7px !important;
+        font-size: 11.5px !important;
         font-weight: 600 !important;
-        padding: 3px 8px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        transition: all 0.15s ease-in-out !important;
+        padding: 4px 8px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
         white-space: nowrap !important;
         box-shadow: none !important;
         width: 100% !important;
-        letter-spacing: -0.1px;
+        letter-spacing: -0.15px;
     }
 
     /* Botão Inativo */
@@ -179,12 +181,13 @@ st.markdown("""
         border-color: #cbd5e1 !important;
     }
 
-    /* BOTÃO ATIVO EM DESTAQUE AZUL CLARO MODERNO */
+    /* BOTÃO ATIVO: DESTAQUE DINÂMICO EM AZUL CLARO MODERNO */
     div.nav-btn-active div.stButton > button {
         background-color: #e0f2fe !important;
         color: #0369a1 !important;
-        border: 1.5px solid #7dd3fc !important;
-        box-shadow: 0 1px 3px rgba(2, 132, 199, 0.12) !important;
+        border: 1.5px solid #38bdf8 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.16) !important;
     }
 
     /* Botão Sincronizar */
@@ -198,21 +201,26 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* KPI CARDS COMPACTOS */
+    /* KPI CARDS */
     .kpi-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-        margin-bottom: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
     }
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 10px 14px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        border-radius: 10px;
+        padding: 12px 16px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         position: relative;
         overflow: hidden;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
     }
     .kpi-card::before {
         content: "";
@@ -227,29 +235,28 @@ st.markdown("""
     .kpi-card.red::before { background: #dc2626; }
 
     .kpi-label {
-        font-size: 10px !important;
+        font-size: 10.5px !important;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.4px;
         color: #64748b;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
     }
     .kpi-value {
-        font-size: 17px !important;
+        font-size: 19px !important;
         font-weight: 700;
         color: #0f172a;
         line-height: 1.2;
     }
 
-    /* Inputs e Controles Compactados */
+    /* Inputs e Controles */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
         background-color: #ffffff !important;
         border-radius: 6px !important;
         border: 1px solid #cbd5e1 !important;
-        font-size: 12px !important;
-        min-height: 32px !important;
+        font-size: 12.5px !important;
     }
 
     .keyboard-hint {
@@ -260,7 +267,7 @@ st.markdown("""
         font-size: 11px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
     .keyboard-hint kbd {
         background: #f1f5f9;
@@ -276,7 +283,7 @@ st.markdown("""
     .divergence-box {
         background-color: #fff7ed;
         border: 1px solid #fed7aa;
-        border-left: 3px solid #ea580c;
+        border-left: 3.5px solid #ea580c;
         border-radius: 6px;
         padding: 10px 12px;
         margin: 10px 0;
@@ -586,7 +593,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. CONTAINER SUPERIOR COMPACTO COM SUBCONTAINER INTEGRADO ---
+# --- 4. CONTAINER SUPERIOR COM MARCA E BOTÕES DINÂMICOS ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
@@ -598,9 +605,9 @@ if logo_src_b64:
 else:
     logo_markup = '<div class="brand-fallback-badge">📦</div>'
 
-# Container Principal Superior Compacto
+# Container Superior Branco
 with st.container(border=True):
-    col_marca, col_nav = st.columns([3.6, 6.4], vertical_alignment="center")
+    col_marca, col_nav = st.columns([4.2, 5.8], vertical_alignment="center")
 
     with col_marca:
         st.markdown(f"""
@@ -616,7 +623,7 @@ with st.container(border=True):
     with col_nav:
         st.markdown('<div class="subnav-wrapper-native">', unsafe_allow_html=True)
         with st.container(border=True):
-            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.15, 1.1, 1.25, 1.35, 1.3, 0.85])
+            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.18, 1.1, 1.25, 1.35, 1.32, 0.8])
 
             opcoes_nav = [
                 (cb1, "Dashboard", "Dashboard"),
@@ -626,11 +633,12 @@ with st.container(border=True):
                 (cb5, "Cadastrar Novo Conferente", "Conferentes")
             ]
 
+            # Renderização dinâmica: o botão ativo recebe a classe nav-btn-active
             for col_btn, nome_menu, label_btn in opcoes_nav:
                 with col_btn:
                     is_active = (st.session_state.menu_selecionado == nome_menu)
-                    classe = "nav-btn-active" if is_active else "nav-btn-inactive"
-                    st.markdown(f'<div class="{classe}">', unsafe_allow_html=True)
+                    classe_css = "nav-btn-active" if is_active else "nav-btn-inactive"
+                    st.markdown(f'<div class="{classe_css}">', unsafe_allow_html=True)
                     if st.button(label_btn, key=f"nav_top_{nome_menu}", use_container_width=True):
                         st.session_state.menu_selecionado = nome_menu
                         st.rerun()
@@ -638,7 +646,7 @@ with st.container(border=True):
 
             with cb_sync:
                 st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
-                if st.button("⟳", key="nav_top_sync", help="Sincronizar dados", use_container_width=True):
+                if st.button("⟳", key="nav_top_sync", help="Sincronizar dados com a planilha", use_container_width=True):
                     carregar_dados_planilha_cached.clear()
                     carregar_lista_conferentes.clear()
                     st.rerun()
@@ -675,7 +683,7 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
-        # Container Branco de Filtros
+        # Filtros
         with st.container(border=True):
             col_f1, col_f2 = st.columns([1, 1])
             with col_f1:
@@ -751,7 +759,7 @@ if menu == "Dashboard":
                     ).encode(
                         text="Qtd:Q"
                     )
-                    chart_mes = (barras_mes + textos_mes).properties(height=220)
+                    chart_mes = (barras_mes + textos_mes).properties(height=210)
                     st.altair_chart(chart_mes, use_container_width=True)
                 else:
                     st.info("Sem dados suficientes para a evolução mensal.")
@@ -775,7 +783,7 @@ if menu == "Dashboard":
                     ).encode(
                         text="Qtd:Q"
                     )
-                    chart_dia = (barras_dia + textos_dia).properties(height=220)
+                    chart_dia = (barras_dia + textos_dia).properties(height=210)
                     st.altair_chart(chart_dia, use_container_width=True)
                 else:
                     st.info("Sem dados suficientes para a evolução diária.")
