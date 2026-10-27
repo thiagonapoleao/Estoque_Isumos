@@ -53,17 +53,16 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS CORPORATIVO: BLINDAGEM VISUAL E ALINHAMENTO ---
+# --- 2. CSS CORPORATIVO: PADRÃO TAILWIND SOLICITADO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* Oculta Sidebar e Header nativos do Streamlit */
+    /* Oculta Sidebar e Header padrão */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* Base da Aplicação: Fundo Slate-50 Suave */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #f8fafc !important;
@@ -71,7 +70,6 @@ st.markdown("""
         font-size: 12.5px !important;
     }
 
-    /* Container Global */
     .block-container {
         padding-top: 0.5rem !important;
         padding-bottom: 2rem !important;
@@ -81,22 +79,20 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
-    /* TODOS OS CONTAINERS PRINCIPAIS BRANCOS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         margin-bottom: 12px !important;
-        padding: 10px 14px !important;
+        padding: 12px 16px !important;
     }
 
-    /* ESTRUTURA DA MARCA: LOGOTIPO & TÍTULOS AMPLIADOS */
     .brand-cluster {
         display: flex;
         align-items: center;
         gap: 16px;
-        min-height: 60px;
+        min-height: 64px;
     }
     .brand-logo-frame {
         height: 60px;
@@ -107,7 +103,7 @@ st.markdown("""
         justify-content: center;
     }
     .brand-logo-frame img {
-        max-height: 56px;
+        max-height: 58px;
         width: auto;
         max-width: 100%;
         object-fit: contain;
@@ -117,18 +113,18 @@ st.markdown("""
         height: 52px;
         background: #0284c7;
         color: #ffffff;
-        border-radius: 10px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 26px;
-        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.2);
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
     }
     .brand-text-block {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.2;
+        line-height: 1.22;
     }
     .brand-title {
         font-size: 20px !important;
@@ -144,82 +140,92 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* SUBCONTAINER CINZA COM ALINHAMENTO VERTICAL PRECISO */
-    .subnav-cluster-box {
-        background-color: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 5px 6px;
-        display: flex;
-        align-items: center;
-    }
-
-    /* FORÇAR ALTURA E LINHA PADRONIZADA EM TODOS OS BOTÕES DA NAVBAR */
-    div[class*="st-key-nav_top_"] button {
-        height: 34px !important;
-        min-height: 34px !important;
-        max-height: 34px !important;
-        border-radius: 7px !important;
-        font-size: 11.5px !important;
-        font-weight: 600 !important;
-        padding: 2px 8px !important;
-        margin: 0 !important;
+    /* CONTAINER ENVOLVENTE PADRÃO: flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap */
+    .nav-bar-container-tw {
         display: flex !important;
         align-items: center !important;
-        justify-content: center !important;
-        white-space: nowrap !important;
-        line-height: 1 !important;
+        gap: 0.5rem !important; /* gap-2 */
+        background-color: #f1f5f9 !important; /* bg-slate-100 */
+        padding: 0.375rem !important; /* p-1.5 */
+        border-radius: 1rem !important; /* rounded-2xl */
+        border: 1px solid #e2e8f0 !important; /* border border-slate-200 */
+        flex-wrap: wrap !important; /* flex-wrap */
         width: 100% !important;
     }
 
-    /* ESTILO BOTÃO INATIVO (BRANCO PURO) */
-    div[class*="st-key-nav_top_"] button[kind="secondary"] {
-        background-color: #ffffff !important;
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
+    /* BOTÃO BASE: nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition */
+    .nav-bar-container-tw button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.5rem !important; /* gap-2 */
+        padding-left: 1rem !important; /* px-4 */
+        padding-right: 1rem !important;
+        padding-top: 0.5rem !important; /* py-2 */
+        padding-bottom: 0.5rem !important;
+        border-radius: 0.75rem !important; /* rounded-xl */
+        font-size: 0.75rem !important; /* text-xs */
+        line-height: 1rem !important;
+        font-weight: 600 !important; /* font-semibold */
+        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke !important; /* transition */
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transition-duration: 150ms !important;
+        white-space: nowrap !important;
         box-shadow: none !important;
+        height: auto !important;
+        min-height: 34px !important;
+        width: 100% !important;
     }
-    div[class*="st-key-nav_top_"] button[kind="secondary"] *,
-    div[class*="st-key-nav_top_"] button[kind="secondary"] p {
+
+    /* BOTÃO INATIVO */
+    .nav-bar-container-tw button[kind="secondary"] {
+        background-color: #ffffff !important;
+        color: #64748b !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .nav-bar-container-tw button[kind="secondary"]:hover {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+    .nav-bar-container-tw button[kind="secondary"] p,
+    .nav-bar-container-tw button[kind="secondary"] span {
         color: #64748b !important;
         font-weight: 600 !important;
     }
-    div[class*="st-key-nav_top_"] button[kind="secondary"]:hover {
-        background-color: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-    }
-    div[class*="st-key-nav_top_"] button[kind="secondary"]:hover * {
+    .nav-bar-container-tw button[kind="secondary"]:hover p,
+    .nav-bar-container-tw button[kind="secondary"]:hover span {
         color: #0f172a !important;
     }
 
-    /* ATIVAÇÃO DEFINITIVA DO BOTÃO SELECIONADO: FUNDO AZUL CLARO MODERNO */
-    div[class*="st-key-nav_top_"] button[kind="primary"],
-    div[class*="st-key-nav_top_"] button[kind="primary"]:hover,
-    div[class*="st-key-nav_top_"] button[kind="primary"]:focus,
-    div[class*="st-key-nav_top_"] button[kind="primary"]:active {
-        background-color: #bae6fd !important;
-        background: #bae6fd !important;
-        border: 1.5px solid #0284c7 !important;
-        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.18) !important;
+    /* BOTÃO ATIVO (CLASS ACTIVE / AZUL CLARO MODERNO) */
+    .nav-bar-container-tw button[kind="primary"],
+    .nav-bar-container-tw button[kind="primary"]:hover,
+    .nav-bar-container-tw button[kind="primary"]:focus,
+    .nav-bar-container-tw button[kind="primary"]:active {
+        background-color: #e0f2fe !important; /* bg-sky-100 */
+        background: #e0f2fe !important;
+        color: #0369a1 !important; /* text-sky-700 */
+        border: 1.5px solid #7dd3fc !important; /* border-sky-300 */
+        box-shadow: 0 2px 4px 0 rgba(2, 132, 199, 0.12) !important;
     }
-    div[class*="st-key-nav_top_"] button[kind="primary"] *,
-    div[class*="st-key-nav_top_"] button[kind="primary"] p,
-    div[class*="st-key-nav_top_"] button[kind="primary"] span {
+    .nav-bar-container-tw button[kind="primary"] *,
+    .nav-bar-container-tw button[kind="primary"] p,
+    .nav-bar-container-tw button[kind="primary"] span {
         color: #0369a1 !important;
-        font-weight: 800 !important;
+        font-weight: 700 !important;
     }
 
     /* BOTÃO SINCRONIZAR */
-    div.st-key-nav_top_sync button {
+    div.sync-btn-slot button {
         background-color: #ecfdf5 !important;
-        background: #ecfdf5 !important;
         border: 1px solid #a7f3d0 !important;
     }
-    div.st-key-nav_top_sync button * {
+    div.sync-btn-slot button * {
         color: #065f46 !important;
         font-weight: 700 !important;
     }
-    div.st-key-nav_top_sync button:hover {
+    div.sync-btn-slot button:hover {
         background-color: #d1fae5 !important;
         border-color: #6ee7b7 !important;
     }
@@ -272,7 +278,6 @@ st.markdown("""
         line-height: 1.2;
     }
 
-    /* Formulários e Inputs */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -616,7 +621,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. CONTAINER SUPERIOR COM ALINHAMENTO PERFEITO ---
+# --- 4. CONTAINER SUPERIOR COM PADRÃO TAILWIND ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
@@ -630,7 +635,7 @@ else:
 
 # Container Principal Superior
 with st.container(border=True):
-    col_marca, col_nav = st.columns([4.0, 6.0], vertical_alignment="center")
+    col_marca, col_nav = st.columns([3.9, 6.1], vertical_alignment="center")
 
     with col_marca:
         st.markdown(f"""
@@ -644,9 +649,9 @@ with st.container(border=True):
         """, unsafe_allow_html=True)
 
     with col_nav:
-        # Subcontainer cinza sem colunas aninhadas quebradas
-        st.markdown('<div class="subnav-cluster-box">', unsafe_allow_html=True)
-        cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.18, 1.1, 1.25, 1.35, 1.32, 0.75], vertical_alignment="center")
+        # Wrapper idêntico ao modelo Tailwind: flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap
+        st.markdown('<div class="nav-bar-container-tw">', unsafe_allow_html=True)
+        cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.15, 1.1, 1.25, 1.35, 1.32, 0.75], vertical_alignment="center")
 
         opcoes_nav = [
             (cb1, "Dashboard", "Dashboard"),
@@ -656,7 +661,7 @@ with st.container(border=True):
             (cb5, "Cadastrar Novo Conferente", "Conferentes")
         ]
 
-        # Injeção direta de tipo primary (azul claro) ou secondary (branco)
+        # Injeção de tipo primary (active) ou secondary (inativo) com estilo Tailwind
         for col_btn, nome_menu, label_btn in opcoes_nav:
             with col_btn:
                 is_active = (st.session_state.menu_selecionado == nome_menu)
@@ -667,10 +672,12 @@ with st.container(border=True):
                     st.rerun()
 
         with cb_sync:
+            st.markdown('<div class="sync-btn-slot">', unsafe_allow_html=True)
             if st.button("⟳", key="nav_top_sync", help="Sincronizar dados com a planilha", use_container_width=True):
                 carregar_dados_planilha_cached.clear()
                 carregar_lista_conferentes.clear()
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
