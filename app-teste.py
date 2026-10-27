@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 import altair as alt
 import os
 from pathlib import Path
-from PIL import Image
+import base64
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -19,8 +19,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- LOCALIZADOR RESILIENTE DO LOGOTIPO ---
-def encontrar_e_carregar_logotipo():
+# --- LOCALIZADOR E CONVERSOR DO LOGOTIPO EM BASE64 ---
+def obter_logotipo_base64():
     nomes_possiveis = [
         "logotipo.png", "logotipo.PNG", "logotipo.jpg", "logotipo.jpeg",
         "logo.png", "logo.PNG", "logo.jpg", "logo.jpeg"
@@ -34,7 +34,8 @@ def encontrar_e_carregar_logotipo():
             candidato = pasta / nome
             if candidato.is_file():
                 try:
-                    return Image.open(candidato)
+                    with open(candidato, "rb") as f:
+                        return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
                 except Exception:
                     pass
     for pasta in pastas_busca:
@@ -42,42 +43,44 @@ def encontrar_e_carregar_logotipo():
             for arq in pasta.rglob("*"):
                 if arq.is_file() and arq.name.lower() in [n.lower() for n in nomes_possiveis]:
                     try:
-                        return Image.open(arq)
+                        with open(arq, "rb") as f:
+                            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
                     except Exception:
                         pass
         except Exception:
             pass
     return None
 
-img_logo_obj = encontrar_e_carregar_logotipo()
+logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL: FUNDO CINZA CLARO & TODOS OS CONTAINERS BRANCOS ---
+# --- 2. CSS CORPORATIVO REFINADO (SLATE & SKY DESIGN SYSTEM) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Ocultar menus e barra lateral padrão */
+    /* Oculta Sidebar e Header nativos do Streamlit */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* Fundo da Página Cinza Claro */
+    /* Base da Aplicação: Fundo Slate-50 Suave */
     html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-        background-color: #f1f5f9 !important;
-        color: #1e293b !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
     }
 
+    /* Container Global Centralizado */
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 3rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
-        max-width: 1340px !important;
+        max-width: 1360px !important;
         margin: 0 auto !important;
     }
 
-    /* TODOS OS CONTAINERS NA COR BRANCA */
+    /* PADRONIZAÇÃO DE CONTAINERS BRANCOS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
@@ -86,63 +89,78 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
-    /* Imagem do Logotipo */
-    [data-testid="stImage"] {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
+    /* ESTRUTURA DA MARCA: LOGO + TÍTULOS (SEM SOBREPOSIÇÃO) */
+    .brand-cluster {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 52px;
     }
-    [data-testid="stImage"] img {
-        max-height: 52px !important;
-        max-width: 130px !important;
-        width: auto !important;
-        object-fit: contain !important;
+    .brand-logo-frame {
+        height: 48px;
+        max-width: 120px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-
-    .brand-fallback-box {
-        width: 46px;
-        height: 46px;
+    .brand-logo-frame img {
+        max-height: 46px;
+        width: auto;
+        max-width: 100%;
+        object-fit: contain;
+    }
+    .brand-fallback-badge {
+        width: 44px;
+        height: 44px;
         background: #0284c7;
         color: #ffffff;
-        border-radius: 8px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 22px;
+        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
     }
-
-    .header-title-text {
-        font-size: 16.5px !important;
+    .brand-text-block {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.25;
+    }
+    .brand-title {
+        font-size: 16px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
-        letter-spacing: -0.2px;
+        letter-spacing: -0.3px;
         margin: 0 !important;
-        line-height: 1.2 !important;
     }
-    .header-subtitle-text {
+    .brand-subtitle {
         font-size: 11.5px !important;
         color: #64748b !important;
         margin: 2px 0 0 0 !important;
+        font-weight: 400;
     }
 
-    /* SUBCONTAINER DOS BOTÕES DE NAVEGAÇÃO */
-    div.subcontainer-nav-box {
-        background-color: #f8fafc;
+    /* SUBCONTAINER DOS BOTÕES NA HEADER */
+    div.subnav-cluster {
+        background-color: #f1f5f9;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
-        padding: 6px 8px;
+        padding: 4px;
     }
 
-    /* Botões de Navegação */
-    div.subcontainer-nav-box div.stButton > button {
+    /* PADRONIZAÇÃO DE BOTÕES DO MENU SUPERIOR */
+    div.subnav-cluster div.stButton > button {
         border-radius: 8px !important;
         font-size: 12px !important;
         font-weight: 600 !important;
-        padding: 5px 12px !important;
-        height: 38px !important;
+        padding: 5px 10px !important;
+        height: 36px !important;
         transition: all 0.15s ease-in-out !important;
         white-space: nowrap !important;
         border: 1px solid transparent !important;
+        box-shadow: none !important;
     }
 
     /* Botão Inativo */
@@ -150,23 +168,22 @@ st.markdown("""
         background-color: #ffffff !important;
         color: #64748b !important;
         border: 1px solid #e2e8f0 !important;
-        box-shadow: none !important;
     }
     div.nav-btn-inactive div.stButton > button:hover {
-        background-color: #f1f5f9 !important;
+        background-color: #f8fafc !important;
         color: #0f172a !important;
         border-color: #cbd5e1 !important;
     }
 
-    /* Botão Ativo */
+    /* Botão Ativo (Sky Blue) */
     div.nav-btn-active div.stButton > button {
         background-color: #0284c7 !important;
         color: #ffffff !important;
         border: 1px solid #0284c7 !important;
-        box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25) !important;
+        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25) !important;
     }
 
-    /* Botão Sincronizar */
+    /* Botão Sincronizar (Emerald) */
     div.nav-btn-sync div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
@@ -177,7 +194,7 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* KPI CARDS (BRANCOS COM BORDA COLORIDA) */
+    /* KPI CARDS (SLATE/SKY HARMONIZADOS) */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -188,15 +205,15 @@ st.markdown("""
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
-        padding: 16px 18px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        padding: 14px 18px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         position: relative;
         overflow: hidden;
     }
     .kpi-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
     }
     .kpi-card::before {
         content: "";
@@ -219,13 +236,13 @@ st.markdown("""
         margin-bottom: 4px;
     }
     .kpi-value {
-        font-size: 21px !important;
+        font-size: 20px !important;
         font-weight: 700;
         color: #0f172a;
         line-height: 1.2;
     }
 
-    /* Inputs e Controles */
+    /* FORMULÁRIOS E INPUTS */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -533,36 +550,39 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. CONTAINER INICIAL BRANCO COM SUBCONTAINER DE NAVEGAÇÃO ---
+# --- 4. CONTAINER SUPERIOR COM SUBCONTAINER DE NAVEGAÇÃO ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-# CONTAINER PRINCIPAL INICIAL BRANCO
+# Tag HTML do logo gerada dinamicamente (sem sobreposição com títulos)
+if logo_src_b64:
+    logo_markup = f'<div class="brand-logo-frame"><img src="{logo_src_b64}" alt="Logotipo"></div>'
+else:
+    logo_markup = '<div class="brand-fallback-badge">📦</div>'
+
+# Container Principal Superior
 with st.container(border=True):
-    col_logo, col_info, col_subnav = st.columns([0.8, 2.5, 6.7], vertical_alignment="center")
+    col_marca, col_nav = st.columns([4.2, 5.8], vertical_alignment="center")
 
-    with col_logo:
-        if img_logo_obj is not None:
-            st.image(img_logo_obj, width=110)
-        else:
-            st.markdown('<div class="brand-fallback-box">📦</div>', unsafe_allow_html=True)
-
-    with col_info:
+    with col_marca:
         st.markdown(f"""
-        <div>
-            <h1 class="header-title-text">Gestão de Conferência de Mercadorias</h1>
-            <p class="header-subtitle-text">Controle Operacional, Ordens & Estoque · <strong>{total_itens_carregados}</strong> itens na base</p>
+        <div class="brand-cluster">
+            {logo_markup}
+            <div class="brand-text-block">
+                <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
+                <p class="brand-subtitle">Controle Operacional, Ordens & Estoque · <strong>{total_itens_carregados}</strong> itens na base</p>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
-    with col_subnav:
-        # SUBCONTAINER INTERNO DEDICADO PARA OS BOTÕES
+    with col_nav:
+        # Subcontainer dedicado para os botões de navegação
         with st.container():
-            st.markdown('<div class="subcontainer-nav-box">', unsafe_allow_html=True)
-            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.2, 1.2, 1.4, 1.5, 1.5, 1.2])
+            st.markdown('<div class="subnav-cluster">', unsafe_allow_html=True)
+            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.2, 1.15, 1.35, 1.45, 1.4, 1.25])
 
             opcoes_nav = [
                 (cb1, "Dashboard", "📊 Dashboard"),
@@ -595,7 +615,7 @@ with st.container(border=True):
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD (CONTAINER BRANCO)
+# OPÇÃO: DASHBOARD
 # ==============================================================================
 if menu == "Dashboard":
     with st.spinner("Compilando indicadores..."):
