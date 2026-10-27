@@ -16,155 +16,225 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Corporativa Compacta
+# Estilização Corporativa - Padrão painel_compras_solicitacoes_pecas
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        font-size: 13px !important;
-    }
-    
-    .main-title {
-        font-size: 19px !important;
-        font-weight: 700 !important;
-        color: #0f134f !important;
-        margin-bottom: 4px !important;
-        padding-bottom: 6px !important;
-        border-bottom: 1.5px solid #e2e8f0 !important;
-        letter-spacing: -0.2px !important;
-    }
-    .sub-title {
-        font-size: 12px !important;
-        color: #64748b !important;
-        margin-bottom: 16px !important;
     }
 
-    .metric-container {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 18px;
-        flex-wrap: wrap;
+    /* Container base */
+    .block-container {
+        padding-top: 1.8rem !important;
+        padding-bottom: 2.5rem !important;
+        max-width: 96% !important;
     }
-    .metric-card {
+
+    /* Cabeçalhos de Página */
+    .page-header {
+        margin-bottom: 22px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .page-title {
+        font-size: 22px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        letter-spacing: -0.4px !important;
+        margin: 0 0 4px 0 !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .page-subtitle {
+        font-size: 13px !important;
+        color: #64748b !important;
+        margin: 0 !important;
+        font-weight: 400;
+    }
+
+    /* KPI / Metric Cards Modernos */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+    .metric-card-pro {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 4px solid #273270;
-        padding: 10px 14px;
-        border-radius: 8px;
-        flex: 1;
-        min-width: 170px;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.04);
-        transition: all 0.2s ease-in-out;
+        border-radius: 10px;
+        padding: 14px 18px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        position: relative;
+        overflow: hidden;
     }
-    .metric-card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(15, 19, 79, 0.08);
+    .metric-card-pro:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.07);
     }
-    .metric-card span {
-        font-size: 10.5px !important;
-        color: #64748b;
-        font-weight: 700;
+    .metric-card-pro::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: #1e3a8a;
+    }
+    .metric-card-pro.green::before { background: #16a34a; }
+    .metric-card-pro.red::before { background: #dc2626; }
+    .metric-card-pro.amber::before { background: #d97706; }
+
+    .metric-card-pro .kpi-label {
+        font-size: 11px !important;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        margin-bottom: 4px;
     }
-    .metric-card strong {
-        display: block;
-        font-size: 15px !important;
-        color: #0f134f;
-        margin-top: 3px;
+    .metric-card-pro .kpi-value {
+        font-size: 20px !important;
         font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
     }
 
+    /* Atalho e Callouts */
     .keyboard-hint {
         background-color: #f8fafc;
         border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        border-radius: 5px;
-        font-size: 11px !important;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 11.5px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 10px;
+        margin-bottom: 14px;
     }
     .keyboard-hint kbd {
         background: #ffffff;
         border: 1px solid #94a3b8;
         border-bottom-width: 2px;
-        padding: 1px 4px;
-        border-radius: 3px;
+        padding: 2px 5px;
+        border-radius: 4px;
         font-weight: 700;
-        font-size: 10.5px !important;
-        color: #0f134f;
+        font-size: 11px !important;
+        color: #0f172a;
     }
 
     .divergence-box {
         background-color: #fff7ed;
-        border: 1px solid #fdba74;
-        border-radius: 6px;
-        padding: 12px 14px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        font-size: 12px !important;
+        border: 1px solid #fed7aa;
+        border-left: 4px solid #ea580c;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 14px 0;
+        font-size: 12.5px !important;
     }
 
+    /* Sidebar Padronizada */
+    [data-testid="stSidebar"] {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        border-right: 1px solid #1e293b;
+    }
+    [data-testid="stSidebar"] * {
+        color: #f1f5f9;
+    }
+    .sidebar-brand-box {
+        padding: 16px 12px;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .sidebar-brand-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        color: #ffffff !important;
+        text-transform: uppercase;
+    }
+    .sidebar-brand-sub {
+        font-size: 10px;
+        color: #94a3b8 !important;
+        margin-top: 2px;
+        font-weight: 500;
+    }
+    .sidebar-section-title {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 8px;
+        margin-top: 6px;
+    }
+
+    /* Botões da Sidebar */
+    [data-testid="stSidebar"] div.stButton > button {
+        background: transparent !important;
+        color: #cbd5e1 !important;
+        border: 1px solid transparent !important;
+        border-radius: 6px !important;
+        text-align: left !important;
+        font-weight: 500 !important;
+        font-size: 12.5px !important;
+        padding: 9px 12px !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    [data-testid="stSidebar"] div.stButton > button:hover {
+        background: rgba(255, 255, 255, 0.06) !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        transform: none !important;
+    }
+
+    /* Botões Padrão do Painel Principal */
+    div.stButton > button[kind="primary"],
+    div.stButton > button {
+        background: #1e3a8a !important;
+        color: #ffffff !important;
+        border: 1px solid #1d4ed8 !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        padding: 7px 18px !important;
+        font-size: 13px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    div.stButton > button:hover {
+        background: #1d4ed8 !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Inputs e Controles */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
-        font-size: 12.5px !important;
+        border-radius: 6px !important;
+        font-size: 13px !important;
     }
     label p {
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        color: #1e293b !important;
-    }
-
-    div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
-        background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
-        background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        padding: 7px 16px !important;
         font-size: 12.5px !important;
-        letter-spacing: 0.2px !important;
-        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
-        transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
-    }
-    div.stButton > button:hover {
-        opacity: 0.95 !important;
-        transform: scale(1.005) !important;
+        font-weight: 600 !important;
+        color: #334155 !important;
     }
 
-    [data-testid="stSidebar"] {
-        background-color: #f8fafc;
-        border-right: 1px solid #e2e8f0;
-    }
-    .sidebar-brand {
-        padding: 10px 12px;
-        border-radius: 6px;
-        background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
-        color: #ffffff;
-        margin-bottom: 14px;
-        text-align: center;
-        font-weight: 700;
-        font-size: 13px !important;
-        letter-spacing: 0.4px;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.15);
-    }
-    .sidebar-menu-title {
-        font-size: 10.5px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        margin-bottom: 6px !important;
-        letter-spacing: 0.5px !important;
-    }
-
+    /* Dataframes & Tabelas */
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
-        font-size: 12px !important;
+        font-size: 12.5px !important;
     }
-
+    
     @media print {
         header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
@@ -234,12 +304,10 @@ def normalizar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return df
 
-    # Normaliza a coluna Remessa para texto sem '.0' e sem espaços
     if "remessa" in df.columns:
         df["remessa"] = df["remessa"].fillna("").astype(str)
         df["remessa"] = df["remessa"].str.replace(r"\.0$", "", regex=True).str.strip()
 
-    # Normaliza campos de texto
     for col in ["produto", "descricao", "local", "conferente", "observacao"]:
         if col in df.columns:
             df[col] = df[col].fillna("").astype(str).str.strip()
@@ -439,30 +507,38 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO POR BOTÕES ---
+# --- 5. NAVEGAÇÃO & SIDEBAR ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
-st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
-st.sidebar.markdown('<p class="sidebar-menu-title">MENU DE NAVEGAÇÃO</p>', unsafe_allow_html=True)
+st.sidebar.markdown("""
+<div class="sidebar-brand-box">
+    <div class="sidebar-brand-title">📦 ESTOQUE & CONFERÊNCIA</div>
+    <div class="sidebar-brand-sub">Painel Integrado de Suprimentos</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown('<div class="sidebar-section-title">Navegação Principal</div>', unsafe_allow_html=True)
 
 opcoes_menu = [
-    "Dashboard de Resumo",
-    "Importar Remessa",
-    "Folha de Impressão Cega",
-    "Digitar Conferência Cega",
-    "Cadastrar Novo Conferente"
+    ("Dashboard de Resumo", "📊"),
+    ("Importar Remessa", "📥"),
+    ("Folha de Impressão Cega", "🖨️"),
+    ("Digitar Conferência Cega", "🔍"),
+    ("Cadastrar Novo Conferente", "👤")
 ]
 
-for opcao in opcoes_menu:
+for opcao, icon in opcoes_menu:
     is_active = (st.session_state.menu_selecionado == opcao)
-    rotulo = f"▶ {opcao}" if is_active else opcao
+    rotulo = f"● {icon}  {opcao}" if is_active else f"{icon}  {opcao}"
     if st.sidebar.button(rotulo, key=f"btn_nav_{opcao}", use_container_width=True):
         st.session_state.menu_selecionado = opcao
         st.rerun()
 
-st.sidebar.write("---")
-if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_width=True):
+st.sidebar.markdown('<div style="margin: 16px 0; border-top: 1px solid #1e293b;"></div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-section-title">Ações do Sistema</div>', unsafe_allow_html=True)
+
+if st.sidebar.button("🔄 Sincronizar Base de Dados", use_container_width=True):
     carregar_dados_planilha_cached.clear()
     carregar_lista_conferentes.clear()
     st.rerun()
@@ -470,11 +546,15 @@ if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_widt
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS)
+# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM CORES CORPORATIVAS)
 # ==============================================================================
 if menu == "Dashboard de Resumo":
-    st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e índice de acuracidade em tempo real.</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <h1 class="page-title">📊 Resumo Gerencial de Conferência Cega</h1>
+        <p class="page-subtitle">Acompanhe a produtividade de conferência, divergências físicas e índices de acuracidade.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.spinner("Compilando indicadores..."):
         df_raw = carregar_dados_planilha()
@@ -498,7 +578,7 @@ if menu == "Dashboard de Resumo":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
-        col_f1, col_f2 = st.columns([2, 2])
+        col_f1, col_f2 = st.columns([1, 1])
         with col_f1:
             confs_unicos = sorted([str(c).strip() for c in df.get("conferente", pd.Series()).dropna().unique() if str(c).strip() != ""])
             lista_confs = ["TODOS"] + confs_unicos
@@ -524,28 +604,29 @@ if menu == "Dashboard de Resumo":
         
         taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
 
+        acuracia_cor_class = "green" if taxa_acuracia >= 98 else "red"
+        divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
+
         st.markdown(f"""
-        <div class="metric-container">
-            <div class="metric-card">
-                <span>Remessas Auditadas</span>
-                <strong>{total_remessas}</strong>
+        <div class="metric-grid">
+            <div class="metric-card-pro">
+                <div class="kpi-label">Remessas Auditadas</div>
+                <div class="kpi-value">{total_remessas}</div>
             </div>
-            <div class="metric-card">
-                <span>Itens Conferidos</span>
-                <strong>{total_conferidos} de {total_itens}</strong>
+            <div class="metric-card-pro">
+                <div class="kpi-label">Itens Conferidos</div>
+                <div class="kpi-value">{total_conferidos} <span style="font-size: 13px; font-weight: 500; color: #64748b;">/ {total_itens}</span></div>
             </div>
-            <div class="metric-card">
-                <span>Acuracidade Físico x Remessa</span>
-                <strong style="color: {'#16a34a' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
+            <div class="metric-card-pro {acuracia_cor_class}">
+                <div class="kpi-label">Acuracidade Físico x Remessa</div>
+                <div class="kpi-value">{taxa_acuracia:.1f}%</div>
             </div>
-            <div class="metric-card">
-                <span>Itens com Divergência</span>
-                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#16a34a'};">{len(itens_com_erro)}</strong>
+            <div class="metric-card-pro {divergencias_cor_class}">
+                <div class="kpi-label">Itens com Divergência</div>
+                <div class="kpi-value">{len(itens_com_erro)}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
-
-        st.write("---")
 
         col_g1, col_g2 = st.columns(2)
 
@@ -554,7 +635,7 @@ if menu == "Dashboard de Resumo":
             df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#1e3a8a", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                     x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
                 )
@@ -564,7 +645,7 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#0f172a"
                 ).encode(
                     text="Qtd:Q"
                 )
@@ -578,7 +659,7 @@ if menu == "Dashboard de Resumo":
             df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
             if not df_dia.empty:
                 max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
-                barras_dia = alt.Chart(df_dia).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                barras_dia = alt.Chart(df_dia).mark_bar(color="#0284c7", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                     x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
                 )
@@ -588,7 +669,7 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#0f172a"
                 ).encode(
                     text="Qtd:Q"
                 )
@@ -597,7 +678,7 @@ if menu == "Dashboard de Resumo":
             else:
                 st.info("Sem dados suficientes para a evolução diária.")
 
-        st.write("---")
+        st.markdown("<hr style='margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
         col_e1, col_e2 = st.columns(2)
 
         with col_e1:
@@ -654,7 +735,12 @@ if menu == "Dashboard de Resumo":
 # OPÇÃO: IMPORTAR REMESSA (Aba Conferencia)
 # ==============================================================================
 elif menu == "Importar Remessa":
-    st.markdown('<div class="main-title">📥 Importação de Remessa</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <h1 class="page-title">📥 Importação de Remessa</h1>
+        <p class="page-subtitle">Suba a planilha original do fornecedor para iniciar o ciclo de auditoria física.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -662,7 +748,7 @@ elif menu == "Importar Remessa":
     with col2:
         nome_local_input = st.text_input("Local / Estoque de Destino *", placeholder="Ex: S.R. EMBALAGENS")
 
-    arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa", type=["xlsx", "xls"])
+    arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa (.xlsx ou .xls)", type=["xlsx", "xls"])
 
     if st.button("Processar e Salvar", type="primary"):
         if not num_remessa or not nome_local_input or not arquivo_excel:
@@ -682,16 +768,16 @@ elif menu == "Importar Remessa":
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        remessa_limpa,             # A: Remessa
-                        nome_local,                # B: Estoque
-                        data_importacao,           # C: Horario / Data
-                        str(item["Produto"]).strip(), # D: Codigo
+                        remessa_limpa,                  # A: Remessa
+                        nome_local,                     # B: Estoque
+                        data_importacao,                # C: Horario / Data
+                        str(item["Produto"]).strip(),   # D: Codigo
                         str(item["Descricao"]).strip(), # E: Descrição
-                        float(item["Quantidade"]), # F: Quantidade
-                        "",                        # G: Conferencia
-                        "",                        # H: Divergencia
-                        "",                        # I: Conferente
-                        ""                         # J: Justificstiva para Divergencia
+                        float(item["Quantidade"]),      # F: Quantidade
+                        "",                             # G: Conferencia
+                        "",                             # H: Divergencia
+                        "",                             # I: Conferente
+                        ""                              # J: Justificativa para Divergencia
                     ])
 
                 with st.spinner("Gravando linhas na aba Conferencia..."):
@@ -707,8 +793,12 @@ elif menu == "Importar Remessa":
 # OPÇÃO: FOLHA DE IMPRESSÃO CEGA (ECONÔMICA)
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
-    st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Gere a folha física com formato compacto para economia de papel.</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <h1 class="page-title">🖨️ Folha de Separação / Contagem Cega</h1>
+        <p class="page-subtitle">Gere a ficha de conferência física pronta para impressão econômica em papel A4.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.spinner("Consultando dados..."):
         df = carregar_dados_planilha()
@@ -716,7 +806,6 @@ elif menu == "Folha de Impressão Cega":
     if df.empty:
         st.info("Nenhuma remessa encontrada na aba Conferencia.")
     else:
-        # Extrai lista de remessas sem duplicatas e sem vazios
         remessas_disponiveis = [
             str(r).strip() for r in df["remessa"].dropna().unique().tolist()
             if str(r).strip() not in ["", "nan", "None"]
@@ -739,9 +828,9 @@ elif menu == "Folha de Impressão Cega":
                     desc_item = str(row.get('descricao', ''))
                     linhas_tabela += (
                         "<tr>"
-                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-weight: bold; font-size: 9.5px;'>{cod_item}</td>"
-                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-size: 9.5px; line-height: 1.15;'>{desc_item}</td>"
-                        "<td style='border: 1px solid #475569; padding: 3px 5px; height: 20px;'></td>"
+                        f"<td style='border: 1px solid #cbd5e1; padding: 4px 6px; font-weight: 700; font-size: 10px; color: #0f172a;'>{cod_item}</td>"
+                        f"<td style='border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 10px; color: #334155; line-height: 1.2;'>{desc_item}</td>"
+                        "<td style='border: 1px solid #cbd5e1; padding: 4px 6px; height: 22px;'></td>"
                         "</tr>"
                     )
 
@@ -751,62 +840,68 @@ elif menu == "Folha de Impressão Cega":
     <meta charset="utf-8">
     <style>
         body {{
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             color: #0f172a;
             margin: 0;
             padding: 4px;
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 1.5px solid #0f134f;
-            padding-bottom: 5px;
-            margin-bottom: 6px;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }}
         .header-title {{
-            font-size: 13.5px;
-            font-weight: bold;
-            margin: 0 0 3px 0;
-            color: #0f134f;
+            font-size: 14px;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            color: #1e3a8a;
             text-transform: uppercase;
+            letter-spacing: 0.4px;
         }}
         .header-meta {{
             display: flex;
-            gap: 16px;
-            font-size: 10px;
-            color: #334155;
+            gap: 20px;
+            font-size: 10.5px;
+            color: #475569;
             font-weight: 600;
         }}
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
+            margin-top: 6px;
         }}
         th {{
-            border: 1px solid #0f134f;
+            border: 1px solid #94a3b8;
             background-color: #f1f5f9;
-            padding: 4px 5px;
+            padding: 5px 6px;
             font-size: 10px;
             text-align: left;
-            font-weight: bold;
+            font-weight: 700;
+            color: #0f172a;
         }}
         .signature-box {{
-            margin-top: 20px;
+            margin-top: 24px;
             display: flex;
             justify-content: space-between;
-            font-size: 9.5px;
-            color: #334155;
+            font-size: 10px;
+            color: #475569;
             padding-top: 4px;
         }}
         .btn-imprimir {{
-            background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
+            background: #1e3a8a;
             color: white;
             border: none;
-            padding: 6px 14px;
-            font-size: 11px;
+            padding: 7px 16px;
+            font-size: 11.5px;
             font-weight: 600;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            transition: background 0.15s ease;
+        }}
+        .btn-imprimir:hover {{
+            background: #1d4ed8;
         }}
         @media print {{
             .btn-imprimir {{
@@ -822,22 +917,22 @@ elif menu == "Folha de Impressão Cega":
     </style>
 </head>
 <body>
-    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha Econômica</button>
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha de Contagem</button>
 
     <div class="header-box">
-        <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
+        <div class="header-title">Folha de Conferência Física (Contagem Cega)</div>
         <div class="header-meta">
-            <div>REMESSA: {remessa_selecionada}</div>
-            <div>LOCAL: {local_cad}</div>
-            <div>DATA: {data_cad}</div>
+            <div>REMESSA: <strong>{remessa_selecionada}</strong></div>
+            <div>LOCAL: <strong>{local_cad}</strong></div>
+            <div>DATA: <strong>{data_cad}</strong></div>
         </div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th style="width: 18%;">CÓDIGO</th>
-                <th style="width: 62%;">DESCRIÇÃO DO PRODUTO</th>
+                <th style="width: 20%;">CÓDIGO</th>
+                <th style="width: 60%;">DESCRIÇÃO DO PRODUTO</th>
                 <th style="width: 20%; text-align: center;">QTD. CONFERIDA</th>
             </tr>
         </thead>
@@ -853,14 +948,19 @@ elif menu == "Folha de Impressão Cega":
 </body>
 </html>"""
 
-                altura_calculada = max(360, 100 + (len(dados_remessa) * 26))
+                altura_calculada = max(360, 110 + (len(dados_remessa) * 28))
                 components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
 # OPÇÃO: DIGITAR CONFERÊNCIA CEGA & JUSTIFICATIVA POR ITEM
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
-    st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <h1 class="page-title">🔍 Digitação de Conferência Cega e Validação</h1>
+        <p class="page-subtitle">Lance os quantitativos apurados fisicamente para validação instantânea contra o manifesto.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.spinner("Buscando registros..."):
         df = carregar_dados_planilha()
@@ -905,22 +1005,22 @@ elif menu == "Digitar Conferência Cega":
                     st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
                 st.markdown(f"""
-                <div class="metric-container">
-                    <div class="metric-card">
-                        <span>Remessa</span>
-                        <strong>{remessa_alvo}</strong>
+                <div class="metric-grid">
+                    <div class="metric-card-pro">
+                        <div class="kpi-label">Remessa</div>
+                        <div class="kpi-value">{remessa_alvo}</div>
                     </div>
-                    <div class="metric-card">
-                        <span>Local / Depósito</span>
-                        <strong>{local_atual}</strong>
+                    <div class="metric-card-pro">
+                        <div class="kpi-label">Local / Depósito</div>
+                        <div class="kpi-value">{local_atual}</div>
                     </div>
-                    <div class="metric-card">
-                        <span>Data de Importação</span>
-                        <strong>{data_atual_br}</strong>
+                    <div class="metric-card-pro">
+                        <div class="kpi-label">Data de Importação</div>
+                        <div class="kpi-value">{data_atual_br}</div>
                     </div>
-                    <div class="metric-card">
-                        <span>Itens a Conferir</span>
-                        <strong>{len(dados_trabalho)}</strong>
+                    <div class="metric-card-pro">
+                        <div class="kpi-label">Itens a Conferir</div>
+                        <div class="kpi-value">{len(dados_trabalho)}</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -950,7 +1050,7 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown("""
                 <div class="keyboard-hint">
-                    ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+                    ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para registrar e descer direto para o próximo produto.
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -991,7 +1091,7 @@ elif menu == "Digitar Conferência Cega":
                             "divergencia": conf_val - qtd_esp
                         })
 
-                st.write("---")
+                st.markdown("<hr style='margin: 18px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
                 autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência com divergência")
                 justificativas_itens = {}
 
@@ -1002,7 +1102,7 @@ elif menu == "Digitar Conferência Cega":
                         st.markdown("""
                         <div class="divergence-box">
                             <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
-                            <span style="font-size: 11.5px; color: #431407;">
+                            <span style="font-size: 12px; color: #7c2d12;">
                                 Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
                             </span>
                         </div>
@@ -1132,8 +1232,12 @@ elif menu == "Digitar Conferência Cega":
 # OPÇÃO: CADASTRAR NOVO CONFERENTE (Aba Local-Estoque - Coluna D)
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
-    st.markdown('<div class="main-title">👤 Cadastro de Conferente</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Os conferentes são lidos e gravados na Coluna D da aba <strong>Local-Estoque</strong>.</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <h1 class="page-title">👤 Cadastro de Conferente</h1>
+        <p class="page-subtitle">Os conferentes são lidos e gravados na Coluna D da aba <strong>Local-Estoque</strong>.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -1152,7 +1256,7 @@ elif menu == "Cadastrar Novo Conferente":
                         mensagem_erro = res.get("message", "Falha de comunicação")
                         st.error(f"Erro ao cadastrar: {mensagem_erro}")
 
-    st.write("---")
+    st.markdown("<hr style='margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
     st.write("#### 👥 Conferentes Atualmente Cadastrados:")
     conferentes_atuais = carregar_lista_conferentes()
     if conferentes_atuais:
