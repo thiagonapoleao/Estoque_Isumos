@@ -99,21 +99,6 @@ st.markdown("""
         padding: 14px 18px !important;
     }
 
-    /* Header Card Unificado */
-    .header-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.75rem;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        padding: 0.65rem 1.25rem;
-        margin-bottom: 14px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
     /* KPI Cards */
     .kpi-grid {
         display: grid;
@@ -195,6 +180,23 @@ st.markdown("""
         padding: 12px 14px;
         margin: 10px 0;
         font-size: 12px !important;
+    }
+
+    /* Botão Sync Verde Corporativo */
+    .btn-sync-custom button {
+        background-color: #ecfdf5 !important;
+        color: #065f46 !important;
+        border: 1px solid #a7f3d0 !important;
+        border-radius: 12px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        height: 48px !important;
+        transition: all 0.2s ease !important;
+    }
+    .btn-sync-custom button:hover {
+        background-color: #d1fae5 !important;
+        border-color: #6ee7b7 !important;
+        color: #064e3b !important;
     }
 
     @media print {
@@ -500,44 +502,70 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER INTEGRADO COM NAVEGAÇÃO NATIVA ---
+# --- 4. CONTAINER ÚNICO: LOGOTIPO + ESCRITO + BOTÕES DE NAVEGAÇÃO ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-logo_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 42px; height: 42px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px;">📦</div>'
+logo_tag = f'<img src="{logo_src_b64}" alt="Logotipo" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 44px; height: 44px; background-color: #0284c7; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px;">📦</div>'
 
-col_header_left, col_header_right = st.columns([1.1, 1.9])
+with st.container(border=True):
+    col_marca, col_menu, col_sync = st.columns([1.1, 1.85, 0.25])
 
-with col_header_left:
-    st.markdown(f"""
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); padding: 0.5rem 1rem; display: flex; align-items: center; gap: 14px; height: 60px;">
-        <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; height: 46px; min-width: 46px;">
-            {logo_tag}
+    with col_marca:
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 14px; min-height: 50px;">
+            <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,0.04); height: 50px; min-width: 50px;">
+                {logo_tag}
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+                <h1 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
+                    Gestão de Conferência de Mercadorias
+                </h1>
+                <p style="font-size: 11.5px; color: #64748b; font-weight: 500; margin: 2px 0 0 0;">
+                    Controle Operacional & Estoque · <strong style="color: #0f172a;">{total_itens_carregados}</strong> registros na base
+                </p>
+            </div>
         </div>
-        <div>
-            <h1 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2;">
-                Gestão de Conferência de Mercadorias
-            </h1>
-            <p style="font-size: 11px; color: #64748b; font-weight: 500; margin: 2px 0 0 0;">
-                Controle Operacional & Estoque · <strong style="color: #0f172a;">{total_itens_carregados}</strong> registros na base
-            </p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-with col_header_right:
-    col_menu, col_sync = st.columns([5.5, 1.0])
     with col_menu:
         selecionado = option_menu(
             menu_title=None,
             options=opcoes_validas,
-            icons=["bar-chart", "cloud-upload", "printer", "pencil-square", "person-plus"],
             default_index=opcoes_validas.index(st.session_state.menu_selecionado) if st.session_state.menu_selecionado in opcoes_validas else 0,
             orientation="horizontal",
             styles={
-                "container": {"padding": "3px 6px", "background-color": "#f1f5f9", "border-radius": "14px", "border": "1px solid #e2e8f0", "height": "60px", "display": "flex", "align-items": "center"},
-                "nav-link": {"font-size": "11.5px", "font-weight": "600", "color": "#64748b", "padding": "7px 11px", "border-radius": "10px", "margin": "0 2px", "border": "1px solid transparent", "white-space": "nowrap"},
-                "nav-link-selected": {"background-color": "#e0f2fe", "color": "#0369a1", "font-weight": "700", "border": "1.5px solid #7dd3fc", "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12)"},
+                "container": {
+                    "padding": "4px",
+                    "background-color": "#f1f5f9",
+                    "border-radius": "14px",
+                    "border": "1px solid #e2e8f0",
+                    "display": "flex",
+                    "align-items": "center",
+                    "justify-content": "center",
+                    "gap": "4px",
+                    "margin": "0"
+                },
+                "nav-link": {
+                    "font-family": "'Inter', system-ui, sans-serif",
+                    "font-size": "11.5px",
+                    "font-weight": "600",
+                    "color": "#64748b",
+                    "background-color": "#ffffff",
+                    "border": "1px solid #e2e8f0",
+                    "border-radius": "10px",
+                    "padding": "6px 12px",
+                    "margin": "0",
+                    "white-space": "nowrap",
+                    "transition": "all 0.15s ease",
+                },
+                "nav-link-selected": {
+                    "background-color": "#e0f2fe !important",
+                    "color": "#0369a1 !important",
+                    "border": "1.5px solid #7dd3fc !important",
+                    "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12) !important",
+                    "font-weight": "700 !important",
+                },
             }
         )
         if selecionado and selecionado != st.session_state.menu_selecionado:
@@ -545,10 +573,11 @@ with col_header_right:
             st.rerun()
 
     with col_sync:
-        st.markdown('<div style="height: 11px;"></div>', unsafe_allow_html=True)
-        if st.button("⟳ Sync", help="Recarregar dados da planilha"):
+        st.markdown('<div class="btn-sync-custom">', unsafe_allow_html=True)
+        if st.button("⟳ Sync", use_container_width=True, help="Recarregar dados da planilha"):
             st.cache_data.clear()
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
