@@ -19,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- LOCALIZADOR DO LOGOTIPO ---
+# --- LOCALIZADOR RESILIENTE DO LOGOTIPO ---
 def encontrar_e_carregar_logotipo():
     nomes_possiveis = [
         "logotipo.png", "logotipo.PNG", "logotipo.jpg", "logotipo.jpeg",
@@ -51,7 +51,7 @@ def encontrar_e_carregar_logotipo():
 
 img_logo_obj = encontrar_e_carregar_logotipo()
 
-# --- 2. CSS CORPORATIVO: TOPO FULL-WIDTH, FUNDO CINZA & ABAS AZUL CLARO ---
+# --- 2. CSS GLOBAL: HEADER FULL-WIDTH & CORPO CENTRALIZADO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -61,14 +61,14 @@ st.markdown("""
         display: none !important;
     }
 
-    /* Fundo da Página Cinza Claro */
+    /* Fundo Slate-100 para toda a página */
     html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
         background-color: #f1f5f9 !important;
-        color: #0f172a !important;
+        color: #1e293b !important;
     }
 
-    /* Remove espaçamentos externos para permitir topo full-width */
+    /* Remove o padding do container externo para que o header encoste nas bordas */
     .block-container {
         padding-top: 0rem !important;
         padding-bottom: 3rem !important;
@@ -77,142 +77,154 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* HEADER FULL-WIDTH (BRANCO NO TOPO DE PONTA A PONTA) */
-    div[data-testid="stVerticalBlock"] > div.header-fullwidth-wrapper {
+    /* HEADER SUPERIOR FULL-WIDTH (BRANCO DE PONTA A PONTA) */
+    .top-header-fullwidth {
+        width: 100vw !important;
         background-color: #ffffff !important;
-        border-bottom: 1px solid #cbd5e1 !important;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
-        padding: 12px 28px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+        padding: 10px 0 !important;
         margin-bottom: 24px !important;
-        width: 100% !important;
     }
 
-    /* Limitação de largura para o conteúdo do app abaixo do topo */
-    div.page-body-container {
-        max-width: 95% !important;
+    /* Conteúdo interno do Header limitado e alinhado */
+    .header-content-inner {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+
+    /* CORPO DA PÁGINA CENTRALIZADO COM MARGENS LATERAIS */
+    .page-center-container {
+        max-width: 1320px !important;
         margin: 0 auto !important;
+        padding: 0 24px !important;
     }
 
-    /* Imagem do logotipo ajustada */
-    [data-testid="stImage"] {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-    }
-    [data-testid="stImage"] img {
-        max-height: 64px !important;
-        max-width: 140px !important;
-        width: auto !important;
-        object-fit: contain !important;
-    }
-
-    .brand-fallback-box {
-        width: 52px;
-        height: 52px;
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
+    /* Logotipo Container */
+    .logo-container-box {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 26px;
+        height: 52px;
+        min-width: 52px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        padding: 4px;
+    }
+    [data-testid="stImage"] img {
+        max-height: 44px !important;
+        max-width: 130px !important;
+        width: auto !important;
+        object-fit: contain !important;
+    }
+    .brand-fallback-box {
+        width: 44px;
+        height: 44px;
+        background: #0284c7;
+        color: #ffffff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
     }
 
-    .brand-title {
-        font-size: 16px !important;
+    /* Título do Cabeçalho */
+    .header-title-text {
+        font-size: 17px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
+        letter-spacing: -0.3px;
         margin: 0 !important;
         line-height: 1.2 !important;
-        letter-spacing: -0.2px;
     }
-    .brand-subtitle {
+    .header-subtitle-text {
         font-size: 11.5px !important;
         color: #64748b !important;
         margin: 2px 0 0 0 !important;
-        font-weight: 500;
     }
 
-    /* PÍLULA DE NAVEGAÇÃO INTERNA COM FUNDO CINZA */
+    /* PÍLULA DE NAVEGAÇÃO INTERNA */
     div.nav-pill-wrapper {
-        background-color: #e2e8f0;
-        border: 1px solid #cbd5e1;
-        border-radius: 12px;
-        padding: 5px;
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 4px;
         display: flex;
         gap: 6px;
         align-items: center;
     }
 
-    /* Botões dentro do subcontainer cinza */
+    /* Configuração dos botões de navegação */
     div.nav-pill-wrapper div.stButton > button {
-        border-radius: 8px !important;
+        border-radius: 12px !important;
         font-size: 12px !important;
         font-weight: 600 !important;
-        padding: 5px 12px !important;
+        padding: 6px 14px !important;
         height: 38px !important;
-        transition: all 0.15s ease-in-out !important;
+        transition: all 0.2s ease !important;
         white-space: nowrap !important;
-        box-shadow: none !important;
-    }
-
-    /* Botão Inativo dentro da pílula */
-    div.btn-item-inactive div.stButton > button {
-        background-color: transparent !important;
-        color: #475569 !important;
         border: 1px solid transparent !important;
     }
-    div.btn-item-inactive div.stButton > button:hover {
-        background-color: rgba(255, 255, 255, 0.7) !important;
+
+    /* Botão Inativo */
+    div.nav-btn-inactive div.stButton > button {
+        background-color: #ffffff !important;
+        color: #64748b !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+    }
+    div.nav-btn-inactive div.stButton > button:hover {
+        background-color: #f8fafc !important;
         color: #0f172a !important;
+        border-color: #cbd5e1 !important;
     }
 
-    /* BOTÃO SELECIONADO: DESTAQUE AZUL CLARO */
-    div.btn-item-active div.stButton > button {
-        background-color: #e0f2fe !important;
-        color: #0369a1 !important;
-        border: 1.5px solid #7dd3fc !important;
-        box-shadow: 0 1px 3px rgba(3, 105, 161, 0.12) !important;
+    /* Botão Ativo (Azul do modelo #0284c7) */
+    div.nav-btn-active div.stButton > button {
+        background-color: #0284c7 !important;
+        color: #ffffff !important;
+        border: 1px solid #0284c7 !important;
+        box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25) !important;
     }
 
     /* Botão Sincronizar */
-    div.btn-item-sync div.stButton > button {
+    div.nav-btn-sync div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
         border: 1px solid #a7f3d0 !important;
     }
-    div.btn-item-sync div.stButton > button:hover {
+    div.nav-btn-sync div.stButton > button:hover {
         background-color: #d1fae5 !important;
         border-color: #6ee7b7 !important;
     }
 
-    /* CONTAINERS INTERNOS EM BRANCO COM BORDAS E SOMBRAS */
-    .white-card {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 20px;
-    }
-
-    /* KPI CARDS */
-    .metric-grid {
+    /* KPI CARDS (Do modelo de referência) */
+    .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         gap: 14px;
         margin-bottom: 22px;
     }
-    .metric-card-pro {
-        background: #ffffff;
+    .kpi-card {
+        background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 14px 18px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        border-radius: 12px;
+        padding: 16px 18px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         position: relative;
         overflow: hidden;
     }
-    .metric-card-pro::before {
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.06);
+    }
+    .kpi-card::before {
         content: "";
         position: absolute;
         top: 0;
@@ -221,10 +233,10 @@ st.markdown("""
         height: 100%;
         background: #0284c7;
     }
-    .metric-card-pro.green::before { background: #16a34a; }
-    .metric-card-pro.red::before { background: #dc2626; }
+    .kpi-card.green::before { background: #16a34a; }
+    .kpi-card.red::before { background: #dc2626; }
 
-    .metric-card-pro .kpi-label {
+    .kpi-label {
         font-size: 11px !important;
         font-weight: 600;
         text-transform: uppercase;
@@ -232,17 +244,28 @@ st.markdown("""
         color: #64748b;
         margin-bottom: 4px;
     }
-    .metric-card-pro .kpi-value {
-        font-size: 20px !important;
+    .kpi-value {
+        font-size: 21px !important;
         font-weight: 700;
         color: #0f172a;
+        line-height: 1.2;
+    }
+
+    /* Formulários e Inputs Modernos */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    input, textarea, select {
+        background-color: #ffffff !important;
+        border-radius: 8px !important;
+        border: 1px solid #cbd5e1 !important;
+        font-size: 13px !important;
     }
 
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
         padding: 8px 12px;
-        border-radius: 6px;
+        border-radius: 8px;
         font-size: 11.5px !important;
         color: #334155;
         display: inline-block;
@@ -269,23 +292,22 @@ st.markdown("""
         font-size: 12.5px !important;
     }
 
-    div[data-baseweb="select"] > div,
-    div[data-baseweb="input"] > div,
-    input, textarea, select {
-        background-color: #ffffff !important;
-        border-radius: 8px !important;
-        font-size: 13px !important;
-    }
-
     @media print {
-        header, .no-print, [data-testid="stToolbar"], footer, div.header-fullwidth-wrapper {
+        body * { visibility: hidden; }
+        .no-print, [data-testid="stToolbar"], footer, .top-header-fullwidth {
             display: none !important;
         }
+        .printable-area, .printable-area * {
+            visibility: visible;
+        }
         .printable-area {
-            display: block !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            background: #ffffff !important;
+            color: #000000 !important;
         }
     }
 </style>
@@ -537,36 +559,33 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. CABEÇALHO TOPO FULL-WIDTH (BRANCO) COM CONTAINER CINZA INTERNO ---
+# --- 4. HEADER SUPERIOR FULL-WIDTH (BRANCO DE PONTA A PONTA) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-# Envolve a barra superior em container de topo
-st.markdown('<div class="header-fullwidth-wrapper no-print">', unsafe_allow_html=True)
+st.markdown('<div class="top-header-fullwidth no-print"><div class="header-content-inner">', unsafe_allow_html=True)
 
-col_logo, col_info, col_nav = st.columns([1.1, 2.5, 6.4], vertical_alignment="center")
+col_logo, col_info, col_nav = st.columns([0.8, 2.5, 6.7], vertical_alignment="center")
 
 with col_logo:
     if img_logo_obj is not None:
-        st.image(img_logo_obj, width=125)
+        st.image(img_logo_obj, width=110)
     else:
         st.markdown('<div class="brand-fallback-box">📦</div>', unsafe_allow_html=True)
 
 with col_info:
     st.markdown(f"""
     <div>
-        <div class="brand-title">Gestão de Conferência de Mercadorias</div>
-        <div class="brand-subtitle">Remessas, Auditoria Cega & Estoque · <strong>{total_itens_carregados}</strong> registros</div>
+        <h1 class="header-title-text">Gestão de Conferência de Mercadorias</h1>
+        <p class="header-subtitle-text">Controle Operacional, Ordens & Estoque · <strong>{total_itens_carregados}</strong> itens na base</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col_nav:
-    # Container cinza agrupando os botões de navegação
     st.markdown('<div class="nav-pill-wrapper">', unsafe_allow_html=True)
-    
     cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.2, 1.2, 1.4, 1.5, 1.5, 1.2])
 
     opcoes_nav = [
@@ -580,7 +599,7 @@ with col_nav:
     for col_btn, nome_menu, label_btn in opcoes_nav:
         with col_btn:
             is_active = (st.session_state.menu_selecionado == nome_menu)
-            classe = "btn-item-active" if is_active else "btn-item-inactive"
+            classe = "nav-btn-active" if is_active else "nav-btn-inactive"
             st.markdown(f'<div class="{classe}">', unsafe_allow_html=True)
             if st.button(label_btn, key=f"nav_top_{nome_menu}", use_container_width=True):
                 st.session_state.menu_selecionado = nome_menu
@@ -588,7 +607,7 @@ with col_nav:
             st.markdown('</div>', unsafe_allow_html=True)
 
     with cb_sync:
-        st.markdown('<div class="btn-item-sync">', unsafe_allow_html=True)
+        st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
         if st.button("🔄 Sincronizar", key="nav_top_sync", use_container_width=True):
             carregar_dados_planilha_cached.clear()
             carregar_lista_conferentes.clear()
@@ -597,15 +616,15 @@ with col_nav:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div></div>', unsafe_allow_html=True)
 
-# Container da página delimitado
-st.markdown('<div class="page-body-container">', unsafe_allow_html=True)
+# --- 5. CORPO DA PÁGINA CENTRALIZADO COM MARGENS LATERAIS ---
+st.markdown('<div class="page-center-container">', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD (CONTAINER BRANCO)
+# OPÇÃO: DASHBOARD
 # ==============================================================================
 if menu == "Dashboard":
     with st.spinner("Compilando indicadores..."):
@@ -630,7 +649,6 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
-        # Container Branco de Filtros
         with st.container(border=True):
             col_f1, col_f2 = st.columns([1, 1])
             with col_f1:
@@ -662,20 +680,20 @@ if menu == "Dashboard":
         divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
 
         st.markdown(f"""
-        <div class="metric-grid">
-            <div class="metric-card-pro">
+        <div class="kpi-grid">
+            <div class="kpi-card">
                 <div class="kpi-label">Remessas Auditadas</div>
                 <div class="kpi-value">{total_remessas}</div>
             </div>
-            <div class="metric-card-pro">
+            <div class="kpi-card">
                 <div class="kpi-label">Itens Conferidos</div>
                 <div class="kpi-value">{total_conferidos} <span style="font-size: 13px; font-weight: 500; color: #64748b;">/ {total_itens}</span></div>
             </div>
-            <div class="metric-card-pro {acuracia_cor_class}">
+            <div class="kpi-card {acuracia_cor_class}">
                 <div class="kpi-label">Acuracidade Físico x Remessa</div>
                 <div class="kpi-value">{taxa_acuracia:.1f}%</div>
             </div>
-            <div class="metric-card-pro {divergencias_cor_class}">
+            <div class="kpi-card {divergencias_cor_class}">
                 <div class="kpi-label">Itens com Divergência</div>
                 <div class="kpi-value">{len(itens_com_erro)}</div>
             </div>
@@ -787,7 +805,7 @@ if menu == "Dashboard":
                     st.success("🎉 Nenhuma divergência registrada no filtro atual!")
 
 # ==============================================================================
-# OPÇÃO: IMPORTAR REMESSA (CONTAINER BRANCO)
+# OPÇÃO: IMPORTAR REMESSA
 # ==============================================================================
 elif menu == "Importar Remessa":
     with st.container(border=True):
@@ -841,7 +859,7 @@ elif menu == "Importar Remessa":
                             st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
 
 # ==============================================================================
-# OPÇÃO: FOLHA DE IMPRESSÃO CEGA (CONTAINER BRANCO)
+# OPÇÃO: FOLHA DE IMPRESSÃO CEGA
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
     with st.container(border=True):
@@ -990,7 +1008,7 @@ elif menu == "Folha de Impressão Cega":
                     components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA (CONTAINER BRANCO)
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
     with st.container(border=True):
@@ -1039,20 +1057,20 @@ elif menu == "Digitar Conferência Cega":
                         st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
                     st.markdown(f"""
-                    <div class="metric-grid">
-                        <div class="metric-card-pro">
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
                             <div class="kpi-label">Remessa</div>
                             <div class="kpi-value">{remessa_alvo}</div>
                         </div>
-                        <div class="metric-card-pro">
+                        <div class="kpi-card">
                             <div class="kpi-label">Local / Depósito</div>
                             <div class="kpi-value">{local_atual}</div>
                         </div>
-                        <div class="metric-card-pro">
+                        <div class="kpi-card">
                             <div class="kpi-label">Data de Importação</div>
                             <div class="kpi-value">{data_atual_br}</div>
                         </div>
-                        <div class="metric-card-pro">
+                        <div class="kpi-card">
                             <div class="kpi-label">Itens a Conferir</div>
                             <div class="kpi-value">{len(dados_trabalho)}</div>
                         </div>
@@ -1256,14 +1274,14 @@ elif menu == "Digitar Conferência Cega":
                                         else:
                                             if autorizar_divergencia:
                                                 st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
-                                            else:
-                                                st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
-                                    else:
-                                        mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
-                                        st.error(f"Erro ao salvar: {mensagem_erro}")
+                                        else:
+                                            st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
+                                else:
+                                    mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                                    st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
-# OPÇÃO: CADASTRAR NOVO CONFERENTE (CONTAINER BRANCO)
+# OPÇÃO: CADASTRAR NOVO CONFERENTE
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
     with st.container(border=True):
