@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 import altair as alt
 import os
 from pathlib import Path
-import base64
+from PIL import Image
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -19,77 +19,54 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inicializa o estado do menu
+# Inicialização do estado de navegação
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
-# --- LOCALIZADOR E CONVERSOR DO LOGOTIPO EM BASE64 ---
-def obter_logotipo_base64():
-    nomes_possiveis = [
-        "logotipo.png", "logotipo.PNG", "logotipo.jpg", "logotipo.jpeg",
-        "logo.png", "logo.PNG", "logo.jpg", "logo.jpeg"
-    ]
-    pastas_busca = [
-        Path.cwd(),
-        Path(__file__).parent.resolve() if "__file__" in locals() else Path.cwd()
-    ]
+# --- LOCALIZADOR DE LOGOTIPO ---
+def encontrar_e_carregar_logotipo():
+    nomes_possiveis = ["logotipo.png", "logotipo.PNG", "logotipo.jpg", "logo.png", "logo.PNG"]
+    pastas_busca = [Path.cwd(), Path(__file__).parent.resolve() if "__file__" in locals() else Path.cwd()]
     for pasta in pastas_busca:
         for nome in nomes_possiveis:
             candidato = pasta / nome
             if candidato.is_file():
                 try:
-                    with open(candidato, "rb") as f:
-                        return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+                    return Image.open(candidato)
                 except Exception:
                     pass
-    for pasta in pastas_busca:
-        try:
-            for arq in pasta.rglob("*"):
-                if arq.is_file() and arq.name.lower() in [n.lower() for n in nomes_possiveis]:
-                    try:
-                        with open(arq, "rb") as f:
-                            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-    return ""
+    return None
 
-logo_src_b64 = obter_logotipo_base64()
+img_logo_obj = encontrar_e_carregar_logotipo()
 
-# --- 2. CSS CORPORATIVO: CLASSE EMOTION BRANCA & NAVBAR TAILWIND ---
+# --- 2. CSS CORPORATIVO: CONTAINERS BRANCOS E TEMA CLARO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* Oculta Sidebar e Header padrão */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* Fundo da Página Slate-50 */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-        background-color: #f8fafc !important;
-        color: #0f172a !important;
+        background-color: #f1f5f9 !important;
+        color: #1e293b !important;
+        font-size: 13px !important;
     }
 
     .block-container {
-        padding-top: 0.5rem !important;
-        padding-bottom: 2rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 2.5rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
         max-width: 1440px !important;
         margin: 0 auto !important;
     }
 
-    /* FORÇAR COR BRANCA NA CLASSE SOLICITADA */
-    .st-emotion-cache-18kf3ut.e1a2occc5,
-    div.st-emotion-cache-18kf3ut,
-    .e1a2occc5,
+    /* TODOS OS CONTAINERS NA COR BRANCA */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
-        background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
@@ -97,135 +74,71 @@ st.markdown("""
         padding: 12px 16px !important;
     }
 
-    /* HEADER: MARCA E TÍTULO */
-    .brand-cluster {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        min-height: 58px;
-    }
-    .brand-logo-frame {
-        height: 56px;
-        max-width: 150px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .brand-logo-frame img {
-        max-height: 52px;
-        width: auto;
-        max-width: 100%;
-        object-fit: contain;
-    }
-    .brand-fallback-badge {
-        width: 50px;
-        height: 50px;
-        background: #0284c7;
-        color: #ffffff;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 26px;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
-    }
-    .brand-text-block {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        line-height: 1.22;
-    }
+    /* MARCA E TÍTULO */
     .brand-title {
-        font-size: 19px !important;
-        font-weight: 800 !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
         color: #0f172a !important;
-        letter-spacing: -0.4px;
         margin: 0 !important;
+        line-height: 1.2 !important;
     }
     .brand-subtitle {
         font-size: 12px !important;
         color: #64748b !important;
         margin: 2px 0 0 0 !important;
-        font-weight: 500;
+    }
+    .brand-fallback-badge {
+        width: 48px;
+        height: 48px;
+        background: #0284c7;
+        color: #ffffff;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
     }
 
-    /* ESTRUTURA DO SUBCONTAINER DOS BOTÕES (flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap) */
-    div.nav-pill-wrapper div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #f1f5f9 !important;
-        background: #f1f5f9 !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 16px !important;
-        padding: 6px 8px !important;
-        margin-bottom: 0px !important;
-        box-shadow: none !important;
-    }
-
-    /* BASE DE BOTÕES (nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition) */
-    div.nav-pill-wrapper button {
-        border-radius: 12px !important;
-        font-size: 11.5px !important;
+    /* BOTÕES DE NAVEGAÇÃO */
+    div.nav-box button {
+        border-radius: 8px !important;
+        font-size: 12px !important;
         font-weight: 600 !important;
-        padding: 5px 10px !important;
         height: 36px !important;
         min-height: 36px !important;
+        width: 100% !important;
+        border: 1px solid transparent !important;
         transition: all 0.15s ease-in-out !important;
         white-space: nowrap !important;
-        width: 100% !important;
-        line-height: 1 !important;
-        letter-spacing: -0.15px;
     }
-
-    /* BOTÃO INATIVO */
-    div.nav-pill-wrapper button[kind="secondary"] {
-        background-color: #ffffff !important;
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        box-shadow: none !important;
-    }
-    div.nav-pill-wrapper button[kind="secondary"] p,
-    div.nav-pill-wrapper button[kind="secondary"] span {
-        color: #64748b !important;
-        font-weight: 600 !important;
-    }
-    div.nav-pill-wrapper button[kind="secondary"]:hover {
+    
+    /* Botão Inativo */
+    div.nav-box button[kind="secondary"] {
         background-color: #f8fafc !important;
+        color: #475569 !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    div.nav-box button[kind="secondary"]:hover {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
         border-color: #cbd5e1 !important;
     }
-    div.nav-pill-wrapper button[kind="secondary"]:hover p,
-    div.nav-pill-wrapper button[kind="secondary"]:hover span {
-        color: #0f172a !important;
+
+    /* Botão Ativo (Destaque Azul) */
+    div.nav-box button[kind="primary"] {
+        background-color: #0284c7 !important;
+        color: #ffffff !important;
+        border: 1px solid #0284c7 !important;
+        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25) !important;
     }
 
-    /* BOTÃO ATIVO (CLASS ACTIVE / AZUL CLARO MODERNO) */
-    div.nav-pill-wrapper button[kind="primary"],
-    div.nav-pill-wrapper button[kind="primary"]:hover,
-    div.nav-pill-wrapper button[kind="primary"]:focus,
-    div.nav-pill-wrapper button[kind="primary"]:active {
-        background-color: #e0f2fe !important;
-        background: #e0f2fe !important;
-        border: 1.5px solid #7dd3fc !important;
-        box-shadow: 0 2px 4px 0 rgba(2, 132, 199, 0.15) !important;
-    }
-    div.nav-pill-wrapper button[kind="primary"] *,
-    div.nav-pill-wrapper button[kind="primary"] p,
-    div.nav-pill-wrapper button[kind="primary"] span {
-        color: #0369a1 !important;
-        font-weight: 750 !important;
-    }
-
-    /* BOTÃO SINCRONIZAR */
-    div.btn-sync-slot button {
+    /* Botão Sincronizar */
+    div.sync-box button {
         background-color: #ecfdf5 !important;
-        background: #ecfdf5 !important;
+        color: #065f46 !important;
         border: 1px solid #a7f3d0 !important;
     }
-    div.btn-sync-slot button p,
-    div.btn-sync-slot button span {
-        color: #065f46 !important;
-        font-weight: 700 !important;
-    }
-    div.btn-sync-slot button:hover {
+    div.sync-box button:hover {
         background-color: #d1fae5 !important;
         border-color: #6ee7b7 !important;
     }
@@ -240,16 +153,11 @@ st.markdown("""
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
+        border-radius: 10px;
         padding: 14px 18px;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         position: relative;
         overflow: hidden;
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
     }
     .kpi-card::before {
         content: "";
@@ -275,24 +183,23 @@ st.markdown("""
         font-size: 20px !important;
         font-weight: 700;
         color: #0f172a;
-        line-height: 1.2;
     }
 
+    /* Inputs e Controles */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
         background-color: #ffffff !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         border: 1px solid #cbd5e1 !important;
-        font-size: 13px !important;
     }
 
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 11.5px !important;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11px !important;
         color: #334155;
         display: inline-block;
         margin-bottom: 10px;
@@ -301,21 +208,21 @@ st.markdown("""
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
-        padding: 2px 5px;
-        border-radius: 4px;
+        padding: 1px 4px;
+        border-radius: 3px;
         font-weight: 700;
-        font-size: 11px !important;
+        font-size: 10px !important;
         color: #0f172a;
     }
 
     .divergence-box {
         background-color: #fff7ed;
         border: 1px solid #fed7aa;
-        border-left: 4px solid #ea580c;
-        border-radius: 8px;
-        padding: 12px 14px;
+        border-left: 3.5px solid #ea580c;
+        border-radius: 6px;
+        padding: 10px 12px;
         margin: 10px 0;
-        font-size: 12px !important;
+        font-size: 11.5px !important;
     }
 
     @media print {
@@ -331,7 +238,7 @@ st.markdown("""
             left: 0;
             top: 0;
             width: 100%;
-            padding: 20px;
+            padding: 16px;
             background: #ffffff !important;
             color: #000000 !important;
         }
@@ -621,63 +528,57 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER SUPERIOR NATIVO E FUNCIONAL COM PADRÃO TAILWIND ---
+# --- 4. CABEÇALHO COM BOTÕES DE NAVEGAÇÃO 100% LINKADOS ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-if logo_src_b64:
-    logo_markup = f'<div class="brand-logo-frame"><img src="{logo_src_b64}" alt="Logotipo"></div>'
-else:
-    logo_markup = '<div class="brand-fallback-badge">📦</div>'
-
-# Container Principal Superior (Branco)
 with st.container(border=True):
-    col_marca, col_nav = st.columns([4.0, 6.0], vertical_alignment="center")
+    col_marca, col_nav = st.columns([4.2, 5.8], vertical_alignment="center")
 
     with col_marca:
-        st.markdown(f"""
-        <div class="brand-cluster">
-            {logo_markup}
-            <div class="brand-text-block">
+        c_img, c_txt = st.columns([0.25, 0.75], vertical_alignment="center")
+        with c_img:
+            if img_logo_obj is not None:
+                st.image(img_logo_obj, width=80)
+            else:
+                st.markdown('<div class="brand-fallback-badge">📦</div>', unsafe_allow_html=True)
+        with c_txt:
+            st.markdown(f"""
+            <div>
                 <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
-                <p class="brand-subtitle">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base</p>
+                <p class="brand-subtitle">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
     with col_nav:
-        # Pílula cinza arredondada nativa contendo os botões
-        st.markdown('<div class="nav-pill-wrapper">', unsafe_allow_html=True)
-        with st.container(border=True):
-            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.18, 1.1, 1.25, 1.35, 1.32, 0.8], vertical_alignment="center")
+        b1, b2, b3, b4, b5, b_sync = st.columns([1.18, 1.1, 1.25, 1.35, 1.32, 0.8], vertical_alignment="center")
 
-            opcoes_nav = [
-                (cb1, "Dashboard", "Dashboard"),
-                (cb2, "Importar Remessa", "Importar"),
-                (cb3, "Folha de Impressão Cega", "Folha Cega"),
-                (cb4, "Digitar Conferência Cega", "Conferência"),
-                (cb5, "Cadastrar Novo Conferente", "Conferentes")
-            ]
+        opcoes_nav = [
+            (b1, "Dashboard", "Dashboard"),
+            (b2, "Importar Remessa", "Importar"),
+            (b3, "Folha de Impressão Cega", "Folha Cega"),
+            (b4, "Digitar Conferência Cega", "Conferência"),
+            (b5, "Cadastrar Novo Conferente", "Conferentes")
+        ]
 
-            # Botões Streamlit 100% integrados à re-renderização
-            for col_btn, nome_menu, label_btn in opcoes_nav:
-                with col_btn:
-                    is_active = (st.session_state.menu_selecionado == nome_menu)
-                    tipo_btn = "primary" if is_active else "secondary"
-                    
-                    if st.button(label_btn, key=f"nav_top_{nome_menu}", type=tipo_btn, use_container_width=True):
-                        st.session_state.menu_selecionado = nome_menu
-                        st.rerun()
-
-            with cb_sync:
-                st.markdown('<div class="btn-sync-slot">', unsafe_allow_html=True)
-                if st.button("⟳ Sync", key="nav_top_sync_btn", use_container_width=True):
-                    carregar_dados_planilha_cached.clear()
-                    carregar_lista_conferentes.clear()
+        # Linkagem direta de cada botão ao seu respectivo estado de menu
+        for col_btn, nome_menu, label_btn in opcoes_nav:
+            with col_btn:
+                st.markdown('<div class="nav-box">', unsafe_allow_html=True)
+                is_active = (st.session_state.menu_selecionado == nome_menu)
+                tipo = "primary" if is_active else "secondary"
+                if st.button(label_btn, key=f"nav_{nome_menu}", type=tipo, use_container_width=True):
+                    st.session_state.menu_selecionado = nome_menu
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        with b_sync:
+            st.markdown('<div class="sync-box">', unsafe_allow_html=True)
+            if st.button("⟳ Sync", key="nav_btn_sync", use_container_width=True):
+                carregar_dados_planilha_cached.clear()
+                carregar_lista_conferentes.clear()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
@@ -708,7 +609,6 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
-        # Filtros
         with st.container(border=True):
             col_f1, col_f2 = st.columns([1, 1])
             with col_f1:
@@ -739,7 +639,6 @@ if menu == "Dashboard":
         acuracia_cor_class = "green" if taxa_acuracia >= 98 else "red"
         divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
 
-        # KPI Grid
         st.markdown(f"""
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -761,7 +660,6 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
-        # Gráficos
         with st.container(border=True):
             col_g1, col_g2 = st.columns(2)
 
@@ -813,7 +711,6 @@ if menu == "Dashboard":
                 else:
                     st.info("Sem dados suficientes para a evolução diária.")
 
-        # Diagnóstico & Ranking
         with st.container(border=True):
             col_e1, col_e2 = st.columns(2)
 
@@ -1302,7 +1199,7 @@ elif menu == "Digitar Conferência Cega":
                                     st.warning(f"Existem {total_erros} item(ns) divergente(s). Realize a segunda conferência ou autorize a divergência.")
 
 # ==============================================================================
-# OPÇÃO: CADASTRAR NOVO CONFERENTE
+# OPÇÃO: CADASTRAR NOVO CONFERENTE (CONTAINER BRANCO)
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
     with st.container(border=True):
