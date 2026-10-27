@@ -99,24 +99,44 @@ st.markdown("""
         padding: 14px 18px !important;
     }
 
-    /* Estilo Exclusivo do Botão Sincronizar (Verde Claro com Destaque no Clique) */
-    div[data-testid="column"] button[kind="secondary"] {
+    /* Container Unificado da Barra de Navegação */
+    .nav-unified-box {
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 4px 6px;
+    }
+
+    /* Botão Sincronizar perfeitamente dimensionado e alinhado aos botões do menu */
+    div.st-key-btn_sync_topo {
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
         height: 48px !important;
-        min-height: 48px !important;
+    }
+
+    div.st-key-btn_sync_topo button {
+        height: 40px !important;
+        min-height: 40px !important;
         background-color: #dcfce7 !important;
         color: #15803d !important;
         border: 1.5px solid #86efac !important;
-        border-radius: 10px !important;
+        border-radius: 9px !important;
         font-weight: 700 !important;
-        font-size: 12px !important;
-        transition: all 0.2s ease-in-out !important;
+        font-size: 11.5px !important;
+        padding: 0 10px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         box-shadow: 0 1px 2px rgba(22, 163, 74, 0.08) !important;
+        transition: all 0.2s ease-in-out !important;
+        width: 100% !important;
     }
 
-    div[data-testid="column"] button[kind="secondary"]:hover {
+    div.st-key-btn_sync_topo button:hover {
         background-color: #bbf7d0 !important;
         border-color: #4ade80 !important;
         color: #166534 !important;
@@ -124,12 +144,12 @@ st.markdown("""
         box-shadow: 0 3px 6px rgba(22, 163, 74, 0.16) !important;
     }
 
-    div[data-testid="column"] button[kind="secondary"]:active,
-    div[data-testid="column"] button[kind="secondary"]:focus {
+    div.st-key-btn_sync_topo button:active,
+    div.st-key-btn_sync_topo button:focus {
         background-color: #86efac !important;
         border-color: #22c55e !important;
         color: #14532d !important;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3) !important;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25) !important;
     }
 
     /* KPI Cards */
@@ -518,7 +538,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER: CONTAINER PRINCIPAL BRANCO E NAVEGAÇÃO CINZA CLARO ---
+# --- 4. HEADER: CONTAINER PRINCIPAL BRANCO E NAVEGAÇÃO UNIFICADA EM CINZA CLARO ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
@@ -526,7 +546,7 @@ logo_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; obj
 
 # Container Principal 100% Branco
 with st.container(border=True):
-    col_header_left, col_header_right = st.columns([1.15, 1.85], gap="medium")
+    col_header_left, col_header_right = st.columns([1.1, 1.9], gap="medium")
 
     with col_header_left:
         st.markdown(f"""
@@ -546,65 +566,64 @@ with st.container(border=True):
         """, unsafe_allow_html=True)
 
     with col_header_right:
-        # Container com fundo cinza claro para abrigar botões de navegação e sincronização
-        st.markdown("""
-        <div style="background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4px 6px;">
-        """, unsafe_allow_html=True)
-        
-        col_menu, col_sync = st.columns([4.8, 1.2], gap="small")
-        with col_menu:
-            selecionado = option_menu(
-                menu_title=None,
-                options=opcoes_validas,
-                icons=["bar-chart", "cloud-upload", "printer", "pencil-square", "person-plus"],
-                default_index=opcoes_validas.index(st.session_state.menu_selecionado) if st.session_state.menu_selecionado in opcoes_validas else 0,
-                orientation="horizontal",
-                styles={
-                    "container": {
-                        "padding": "0px",
-                        "background-color": "transparent",
-                        "border": "none",
-                        "height": "48px",
-                        "display": "flex",
-                        "align-items": "center",
-                        "width": "100%",
-                        "gap": "3px"
-                    },
-                    "nav-link": {
-                        "font-size": "11.5px",
-                        "font-weight": "600",
-                        "color": "#64748b",
-                        "padding": "8px 4px",
-                        "border-radius": "9px",
-                        "margin": "0",
-                        "border": "1px solid transparent",
-                        "white-space": "nowrap",
-                        "display": "flex",
-                        "align-items": "center",
-                        "justify-content": "center",
-                        "flex": "1 1 0%",
-                        "height": "42px",
-                        "text-align": "center"
-                    },
-                    "nav-link-selected": {
-                        "background-color": "#e0f2fe",
-                        "color": "#0369a1",
-                        "font-weight": "700",
-                        "border": "1.5px solid #7dd3fc",
-                        "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12)"
-                    },
-                }
-            )
-            if selecionado and selecionado != st.session_state.menu_selecionado:
-                st.session_state.menu_selecionado = selecionado
-                st.rerun()
+        # Container unificado em cinza claro com o menu e o botão Sincronizar dentro
+        with st.container():
+            st.markdown('<div class="nav-unified-box">', unsafe_allow_html=True)
+            col_menu, col_sync = st.columns([5.3, 1.1], gap="small")
+            
+            with col_menu:
+                selecionado = option_menu(
+                    menu_title=None,
+                    options=opcoes_validas,
+                    icons=["bar-chart", "cloud-upload", "printer", "pencil-square", "person-plus"],
+                    default_index=opcoes_validas.index(st.session_state.menu_selecionado) if st.session_state.menu_selecionado in opcoes_validas else 0,
+                    orientation="horizontal",
+                    styles={
+                        "container": {
+                            "padding": "0px",
+                            "background-color": "transparent",
+                            "border": "none",
+                            "height": "48px",
+                            "display": "flex",
+                            "align-items": "center",
+                            "width": "100%",
+                            "gap": "3px"
+                        },
+                        "nav-link": {
+                            "font-size": "11.5px",
+                            "font-weight": "600",
+                            "color": "#64748b",
+                            "padding": "0 6px",
+                            "border-radius": "9px",
+                            "margin": "0",
+                            "border": "1px solid transparent",
+                            "white-space": "nowrap",
+                            "display": "flex",
+                            "align-items": "center",
+                            "justify-content": "center",
+                            "flex": "1 1 0%",
+                            "height": "40px",
+                            "text-align": "center"
+                        },
+                        "nav-link-selected": {
+                            "background-color": "#e0f2fe",
+                            "color": "#0369a1",
+                            "font-weight": "700",
+                            "border": "1.5px solid #7dd3fc",
+                            "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12)"
+                        },
+                    }
+                )
+                if selecionado and selecionado != st.session_state.menu_selecionado:
+                    st.session_state.menu_selecionado = selecionado
+                    st.rerun()
 
-        with col_sync:
-            if st.button("⟳ Sincronizar", help="Recarregar dados atualizados da planilha", use_container_width=True):
-                st.cache_data.clear()
-                st.rerun()
+            with col_sync:
+                if st.button("⟳ Sincronizar", key="btn_sync_topo", help="Recarregar dados atualizados da planilha", use_container_width=True):
+                    st.cache_data.clear()
+                    st.rerun()
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
