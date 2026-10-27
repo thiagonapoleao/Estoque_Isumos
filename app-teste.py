@@ -19,29 +19,49 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Carregamento seguro da imagem com PIL
-def carregar_imagem_logotipo():
-    diretorios = [
-        Path.cwd() / "logotipo.png",
-        Path(__file__).parent / "logotipo.png" if "__file__" in locals() else None,
-        Path("logotipo.png")
+# --- LOCALIZADOR RESILIENTE DO LOGOTIPO ---
+def encontrar_e_carregar_logotipo():
+    nomes_possiveis = [
+        "logotipo.png", "logotipo.PNG", "logotipo.jpg", "logotipo.jpeg",
+        "logo.png", "logo.PNG", "logo.jpg", "logo.jpeg"
     ]
-    for d in diretorios:
-        if d and d.exists() and d.is_file():
-            try:
-                return Image.open(d)
-            except Exception:
-                pass
+    
+    pastas_busca = [
+        Path.cwd(),
+        Path(__file__).parent.resolve() if "__file__" in locals() else Path.cwd()
+    ]
+    
+    # Busca direta nas pastas principais
+    for pasta in pastas_busca:
+        for nome in nomes_possiveis:
+            candidato = pasta / nome
+            if candidato.is_file():
+                try:
+                    return Image.open(candidato)
+                except Exception:
+                    pass
+    
+    # Busca profunda em subpastas caso esteja em 'assets', 'img', 'static', etc.
+    for pasta in pastas_busca:
+        try:
+            for arq in pasta.rglob("*"):
+                if arq.is_file() and arq.name.lower() in [n.lower() for n in nomes_possiveis]:
+                    try:
+                        return Image.open(arq)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
     return None
 
-img_logo_obj = carregar_imagem_logotipo()
+img_logo_obj = encontrar_e_carregar_logotipo()
 
 # --- 2. CSS CORPORATIVO ULTRA-COMPACTO E MODERNO (TEMA CLARO) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Ocultar elementos padrão do Streamlit */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
@@ -58,41 +78,39 @@ st.markdown("""
         max-width: 96% !important;
     }
 
-    /* ESTILIZAÇÃO DO CONTAINER DE NAVEGAÇÃO SUPERIOR */
+    /* Container de Navegação Superior */
     div[data-testid="stVerticalBlock"] > div.nav-card-container {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
-        padding: 8px 16px !important;
+        padding: 6px 14px !important;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-        margin-bottom: 18px !important;
+        margin-bottom: 16px !important;
     }
 
-    /* Ajuste da imagem do logo para que fique compacta e proporcional */
+    [data-testid="stImage"] {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
     [data-testid="stImage"] img {
-        max-height: 44px !important;
+        max-height: 48px !important;
         width: auto !important;
         object-fit: contain !important;
-        border-radius: 6px;
     }
 
     .brand-fallback-box {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 22px;
     }
 
-    .brand-text-col {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
     .brand-title {
         font-size: 15px !important;
         font-weight: 700 !important;
@@ -108,12 +126,12 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* BOTÕES DA BARRA DE NAVEGAÇÃO */
+    /* Botões de navegação */
     div.nav-btn-box div.stButton > button {
         border-radius: 8px !important;
         font-size: 12px !important;
         font-weight: 600 !important;
-        padding: 5px 10px !important;
+        padding: 4px 8px !important;
         height: 36px !important;
         transition: all 0.15s ease-in-out !important;
         white-space: nowrap !important;
@@ -149,7 +167,7 @@ st.markdown("""
         color: #047857 !important;
     }
 
-    /* KPI METRICS */
+    /* KPI Cards */
     .metric-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -490,43 +508,39 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. BARRA SUPERIOR TOTALMENTE UNIFICADA E COMPACTA ---
+# --- 4. BARRA SUPERIOR TOTALMENTE UNIFICADA ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-# Container Único e com borda nativa do Streamlit
-header_container = st.container(border=True)
-
-with header_container:
-    # 8 Colunas alinhadas verticalmente no centro
-    c_logo, c_title, c_btn1, c_btn2, c_btn3, c_btn4, c_btn5, c_sync = st.columns(
+with st.container(border=True):
+    col_img, col_info, col_b1, col_b2, col_b3, col_b4, col_b5, col_s = st.columns(
         [0.45, 2.35, 1.05, 0.95, 1.15, 1.25, 1.15, 1.05],
         vertical_alignment="center"
     )
 
-    with c_logo:
-        if img_logo_obj:
-            st.image(img_logo_obj, use_container_width=True)
+    with col_img:
+        if img_logo_obj is not None:
+            st.image(img_logo_obj, width=54)
         else:
             st.markdown('<div class="brand-fallback-box">📦</div>', unsafe_allow_html=True)
 
-    with c_title:
+    with col_info:
         st.markdown(f"""
-        <div class="brand-text-col">
-            <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
-            <p class="brand-subtitle">Remessas, Auditoria Cega & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
+        <div>
+            <div class="brand-title">Gestão de Conferência de Mercadorias</div>
+            <div class="brand-subtitle">Remessas, Auditoria Cega & Estoque · <strong>{total_itens_carregados}</strong> registros</div>
         </div>
         """, unsafe_allow_html=True)
 
     opcoes_nav = [
-        (c_btn1, "Dashboard de Resumo", "📊 Resumo"),
-        (c_btn2, "Importar Remessa", "📥 Importar"),
-        (c_btn3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
-        (c_btn4, "Digitar Conferência Cega", "🔍 Conferência"),
-        (c_btn5, "Cadastrar Novo Conferente", "👤 Conferentes")
+        (col_b1, "Dashboard de Resumo", "📊 Resumo"),
+        (col_b2, "Importar Remessa", "📥 Importar"),
+        (col_b3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
+        (col_b4, "Digitar Conferência Cega", "🔍 Conferência"),
+        (col_b5, "Cadastrar Novo Conferente", "👤 Conferentes")
     ]
 
     for col_btn, nome_menu, label_btn in opcoes_nav:
@@ -539,7 +553,7 @@ with header_container:
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
-    with c_sync:
+    with col_s:
         st.markdown('<div class="nav-btn-box btn-sync">', unsafe_allow_html=True)
         if st.button("🔄 Sincronizar", key="top_nav_sync", use_container_width=True):
             carregar_dados_planilha_cached.clear()
