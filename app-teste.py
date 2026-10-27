@@ -31,7 +31,6 @@ def encontrar_e_carregar_logotipo():
         Path(__file__).parent.resolve() if "__file__" in locals() else Path.cwd()
     ]
     
-    # Busca direta nas pastas principais
     for pasta in pastas_busca:
         for nome in nomes_possiveis:
             candidato = pasta / nome
@@ -41,7 +40,6 @@ def encontrar_e_carregar_logotipo():
                 except Exception:
                     pass
     
-    # Busca profunda em subpastas caso esteja em 'assets', 'img', 'static', etc.
     for pasta in pastas_busca:
         try:
             for arq in pasta.rglob("*"):
@@ -88,27 +86,29 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
+    /* Logotipo com tamanho de destaque ajustado */
     [data-testid="stImage"] {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
     [data-testid="stImage"] img {
-        max-height: 48px !important;
+        max-height: 70px !important;
+        max-width: 130px !important;
         width: auto !important;
         object-fit: contain !important;
     }
 
     .brand-fallback-box {
-        width: 44px;
-        height: 44px;
+        width: 54px;
+        height: 54px;
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 26px;
     }
 
     .brand-title {
@@ -132,7 +132,7 @@ st.markdown("""
         font-size: 12px !important;
         font-weight: 600 !important;
         padding: 4px 8px !important;
-        height: 36px !important;
+        height: 38px !important;
         transition: all 0.15s ease-in-out !important;
         white-space: nowrap !important;
         box-shadow: none !important;
@@ -508,7 +508,7 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. BARRA SUPERIOR TOTALMENTE UNIFICADA ---
+# --- 4. BARRA SUPERIOR TOTALMENTE UNIFICADA COM LOGO PROPORCIONAL ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
@@ -517,13 +517,13 @@ total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
 with st.container(border=True):
     col_img, col_info, col_b1, col_b2, col_b3, col_b4, col_b5, col_s = st.columns(
-        [0.45, 2.35, 1.05, 0.95, 1.15, 1.25, 1.15, 1.05],
+        [1.0, 2.2, 1.0, 0.95, 1.15, 1.25, 1.15, 1.05],
         vertical_alignment="center"
     )
 
     with col_img:
         if img_logo_obj is not None:
-            st.image(img_logo_obj, width=54)
+            st.image(img_logo_obj, width=110)
         else:
             st.markdown('<div class="brand-fallback-box">📦</div>', unsafe_allow_html=True)
 
