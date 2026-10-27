@@ -53,7 +53,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS CORPORATIVO: AZUL CLARO MODERNO & COMPACTAÇÃO ---
+# --- 2. CSS CORPORATIVO: BLINDAGEM TAILWIND SKY / LIGHT-BLUE ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -91,7 +91,7 @@ st.markdown("""
         padding: 10px 14px !important;
     }
 
-    /* ESTRUTURA DA MARCA: LOGOTIPO & TÍTULOS AMPLIADOS PROPORCIONALMENTE */
+    /* ESTRUTURA DA MARCA: LOGOTIPO & TÍTULOS AMPLIADOS */
     .brand-cluster {
         display: flex;
         align-items: center;
@@ -154,8 +154,8 @@ st.markdown("""
         margin-bottom: 0px !important;
     }
 
-    /* PADRONIZAÇÃO DOS BOTÕES DE NAVEGAÇÃO */
-    div.subnav-wrapper-native div.stButton > button {
+    /* BASE DOS BOTÕES */
+    div.subnav-wrapper-native button {
         border-radius: 7px !important;
         font-size: 11.5px !important;
         font-weight: 600 !important;
@@ -169,36 +169,62 @@ st.markdown("""
         letter-spacing: -0.15px;
     }
 
-    /* Botão Inativo */
-    div.nav-btn-inactive div.stButton > button {
+    /* BOTÃO INATIVO (Branco Puro com Texto Slate) */
+    div.nav-btn-inactive button,
+    div.nav-btn-inactive button:focus,
+    div.nav-btn-inactive button:active {
         background-color: #ffffff !important;
         color: #64748b !important;
         border: 1px solid #e2e8f0 !important;
     }
-    div.nav-btn-inactive div.stButton > button:hover {
+    div.nav-btn-inactive button:hover {
         background-color: #f8fafc !important;
         color: #0f172a !important;
         border-color: #cbd5e1 !important;
     }
-
-    /* BOTÃO ATIVO: DESTAQUE DINÂMICO EM AZUL CLARO MODERNO */
-    div.nav-btn-active div.stButton > button {
-        background-color: #e0f2fe !important;
-        color: #0369a1 !important;
-        border: 1.5px solid #38bdf8 !important;
-        font-weight: 700 !important;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.16) !important;
+    div.nav-btn-inactive button p,
+    div.nav-btn-inactive button span {
+        color: #64748b !important;
+        font-weight: 600 !important;
+    }
+    div.nav-btn-inactive button:hover p,
+    div.nav-btn-inactive button:hover span {
+        color: #0f172a !important;
     }
 
-    /* Botão Sincronizar */
-    div.nav-btn-sync div.stButton > button {
+    /* BOTÃO ATIVO: DESTAQUE TAILWIND SKY / LIGHT-BLUE FORÇADO */
+    div.nav-btn-active button,
+    div.nav-btn-active button:hover,
+    div.nav-btn-active button:focus,
+    div.nav-btn-active button:active {
+        background-color: #e0f2fe !important;
+        background: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1.5px solid #38bdf8 !important;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.16) !important;
+    }
+    div.nav-btn-active button p,
+    div.nav-btn-active button span {
+        color: #0369a1 !important;
+        font-weight: 700 !important;
+    }
+
+    /* BOTÃO SINCRONIZAR (EMERALD) */
+    div.nav-btn-sync button,
+    div.nav-btn-sync button:focus,
+    div.nav-btn-sync button:active {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
         border: 1px solid #a7f3d0 !important;
     }
-    div.nav-btn-sync div.stButton > button:hover {
+    div.nav-btn-sync button:hover {
         background-color: #d1fae5 !important;
         border-color: #6ee7b7 !important;
+    }
+    div.nav-btn-sync button p,
+    div.nav-btn-sync button span {
+        color: #065f46 !important;
+        font-weight: 700 !important;
     }
 
     /* KPI CARDS */
@@ -633,7 +659,7 @@ with st.container(border=True):
                 (cb5, "Cadastrar Novo Conferente", "Conferentes")
             ]
 
-            # Renderização dinâmica: o botão ativo recebe a classe nav-btn-active
+            # Injeção da classe ativa 'nav-btn-active' ou inativa 'nav-btn-inactive'
             for col_btn, nome_menu, label_btn in opcoes_nav:
                 with col_btn:
                     is_active = (st.session_state.menu_selecionado == nome_menu)
