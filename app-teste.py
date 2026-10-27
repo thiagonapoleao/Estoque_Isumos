@@ -57,7 +57,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL CORPORATIVO ---
+# --- 2. CSS GLOBAL CORPORATIVO COM ESTILO LITERAL SOLICITADO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -81,6 +81,58 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
+    /* Container envolvente dos botões:
+       flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap */
+    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        background-color: #f1f5f9 !important;
+        padding: 0.375rem !important;
+        border-radius: 1rem !important;
+        border: 1px solid #e2e8f0 !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+    }
+
+    /* Formatação dos botões no modelo nav-btn:
+       nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition */
+    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 0.75rem !important;
+        font-size: 0.75rem !important;
+        line-height: 1rem !important;
+        font-weight: 600 !important;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
+        color: #64748b !important;
+        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke !important;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transition-duration: 150ms !important;
+        height: auto !important;
+        min-height: unset !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button:hover {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    /* Estilo quando ativo (kind="primary"):
+       active -> destaque azul claro */
+    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button[kind="primary"] {
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1.5px solid #7dd3fc !important;
+        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12) !important;
+    }
+
+    /* Card Branco Padrão do Sistema */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
@@ -88,41 +140,6 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         margin-bottom: 14px !important;
         padding: 14px 18px !important;
-    }
-
-    /* Barra de Navegação Superior */
-    div[data-testid="stHorizontalBlock"]:has(.nav-marker) {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        padding: 10px 16px;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-
-    div[data-testid="stHorizontalBlock"]:has(.nav-marker) button {
-        border-radius: 10px !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        padding: 4px 10px !important;
-        border: 1px solid #e2e8f0 !important;
-        background-color: #ffffff !important;
-        color: #64748b !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-
-    div[data-testid="stHorizontalBlock"]:has(.nav-marker) button:hover {
-        background-color: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-        color: #0f172a !important;
-    }
-
-    div[data-testid="stHorizontalBlock"]:has(.nav-marker) button[kind="primary"] {
-        background-color: #e0f2fe !important;
-        color: #0369a1 !important;
-        border: 1.5px solid #7dd3fc !important;
-        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12) !important;
     }
 
     /* KPI Cards */
@@ -511,29 +528,39 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER CORPORATIVO E NAVEGAÇÃO NATIVA ---
+# --- 4. HEADER CORPORATIVO COM A ESTRUTURA E CLASSES SOLICITADAS ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-col_brand, col_nav = st.columns([1.5, 2.5])
+st.markdown("""
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); padding: 0.85rem 1.25rem; margin-bottom: 1rem;">
+""", unsafe_allow_html=True)
+
+col_brand, col_nav = st.columns([1.3, 2.7], gap="medium")
 
 with col_brand:
-    img_tag = f'<img src="{logo_src_b64}" style="max-height: 44px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 38px; height: 38px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">📦</div>'
+    img_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 40px; height: 40px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px;">📦</div>'
     st.markdown(f"""
-    <div class="nav-marker" style="display: flex; align-items: center; gap: 12px;">
-        <div style="min-width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 2px;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: center; padding: 0.25rem; background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 54px; min-width: 54px; overflow: hidden;">
             {img_tag}
         </div>
         <div>
-            <h1 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2;">Gestão de Conferência de Mercadorias</h1>
-            <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base</p>
+            <h1 style="font-size: 1.15rem; font-weight: 700; letter-spacing: -0.025em; color: #0f172a; margin: 0; line-height: 1.2;">
+                Gestão de Conferência de Mercadorias
+            </h1>
+            <p style="font-size: 0.75rem; color: #64748b; font-weight: 500; margin: 0.25rem 0 0 0;">
+                Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base
+            </p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 with col_nav:
-    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1.1, 0.8])
-    
+    # Marca invisível para aplicar o container CSS estilizado
+    st.markdown('<div class="nav-btn-container" style="display:none;"></div>', unsafe_allow_html=True)
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1.1, 0.75], gap="small")
+
     def btn_type(nome):
         return "primary" if st.session_state.menu_selecionado == nome else "secondary"
 
@@ -560,6 +587,8 @@ with col_nav:
     if c6.button("⟳ Sync", use_container_width=True, help="Recarregar dados da planilha"):
         st.cache_data.clear()
         st.rerun()
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
