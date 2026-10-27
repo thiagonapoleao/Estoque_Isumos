@@ -10,6 +10,7 @@ import altair as alt
 import os
 from pathlib import Path
 import base64
+import urllib.parse
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -212,26 +213,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-# Listener nativo na janela principal para responder ao postMessage do iframe sem violar restrições de navegação
-components.html("""
-<script>
-(function() {
-    window.parent.addEventListener('message', function(event) {
-        if (event.data && event.data.type === 'streamlit_nav') {
-            const url = new URL(window.parent.location.href);
-            if (event.data.action === 'sync') {
-                url.searchParams.set('action', 'sync');
-            } else if (event.data.menu) {
-                url.searchParams.set('menu', event.data.menu);
-                url.searchParams.delete('action');
-            }
-            window.parent.location.href = url.href;
-        }
-    }, false);
-})();
-</script>
-""", height=0, width=0)
 
 # --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
 API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9w1kx4Ie7mxrWcQnjjOj1rf0ND7JIGEb1Jk-yCi/exec"
@@ -520,7 +501,10 @@ df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 menu_atual = st.session_state.menu_selecionado
 
-# Gera o código do Header com Tailwind CSS mantendo todas as chaves escapadas
+def obter_url_menu(nome):
+    return f"?menu={urllib.parse.quote_plus(nome)}"
+
+# Gera o código do Header mantendo rigorosamente seu visual, layout e CSS
 header_component_html = f"""
 <!DOCTYPE html>
 <html>
@@ -548,6 +532,9 @@ header_component_html = f"""
             border: 1px solid #e2e8f0;
             background-color: #ffffff;
             color: #64748b;
+            text-decoration: none !important;
+            display: inline-flex;
+            user-select: none;
         }}
         .nav-btn:hover {{
             background-color: #f8fafc;
@@ -580,35 +567,26 @@ header_component_html = f"""
 
         <!-- DIV ENVOLVENTE PADRÃO SOLICITADO -->
         <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap">
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Dashboard' else ''}" onclick="navegar('Dashboard')">
+            <a href="{obter_url_menu('Dashboard')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Dashboard' else ''}">
                 Dashboard
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Importar Remessa' else ''}" onclick="navegar('Importar Remessa')">
+            </a>
+            <a href="{obter_url_menu('Importar Remessa')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Importar Remessa' else ''}">
                 Importar
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Folha de Impressão Cega' else ''}" onclick="navegar('Folha de Impressão Cega')">
+            </a>
+            <a href="{obter_url_menu('Folha de Impressão Cega')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Folha de Impressão Cega' else ''}">
                 Folha Cega
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Digitar Conferência Cega' else ''}" onclick="navegar('Digitar Conferência Cega')">
+            </a>
+            <a href="{obter_url_menu('Digitar Conferência Cega')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Digitar Conferência Cega' else ''}">
                 Conferência
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Cadastrar Novo Conferente' else ''}" onclick="navegar('Cadastrar Novo Conferente')">
+            </a>
+            <a href="{obter_url_menu('Cadastrar Novo Conferente')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Cadastrar Novo Conferente' else ''}">
                 Conferentes
-            </button>
-            <button onclick="sincronizar()" title="Clique para recarregar da planilha" class="inline-flex items-center px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 cursor-pointer transition">
+            </a>
+            <a href="?action=sync" target="_top" title="Clique para recarregar da planilha" class="inline-flex items-center px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 cursor-pointer transition no-underline">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> ⟳ Sync
-            </button>
+            </a>
         </div>
     </div>
-
-    <script>
-        function navegar(menuNome) {{
-            window.parent.postMessage({{ type: 'streamlit_nav', menu: menuNome }}, '*');
-        }}
-        function sincronizar() {{
-            window.parent.postMessage({{ type: 'streamlit_nav', action: 'sync' }}, '*');
-        }}
-    </script>
 </body>
 </html>
 """
