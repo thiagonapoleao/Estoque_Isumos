@@ -7,6 +7,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
 import altair as alt
+import os
+import base64
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -16,7 +18,22 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS GLOBAL TEMA CLARO & NAVBAR SUPERIOR ---
+# Carregamento do Logotipo local em Base64
+def carregar_logotipo_base64():
+    caminhos = ["logotipo.png", os.path.join(os.path.dirname(__file__), "logotipo.png")] if "__file__" in locals() else ["logotipo.png"]
+    for caminho in caminhos:
+        if os.path.exists(caminho):
+            try:
+                with open(caminho, "rb") as img_file:
+                    encoded = base64.b64encode(img_file.read()).decode()
+                    return f"data:image/png;base64,{encoded}"
+            except Exception:
+                pass
+    return ""
+
+logo_base64_src = carregar_logotipo_base64()
+
+# --- 2. CSS GLOBAL TEMA CLARO & NAVBAR INTEGRADA ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -41,18 +58,14 @@ st.markdown("""
         max-width: 95% !important;
     }
 
-    /* Top Header Container */
-    .top-header-wrapper {
-        background: rgba(255, 255, 255, 0.96);
+    /* Top Header Container Unificado */
+    .top-header-unified {
+        background: rgba(255, 255, 255, 0.98);
         border: 1px solid #e2e8f0;
         border-radius: 14px;
-        padding: 12px 20px;
-        margin-bottom: 24px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
+        padding: 12px 18px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
 
     .brand-section {
@@ -60,82 +73,82 @@ st.markdown("""
         align-items: center;
         gap: 12px;
     }
-    .brand-icon-box {
-        width: 48px;
+    .brand-logo-box {
         height: 48px;
         min-width: 48px;
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        overflow: hidden;
+        padding: 2px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .brand-logo-box img {
+        max-height: 44px;
+        max-width: 100%;
+        object-fit: contain;
+    }
+    .brand-logo-fallback {
+        font-size: 22px;
+        line-height: 1;
     }
     .brand-title {
-        font-size: 17px !important;
+        font-size: 16px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         letter-spacing: -0.3px;
         margin: 0 !important;
+        line-height: 1.2;
     }
     .brand-subtitle {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         color: #64748b !important;
         margin: 2px 0 0 0 !important;
+        font-weight: 400;
     }
 
-    /* Pílula de navegação superior */
-    .nav-pill-box {
-        background-color: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 4px;
-        display: flex;
-        gap: 4px;
-        align-items: center;
-    }
-
-    /* Customização dos botões Streamlit dentro da barra superior */
-    div[data-testid="column"] div.stButton > button {
-        border-radius: 10px !important;
-        font-size: 12px !important;
+    /* Container de Botões do Menu Superior */
+    div.nav-btn-box div.stButton > button {
+        border-radius: 8px !important;
+        font-size: 11.5px !important;
         font-weight: 600 !important;
-        padding: 7px 12px !important;
-        height: 38px !important;
+        padding: 5px 8px !important;
+        height: 34px !important;
         transition: all 0.15s ease-in-out !important;
-        border: 1px solid transparent !important;
         box-shadow: none !important;
+        white-space: nowrap !important;
     }
 
-    /* Botão inativo da navbar */
-    div.nav-btn-inactive > div.stButton > button {
+    /* Botão Inativo */
+    div.nav-btn-inactive div.stButton > button {
         background-color: transparent !important;
         color: #475569 !important;
         border: 1px solid transparent !important;
     }
-    div.nav-btn-inactive > div.stButton > button:hover {
-        background-color: #ffffff !important;
+    div.nav-btn-inactive div.stButton > button:hover {
+        background-color: #f1f5f9 !important;
         color: #0f172a !important;
         border-color: #cbd5e1 !important;
     }
 
-    /* Botão ativo da navbar */
-    div.nav-btn-active > div.stButton > button {
+    /* Botão Ativo */
+    div.nav-btn-active div.stButton > button {
         background-color: #ffffff !important;
         color: #0f172a !important;
-        border: 1px solid #cbd5e1 !important;
+        border: 1px solid #94a3b8 !important;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
     }
 
     /* Botão de Sincronizar */
-    div.sync-btn > div.stButton > button {
+    div.sync-btn div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
         border: 1px solid #a7f3d0 !important;
     }
-    div.sync-btn > div.stButton > button:hover {
+    div.sync-btn div.stButton > button:hover {
         background-color: #d1fae5 !important;
         border-color: #6ee7b7 !important;
         color: #047857 !important;
@@ -183,7 +196,6 @@ st.markdown("""
         color: #0f172a;
     }
 
-    /* Helpers e avisos */
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
@@ -224,7 +236,7 @@ st.markdown("""
     }
 
     @media print {
-        header, .no-print, [data-testid="stToolbar"], footer, .top-header-wrapper {
+        header, .no-print, [data-testid="stToolbar"], footer, .top-header-unified {
             display: none !important;
         }
         .printable-area {
@@ -483,28 +495,33 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. HEADER SUPERIOR COM TEMA CLARO & MENU ---
+# --- 4. HEADER SUPERIOR COM LOGOTIPO E BOTÕES DENTRO DA MESMA DIV ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
-# Carregamento prévio de contagem para o subtítulo do header
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-st.markdown(f"""
-<div class="top-header-wrapper no-print">
+# Renderização do cabeçalho unificado
+img_html = f'<img src="{logo_base64_src}" alt="Logotipo">' if logo_base64_src else '<div class="brand-logo-fallback">📦</div>'
+
+# Div wrapper única contendo marca, título e botões de navegação
+st.markdown('<div class="top-header-unified no-print">', unsafe_allow_html=True)
+
+col_header_brand, col_nav1, col_nav2, col_nav3, col_nav4, col_nav5, col_sync = st.columns([2.6, 1.0, 1.0, 1.1, 1.2, 1.1, 1.0], vertical_alignment="center")
+
+with col_header_brand:
+    st.markdown(f"""
     <div class="brand-section">
-        <div class="brand-icon-box">📦</div>
+        <div class="brand-logo-box">
+            {img_html}
+        </div>
         <div>
             <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
-            <p class="brand-subtitle">Controle de Remessas, Contagem Cega & Divergências · <strong>{total_itens_carregados}</strong> registros na base</p>
+            <p class="brand-subtitle">Remessas, Auditoria Cega & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
-
-# Barra de Botões de Navegação Superior (6 Colunas: 5 Menus + 1 Sync)
-col_nav1, col_nav2, col_nav3, col_nav4, col_nav5, col_sync = st.columns([1.3, 1.2, 1.4, 1.5, 1.4, 1.1])
+    """, unsafe_allow_html=True)
 
 opcoes = [
     (col_nav1, "Dashboard de Resumo", "📊 Resumo"),
@@ -518,21 +535,21 @@ for col, nome_menu, label_btn in opcoes:
     with col:
         is_active = (st.session_state.menu_selecionado == nome_menu)
         classe_css = "nav-btn-active" if is_active else "nav-btn-inactive"
-        st.markdown(f'<div class="{classe_css}">', unsafe_allow_html=True)
+        st.markdown(f'<div class="nav-btn-box {classe_css}">', unsafe_allow_html=True)
         if st.button(label_btn, key=f"top_nav_{nome_menu}", use_container_width=True):
             st.session_state.menu_selecionado = nome_menu
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 with col_sync:
-    st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
+    st.markdown('<div class="nav-btn-box sync-btn">', unsafe_allow_html=True)
     if st.button("🔄 Sincronizar", key="top_btn_sync", use_container_width=True):
         carregar_dados_planilha_cached.clear()
         carregar_lista_conferentes.clear()
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<hr style='margin: 14px 0 20px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
