@@ -63,7 +63,7 @@ st.markdown("""
         display: none !important;
     }
 
-    /* Base da Aplicação: Fundo Slate-50 Suave */
+    /* Base da Aplicação: Fundo Slate-50 */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #f8fafc !important;
@@ -76,11 +76,11 @@ st.markdown("""
         padding-bottom: 3rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
-        max-width: 1360px !important;
+        max-width: 1380px !important;
         margin: 0 auto !important;
     }
 
-    /* PADRONIZAÇÃO DE CONTAINERS BRANCOS */
+    /* TODOS OS CONTAINERS PRINCIPAIS BRANCOS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
@@ -89,7 +89,7 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
-    /* ESTRUTURA DA MARCA: LOGO + TÍTULOS (SEM SOBREPOSIÇÃO) */
+    /* ESTRUTURA DA MARCA: LOGO + TÍTULOS */
     .brand-cluster {
         display: flex;
         align-items: center;
@@ -119,7 +119,7 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
         box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
     }
     .brand-text-block {
@@ -142,31 +142,35 @@ st.markdown("""
         font-weight: 400;
     }
 
-    /* SUBCONTAINER DOS BOTÕES NA HEADER */
-    div.subnav-cluster {
-        background-color: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 4px;
+    /* SUBCONTAINER CINZA REALMENTE ACOPLADO AOS BOTÕES */
+    div.subnav-wrapper-native div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 4px 6px !important;
+        box-shadow: none !important;
+        margin-bottom: 0px !important;
     }
 
-    /* PADRONIZAÇÃO DE BOTÕES DO MENU SUPERIOR */
-    div.subnav-cluster div.stButton > button {
-        border-radius: 8px !important;
-        font-size: 12px !important;
+    /* PADRONIZAÇÃO COMPACTA DOS BOTÕES DE NAVEGAÇÃO */
+    div.subnav-wrapper-native div.stButton > button {
+        border-radius: 6px !important;
+        font-size: 11.5px !important;
         font-weight: 600 !important;
-        padding: 5px 10px !important;
-        height: 36px !important;
+        padding: 4px 6px !important;
+        height: 34px !important;
         transition: all 0.15s ease-in-out !important;
         white-space: nowrap !important;
         border: 1px solid transparent !important;
         box-shadow: none !important;
+        width: 100% !important;
+        letter-spacing: -0.1px;
     }
 
     /* Botão Inativo */
     div.nav-btn-inactive div.stButton > button {
         background-color: #ffffff !important;
-        color: #64748b !important;
+        color: #475569 !important;
         border: 1px solid #e2e8f0 !important;
     }
     div.nav-btn-inactive div.stButton > button:hover {
@@ -550,22 +554,21 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. CONTAINER SUPERIOR COM SUBCONTAINER DE NAVEGAÇÃO ---
+# --- 4. CONTAINER SUPERIOR COM SUBCONTAINER INTEGRADO ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-# Tag HTML do logo gerada dinamicamente (sem sobreposição com títulos)
 if logo_src_b64:
     logo_markup = f'<div class="brand-logo-frame"><img src="{logo_src_b64}" alt="Logotipo"></div>'
 else:
     logo_markup = '<div class="brand-fallback-badge">📦</div>'
 
-# Container Principal Superior
+# CONTAINER PRINCIPAL SUPERIOR (BRANCO)
 with st.container(border=True):
-    col_marca, col_nav = st.columns([4.2, 5.8], vertical_alignment="center")
+    col_marca, col_nav = st.columns([3.8, 6.2], vertical_alignment="center")
 
     with col_marca:
         st.markdown(f"""
@@ -579,17 +582,17 @@ with st.container(border=True):
         """, unsafe_allow_html=True)
 
     with col_nav:
-        # Subcontainer dedicado para os botões de navegação
-        with st.container():
-            st.markdown('<div class="subnav-cluster">', unsafe_allow_html=True)
-            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.2, 1.15, 1.35, 1.45, 1.4, 1.25])
+        st.markdown('<div class="subnav-wrapper-native">', unsafe_allow_html=True)
+        # Subcontainer cinza envolvendo as colunas e botões
+        with st.container(border=True):
+            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.1, 1.1, 1.25, 1.35, 1.3, 1.1])
 
             opcoes_nav = [
-                (cb1, "Dashboard", "📊 Dashboard"),
-                (cb2, "Importar Remessa", "📥 Importar"),
-                (cb3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
-                (cb4, "Digitar Conferência Cega", "🔍 Conferência"),
-                (cb5, "Cadastrar Novo Conferente", "👤 Conferentes")
+                (cb1, "Dashboard", "▪ Dashboard"),
+                (cb2, "Importar Remessa", "▪ Importar"),
+                (cb3, "Folha de Impressão Cega", "▪ Folha Cega"),
+                (cb4, "Digitar Conferência Cega", "▪ Conferência"),
+                (cb5, "Cadastrar Novo Conferente", "▪ Conferentes")
             ]
 
             for col_btn, nome_menu, label_btn in opcoes_nav:
@@ -604,13 +607,13 @@ with st.container(border=True):
 
             with cb_sync:
                 st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
-                if st.button("🔄 Sincronizar", key="nav_top_sync", use_container_width=True):
+                if st.button("⟳ Sync", key="nav_top_sync", use_container_width=True):
                     carregar_dados_planilha_cached.clear()
                     carregar_lista_conferentes.clear()
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
@@ -1166,12 +1169,12 @@ elif menu == "Digitar Conferência Cega":
                                     if not linha_orig.empty and pd.notna(linha_orig["observacao"].iloc[0]):
                                         obs_anterior = str(linha_orig["observacao"].iloc[0]).strip()
 
-                                justificativas_itens[r_id] = st.text_input(
-                                    f"Justificativa para {label_item} *",
-                                    value=obs_anterior,
-                                    placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
-                                    key=f"justificativa_item_{r_id}"
-                                )
+                            justificativas_itens[r_id] = st.text_input(
+                                f"Justificativa para {label_item} *",
+                                value=obs_anterior,
+                                placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
+                                key=f"justificativa_item_{r_id}"
+                            )
 
                     if st.button("⚖️ Comparar e Gravar Conferência"):
                         if not nome_conferente_final:
@@ -1270,11 +1273,11 @@ elif menu == "Digitar Conferência Cega":
                                         else:
                                             if autorizar_divergencia:
                                                 st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
-                                            else:
-                                                st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
-                                    else:
-                                        mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
-                                        st.error(f"Erro ao salvar: {mensagem_erro}")
+                                        else:
+                                            st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
+                                else:
+                                    mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                                    st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE (CONTAINER BRANCO)
