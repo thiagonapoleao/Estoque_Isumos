@@ -10,6 +10,7 @@ import altair as alt
 import os
 from pathlib import Path
 import base64
+from streamlit_option_menu import option_menu
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -20,15 +21,13 @@ st.set_page_config(
 )
 
 # --- SINCRONIZAÇÃO DO MENU ATIVO ---
-menu_itens = [
-    ("Dashboard", "📊"),
-    ("Importar Remessa", "☁️"),
-    ("Folha de Impressão Cega", "🖨️"),
-    ("Digitar Conferência Cega", "✏️"),
-    ("Cadastrar Novo Conferente", "👤")
+opcoes_validas = [
+    "Dashboard",
+    "Importar Remessa",
+    "Folha de Impressão Cega",
+    "Digitar Conferência Cega",
+    "Cadastrar Novo Conferente"
 ]
-
-opcoes_validas = [nome for nome, _ in menu_itens]
 
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
@@ -67,7 +66,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL CORPORATIVO & DESIGN SYSTEM ---
+# --- 2. CSS GLOBAL CORPORATIVO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -77,13 +76,13 @@ st.markdown("""
     }
 
     html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        background-color: #f8fafc !important;
-        color: #0f172a !important;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+        background-color: #f1f5f9 !important;
+        color: #1e293b !important;
     }
 
     .block-container {
-        padding-top: 0.65rem !important;
+        padding-top: 0.5rem !important;
         padding-bottom: 2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
@@ -91,100 +90,78 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
-    /* Container base cards */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
-        box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05) !important;
-        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        margin-bottom: 14px !important;
         padding: 14px 18px !important;
     }
 
-    /* Barra de Navegação Corporativa Cinza Claro (Mesma div unificada) */
-    div[data-testid="stHorizontalBlock"]:has(div.nav-btn-wrapper) {
+    /* BARRA UNIFICADA DOS BOTÕES DE NAVEGAÇÃO E SINCRONIZAR */
+    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sincronizar_topo) {
         background-color: #f1f5f9 !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
-        padding: 5px 6px !important;
-        gap: 4px !important;
+        padding: 4px 6px !important;
+        display: flex !important;
         align-items: center !important;
+        height: 56px !important;
         box-sizing: border-box !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:has(div.nav-btn-wrapper) > div[data-testid="column"] {
+    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sincronizar_topo) iframe {
+        height: 46px !important;
+        border: none !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* BOTÃO SINCRONIZAR: PREENCHIMENTO TOTAL EM VERDE E ALINHAMENTO EXATO */
+    div.st-key-btn_sincronizar_topo {
+        margin: 0 !important;
         padding: 0 !important;
+        height: 100% !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
 
-    /* Botões da Régua de Navegação */
-    div.nav-btn-wrapper button {
-        height: 38px !important;
-        min-height: 38px !important;
-        max-height: 38px !important;
-        font-size: 11.5px !important;
-        font-weight: 600 !important;
-        color: #64748b !important;
-        background-color: transparent !important;
-        border: 1px solid transparent !important;
-        border-radius: 9px !important;
-        padding: 0 8px !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-        width: 100% !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-
-    div.nav-btn-wrapper button:hover {
-        background-color: #e2e8f0 !important;
-        color: #0f172a !important;
-    }
-
-    /* Botão de Navegação Selecionado/Ativo */
-    div.nav-btn-active button {
-        background-color: #e0f2fe !important;
-        color: #0369a1 !important;
-        font-weight: 700 !important;
-        border: 1.5px solid #7dd3fc !important;
-        box-shadow: 0 1px 3px rgba(2, 132, 199, 0.12) !important;
-    }
-
-    /* Botão Sincronizar: Preenchimento Total Verde, mesma altura e alinhamento */
-    div.nav-sync-wrapper button {
-        height: 38px !important;
-        min-height: 38px !important;
-        max-height: 38px !important;
+    div.st-key-btn_sincronizar_topo button {
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
         background-color: #16a34a !important;
         color: #ffffff !important;
         border: 1px solid #15803d !important;
-        border-radius: 9px !important;
+        border-radius: 10px !important;
         font-weight: 700 !important;
         font-size: 11.5px !important;
-        padding: 0 10px !important;
+        padding: 0 12px !important;
         margin: 0 !important;
         white-space: nowrap !important;
-        width: 100% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         box-shadow: 0 1px 2px rgba(22, 163, 74, 0.25) !important;
-        transition: all 0.15s ease-in-out !important;
+        transition: all 0.2s ease-in-out !important;
+        width: 100% !important;
     }
 
-    div.nav-sync-wrapper button:hover {
+    div.st-key-btn_sincronizar_topo button:hover {
         background-color: #15803d !important;
         border-color: #166534 !important;
         color: #ffffff !important;
-        box-shadow: 0 2px 4px rgba(21, 128, 61, 0.35) !important;
         transform: translateY(-0.5px) !important;
+        box-shadow: 0 3px 6px rgba(21, 128, 61, 0.35) !important;
     }
 
-    div.nav-sync-wrapper button:active,
-    div.nav-sync-wrapper button:focus {
+    div.st-key-btn_sincronizar_topo button:active,
+    div.st-key-btn_sincronizar_topo button:focus {
         background-color: #14532d !important;
         border-color: #052e16 !important;
         color: #ffffff !important;
-        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35) !important;
-        transform: translateY(0px) !important;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4) !important;
     }
 
     /* KPI Cards */
@@ -192,14 +169,14 @@ st.markdown("""
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 12px 16px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        border-radius: 12px;
+        padding: 14px 18px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         position: relative;
         overflow: hidden;
     }
@@ -221,11 +198,11 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.4px;
         color: #64748b;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
     }
     .kpi-value {
-        font-size: 21px !important;
-        font-weight: 800;
+        font-size: 20px !important;
+        font-weight: 700;
         color: #0f172a;
         line-height: 1.2;
     }
@@ -242,12 +219,12 @@ st.markdown("""
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 6px 12px;
+        padding: 8px 12px;
         border-radius: 8px;
         font-size: 11.5px !important;
-        color: #475569;
+        color: #334155;
         display: inline-block;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
     .keyboard-hint kbd {
         background: #f1f5f9;
@@ -265,7 +242,7 @@ st.markdown("""
         border: 1px solid #fed7aa;
         border-left: 4px solid #ea580c;
         border-radius: 8px;
-        padding: 10px 14px;
+        padding: 12px 14px;
         margin: 10px 0;
         font-size: 12px !important;
     }
@@ -573,7 +550,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER: CONTAINER PRINCIPAL BRANCO E NAVEGAÇÃO UNIFICADA EM CINZA ---
+# --- 4. HEADER: CONTAINER PRINCIPAL BRANCO E BOTÕES INTEGRADOS ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
@@ -581,12 +558,12 @@ logo_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; obj
 
 # Container Principal 100% Branco
 with st.container(border=True):
-    col_header_left, col_header_right = st.columns([1.0, 2.0], gap="medium")
+    col_header_left, col_header_right = st.columns([1.05, 1.95], gap="medium")
 
     with col_header_left:
         st.markdown(f"""
-        <div style="background: #ffffff; padding: 0; display: flex; align-items: center; gap: 14px; height: 50px;">
-            <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; height: 46px; min-width: 46px;">
+        <div style="background: #ffffff; padding: 0; display: flex; align-items: center; gap: 14px; height: 56px;">
+            <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; height: 48px; min-width: 48px;">
                 {logo_tag}
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center;">
@@ -601,27 +578,57 @@ with st.container(border=True):
         """, unsafe_allow_html=True)
 
     with col_header_right:
-        # Container unificado: todos os 5 botões de navegação + botão Sincronizar na mesma div
-        cols_nav = st.columns([1.0, 1.15, 1.35, 1.35, 1.35, 1.15], gap="small")
+        # Container unificado: o option_menu e o botão Sincronizar dividem o mesmo bloco cinza claro
+        col_menu, col_sync = st.columns([5.2, 1.2], gap="small")
         
-        for idx, (nome, icone) in enumerate(menu_itens):
-            with cols_nav[idx]:
-                esta_ativo = (st.session_state.menu_selecionado == nome)
-                wrapper_class = "nav-btn-wrapper nav-btn-active" if esta_ativo else "nav-btn-wrapper"
-                
-                st.markdown(f'<div class="{wrapper_class}">', unsafe_allow_html=True)
-                if st.button(f"{icone} {nome}", key=f"nav_btn_{idx}", use_container_width=True):
-                    if st.session_state.menu_selecionado != nome:
-                        st.session_state.menu_selecionado = nome
-                        st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-        with cols_nav[5]:
-            st.markdown('<div class="nav-btn-wrapper nav-sync-wrapper">', unsafe_allow_html=True)
-            if st.button("⟳ Sincronizar", key="nav_btn_sync", help="Recarregar dados atualizados da planilha", use_container_width=True):
+        with col_menu:
+            selecionado = option_menu(
+                menu_title=None,
+                options=opcoes_validas,
+                icons=["bar-chart", "cloud-upload", "printer", "pencil-square", "person-plus"],
+                default_index=opcoes_validas.index(st.session_state.menu_selecionado) if st.session_state.menu_selecionado in opcoes_validas else 0,
+                orientation="horizontal",
+                styles={
+                    "container": {
+                        "padding": "0px",
+                        "background-color": "transparent",
+                        "border": "none",
+                        "height": "46px",
+                        "display": "flex",
+                        "align-items": "center",
+                        "width": "100%",
+                        "margin": "0px"
+                    },
+                    "nav-link": {
+                        "font-size": "11.5px",
+                        "font-weight": "600",
+                        "color": "#64748b",
+                        "padding": "8px 10px",
+                        "border-radius": "10px",
+                        "margin": "0 2px",
+                        "border": "1px solid transparent",
+                        "white-space": "nowrap",
+                        "display": "flex",
+                        "align-items": "center",
+                        "justify-content": "center"
+                    },
+                    "nav-link-selected": {
+                        "background-color": "#e0f2fe",
+                        "color": "#0369a1",
+                        "font-weight": "700",
+                        "border": "1.5px solid #7dd3fc",
+                        "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12)"
+                    },
+                }
+            )
+            if selecionado and selecionado != st.session_state.menu_selecionado:
+                st.session_state.menu_selecionado = selecionado
+                st.rerun()
+
+        with col_sync:
+            if st.button("⟳ Sincronizar", key="btn_sincronizar_topo", help="Recarregar dados atualizados da planilha", use_container_width=True):
                 st.cache_data.clear()
                 st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
@@ -867,7 +874,7 @@ elif menu == "Importar Remessa":
 # ==============================================================================
 # OPÇÃO: FOLHA DE IMPRESSÃO CEGA
 # ==============================================================================
-elif menu == "Folha de Impressão Cega":
+elif menu == "Folha de ImpressÃO Cega":
     with st.container(border=True):
         st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 8px;'>Ficha de Contagem Cega para Impressão</p>", unsafe_allow_html=True)
 
