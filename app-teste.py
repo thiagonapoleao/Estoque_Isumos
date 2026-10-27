@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 import altair as alt
 import os
 from pathlib import Path
-from PIL import Image
+import base64
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -19,27 +19,64 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inicialização do estado de navegação
-if "menu_selecionado" not in st.session_state:
+# --- SINCRONIZAÇÃO DO MENU ATIVO ---
+opcoes_validas = [
+    "Dashboard",
+    "Importar Remessa",
+    "Folha de Impressão Cega",
+    "Digitar Conferência Cega",
+    "Cadastrar Novo Conferente"
+]
+
+# Lê da URL se houver navegação pelo Header HTML
+query_menu = st.query_params.get("menu", None)
+if query_menu in opcoes_validas:
+    st.session_state.menu_selecionado = query_menu
+elif "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
-# --- LOCALIZADOR DE LOGOTIPO ---
-def encontrar_e_carregar_logotipo():
-    nomes_possiveis = ["logotipo.png", "logotipo.PNG", "logotipo.jpg", "logo.png", "logo.PNG"]
-    pastas_busca = [Path.cwd(), Path(__file__).parent.resolve() if "__file__" in locals() else Path.cwd()]
+# Trata ação de sincronização acionada pelo menu superior
+if st.query_params.get("action") == "sync":
+    st.cache_data.clear()
+    st.query_params.clear()
+    st.query_params["menu"] = st.session_state.menu_selecionado
+    st.rerun()
+
+# --- LOCALIZADOR E CONVERSOR DO LOGOTIPO EM BASE64 ---
+def obter_logotipo_base64():
+    nomes_possiveis = [
+        "logotipo.png", "logotipo.PNG", "logotipo.jpg", "logotipo.jpeg",
+        "logo.png", "logo.PNG", "logo.jpg", "logo.jpeg"
+    ]
+    pastas_busca = [
+        Path.cwd(),
+        Path(__file__).parent.resolve() if "__file__" in locals() else Path.cwd()
+    ]
     for pasta in pastas_busca:
         for nome in nomes_possiveis:
             candidato = pasta / nome
             if candidato.is_file():
                 try:
-                    return Image.open(candidato)
+                    with open(candidato, "rb") as f:
+                        return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
                 except Exception:
                     pass
-    return None
+    for pasta in pastas_busca:
+        try:
+            for arq in pasta.rglob("*"):
+                if arq.is_file() and arq.name.lower() in [n.lower() for n in nomes_possiveis]:
+                    try:
+                        with open(arq, "rb") as f:
+                            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+    return ""
 
-img_logo_obj = encontrar_e_carregar_logotipo()
+logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS CORPORATIVO: CONTAINERS BRANCOS E TEMA CLARO ---
+# --- 2. CSS GLOBAL CORPORATIVO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -52,98 +89,27 @@ st.markdown("""
         font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
         background-color: #f1f5f9 !important;
         color: #1e293b !important;
-        font-size: 13px !important;
     }
 
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 2.5rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
         max-width: 1440px !important;
         margin: 0 auto !important;
     }
 
-    /* TODOS OS CONTAINERS NA COR BRANCA */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         margin-bottom: 14px !important;
-        padding: 12px 16px !important;
+        padding: 14px 18px !important;
     }
 
-    /* MARCA E TÍTULO */
-    .brand-title {
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        margin: 0 !important;
-        line-height: 1.2 !important;
-    }
-    .brand-subtitle {
-        font-size: 12px !important;
-        color: #64748b !important;
-        margin: 2px 0 0 0 !important;
-    }
-    .brand-fallback-badge {
-        width: 48px;
-        height: 48px;
-        background: #0284c7;
-        color: #ffffff;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
-
-    /* BOTÕES DE NAVEGAÇÃO */
-    div.nav-box button {
-        border-radius: 8px !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        height: 36px !important;
-        min-height: 36px !important;
-        width: 100% !important;
-        border: 1px solid transparent !important;
-        transition: all 0.15s ease-in-out !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Botão Inativo */
-    div.nav-box button[kind="secondary"] {
-        background-color: #f8fafc !important;
-        color: #475569 !important;
-        border: 1px solid #e2e8f0 !important;
-    }
-    div.nav-box button[kind="secondary"]:hover {
-        background-color: #f1f5f9 !important;
-        color: #0f172a !important;
-        border-color: #cbd5e1 !important;
-    }
-
-    /* Botão Ativo (Destaque Azul) */
-    div.nav-box button[kind="primary"] {
-        background-color: #0284c7 !important;
-        color: #ffffff !important;
-        border: 1px solid #0284c7 !important;
-        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25) !important;
-    }
-
-    /* Botão Sincronizar */
-    div.sync-box button {
-        background-color: #ecfdf5 !important;
-        color: #065f46 !important;
-        border: 1px solid #a7f3d0 !important;
-    }
-    div.sync-box button:hover {
-        background-color: #d1fae5 !important;
-        border-color: #6ee7b7 !important;
-    }
-
-    /* KPI CARDS */
+    /* KPI Cards */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -153,7 +119,7 @@ st.markdown("""
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 14px 18px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         position: relative;
@@ -183,23 +149,24 @@ st.markdown("""
         font-size: 20px !important;
         font-weight: 700;
         color: #0f172a;
+        line-height: 1.2;
     }
 
-    /* Inputs e Controles */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
         background-color: #ffffff !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         border: 1px solid #cbd5e1 !important;
+        font-size: 13px !important;
     }
 
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 11px !important;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 11.5px !important;
         color: #334155;
         display: inline-block;
         margin-bottom: 10px;
@@ -208,26 +175,26 @@ st.markdown("""
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
-        padding: 1px 4px;
-        border-radius: 3px;
+        padding: 2px 5px;
+        border-radius: 4px;
         font-weight: 700;
-        font-size: 10px !important;
+        font-size: 11px !important;
         color: #0f172a;
     }
 
     .divergence-box {
         background-color: #fff7ed;
         border: 1px solid #fed7aa;
-        border-left: 3.5px solid #ea580c;
-        border-radius: 6px;
-        padding: 10px 12px;
+        border-left: 4px solid #ea580c;
+        border-radius: 8px;
+        padding: 12px 14px;
         margin: 10px 0;
-        font-size: 11.5px !important;
+        font-size: 12px !important;
     }
 
     @media print {
         body * { visibility: hidden; }
-        .no-print, [data-testid="stToolbar"], footer {
+        .no-print, [data-testid="stToolbar"], footer, iframe {
             display: none !important;
         }
         .printable-area, .printable-area * {
@@ -238,7 +205,7 @@ st.markdown("""
             left: 0;
             top: 0;
             width: 100%;
-            padding: 16px;
+            padding: 20px;
             background: #ffffff !important;
             color: #000000 !important;
         }
@@ -528,57 +495,110 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. CABEÇALHO COM BOTÕES DE NAVEGAÇÃO 100% LINKADOS ---
+# --- 4. HEADER NATIVO HTML COM A ESTRUTURA E CLASSES TAILWIND LITERAIS ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
+menu_atual = st.session_state.menu_selecionado
 
-with st.container(border=True):
-    col_marca, col_nav = st.columns([4.2, 5.8], vertical_alignment="center")
-
-    with col_marca:
-        c_img, c_txt = st.columns([0.25, 0.75], vertical_alignment="center")
-        with c_img:
-            if img_logo_obj is not None:
-                st.image(img_logo_obj, width=80)
-            else:
-                st.markdown('<div class="brand-fallback-badge">📦</div>', unsafe_allow_html=True)
-        with c_txt:
-            st.markdown(f"""
-            <div>
-                <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
-                <p class="brand-subtitle">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
+# Gera o código do Header com Tailwind CSS
+header_component_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {{
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }}
+        .header-card {{
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            padding: 0.85rem 1.25rem;
+        }}
+        /* Botão Base Solicitado */
+        .nav-btn {{
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            color: #64748b;
+        }}
+        .nav-btn:hover {{
+            background-color: #f8fafc;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }}
+        /* Botão Ativo: Destaque Azul Claro */
+        .nav-btn.active {{
+            background-color: #e0f2fe !important;
+            color: #0369a1 !important;
+            border: 1.5px solid #7dd3fc !important;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12) !important;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header-card flex flex-col lg:flex-row justify-between items-center gap-4">
+        <!-- Cluster da Marca e Título -->
+        <div class="flex items-center gap-4">
+            <div class="flex items-center justify-center p-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" style="height: 54px; min-width: 54px;">
+                {'<img src="' + logo_src_b64 + '" alt="Logotipo" class="max-h-12 w-auto object-contain">' if logo_src_b64 else '<div class="w-10 h-10 bg-sky-600 text-white rounded-lg flex items-center justify-center font-black text-sm">📦</div>'}
             </div>
-            """, unsafe_allow_html=True)
+            <div>
+                <h1 class="text-lg lg:text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+                    Gestão de Conferência de Mercadorias
+                </h1>
+                <p class="text-xs text-slate-500 font-medium">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base</p>
+            </div>
+        </div>
 
-    with col_nav:
-        b1, b2, b3, b4, b5, b_sync = st.columns([1.18, 1.1, 1.25, 1.35, 1.32, 0.8], vertical_alignment="center")
+        <!-- DIV ENVOLVENTE PADRÃO SOLICITADO -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap">
+            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Dashboard' else ''}" onclick="navegar('Dashboard')">
+                Dashboard
+            </button>
+            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Importar Remessa' else ''}" onclick="navegar('Importar Remessa')">
+                Importar
+            </button>
+            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Folha de Impressão Cega' else ''}" onclick="navegar('Folha de Impressão Cega')">
+                Folha Cega
+            </button>
+            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Digitar Conferência Cega' else ''}" onclick="navegar('Digitar Conferência Cega')">
+                Conferência
+            </button>
+            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Cadastrar Novo Conferente' else ''}" onclick="navegar('Cadastrar Novo Conferente')">
+                Conferentes
+            </button>
+            <button onclick="sincronizar()" title="Clique para recarregar da planilha" class="inline-flex items-center px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 cursor-pointer transition">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> ⟳ Sync
+            </button>
+        </div>
+    </div>
 
-        opcoes_nav = [
-            (b1, "Dashboard", "Dashboard"),
-            (b2, "Importar Remessa", "Importar"),
-            (b3, "Folha de Impressão Cega", "Folha Cega"),
-            (b4, "Digitar Conferência Cega", "Conferência"),
-            (b5, "Cadastrar Novo Conferente", "Conferentes")
-        ]
+    <script>
+        function navegar(menuNome) {{
+            const url = new URL(window.parent.location.href);
+            url.searchParams.set('menu', menuNome);
+            url.searchParams.delete('action');
+            window.parent.location.href = url.href;
+        }}
+        function sincronizar() {{
+            const url = new URL(window.parent.location.href);
+            url.searchParams.set('action', 'sync');
+            window.parent.location.href = url.href;
+        }}
+    </script>
+</body>
+</html>
+"""
 
-        # Linkagem direta de cada botão ao seu respectivo estado de menu
-        for col_btn, nome_menu, label_btn in opcoes_nav:
-            with col_btn:
-                st.markdown('<div class="nav-box">', unsafe_allow_html=True)
-                is_active = (st.session_state.menu_selecionado == nome_menu)
-                tipo = "primary" if is_active else "secondary"
-                if st.button(label_btn, key=f"nav_{nome_menu}", type=tipo, use_container_width=True):
-                    st.session_state.menu_selecionado = nome_menu
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-
-        with b_sync:
-            st.markdown('<div class="sync-box">', unsafe_allow_html=True)
-            if st.button("⟳ Sync", key="nav_btn_sync", use_container_width=True):
-                carregar_dados_planilha_cached.clear()
-                carregar_lista_conferentes.clear()
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+components.html(header_component_html, height=84, scrolling=False)
 
 menu = st.session_state.menu_selecionado
 
@@ -609,6 +629,7 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
+        # Filtros
         with st.container(border=True):
             col_f1, col_f2 = st.columns([1, 1])
             with col_f1:
@@ -639,6 +660,7 @@ if menu == "Dashboard":
         acuracia_cor_class = "green" if taxa_acuracia >= 98 else "red"
         divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
 
+        # KPI Grid
         st.markdown(f"""
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -660,6 +682,7 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
+        # Gráficos
         with st.container(border=True):
             col_g1, col_g2 = st.columns(2)
 
@@ -711,6 +734,7 @@ if menu == "Dashboard":
                 else:
                     st.info("Sem dados suficientes para a evolução diária.")
 
+        # Diagnóstico & Ranking
         with st.container(border=True):
             col_e1, col_e2 = st.columns(2)
 
