@@ -19,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- LOCALIZADOR DO LOGOTIPO ---
+# --- LOCALIZADOR RESILIENTE DO LOGOTIPO ---
 def encontrar_e_carregar_logotipo():
     nomes_possiveis = [
         "logotipo.png", "logotipo.PNG", "logotipo.jpg", "logotipo.jpeg",
@@ -51,24 +51,21 @@ def encontrar_e_carregar_logotipo():
 
 img_logo_obj = encontrar_e_carregar_logotipo()
 
-# --- 2. CSS GLOBAL: HEADER FULL-WIDTH & CORPO CENTRALIZADO ---
+# --- 2. CSS GLOBAL: HEADER SUPERIOR E TEMA CLARO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Ocultar barras padrão do Streamlit */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* Fundo da página Slate-100 */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
         background-color: #f1f5f9 !important;
         color: #1e293b !important;
     }
 
-    /* Container global da página: centralizado com margens confortáveis */
     .block-container {
         padding-top: 0rem !important;
         padding-bottom: 3rem !important;
@@ -78,7 +75,6 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
-    /* BARRA SUPERIOR TOTALMENTE UNIFICADA */
     div[data-testid="stVerticalBlock"] > div:has(.navbar-header-marker) {
         background: #ffffff !important;
         border-bottom: 1px solid #e2e8f0 !important;
@@ -88,7 +84,6 @@ st.markdown("""
         border-radius: 0 0 14px 14px !important;
     }
 
-    /* Logotipo Container */
     [data-testid="stImage"] {
         display: flex !important;
         align-items: center !important;
@@ -126,7 +121,6 @@ st.markdown("""
         margin: 2px 0 0 0 !important;
     }
 
-    /* PÍLULA DE NAVEGAÇÃO INTERNA */
     div.nav-pill-wrapper {
         background-color: #f1f5f9;
         border: 1px solid #e2e8f0;
@@ -137,7 +131,6 @@ st.markdown("""
         align-items: center;
     }
 
-    /* Configuração dos botões */
     div.nav-pill-wrapper div.stButton > button {
         border-radius: 10px !important;
         font-size: 12px !important;
@@ -149,7 +142,6 @@ st.markdown("""
         border: 1px solid transparent !important;
     }
 
-    /* Botão Inativo */
     div.nav-btn-inactive div.stButton > button {
         background-color: #ffffff !important;
         color: #64748b !important;
@@ -162,7 +154,6 @@ st.markdown("""
         border-color: #cbd5e1 !important;
     }
 
-    /* Botão Ativo */
     div.nav-btn-active div.stButton > button {
         background-color: #0284c7 !important;
         color: #ffffff !important;
@@ -170,7 +161,6 @@ st.markdown("""
         box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25) !important;
     }
 
-    /* Botão Sincronizar */
     div.nav-btn-sync div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
@@ -181,7 +171,6 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* KPI CARDS */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -229,7 +218,6 @@ st.markdown("""
         line-height: 1.2;
     }
 
-    /* Inputs e formulários */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -537,14 +525,13 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. HEADER SUPERIOR TOTALMENTE UNIFICADO ---
+# --- 4. HEADER SUPERIOR COM NAVEGAÇÃO ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-# Container unificado do topo sem divs quebradas
 with st.container():
     col_logo, col_info, col_nav = st.columns([0.8, 2.5, 6.7], vertical_alignment="center")
 
@@ -1248,11 +1235,11 @@ elif menu == "Digitar Conferência Cega":
                                         else:
                                             if autorizar_divergencia:
                                                 st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
-                                        else:
-                                            st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
-                                else:
-                                    mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
-                                    st.error(f"Erro ao salvar: {mensagem_erro}")
+                                            else:
+                                                st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
+                                    else:
+                                        mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                                        st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE
