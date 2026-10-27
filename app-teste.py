@@ -58,19 +58,16 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Oculta Sidebar e Header nativos do Streamlit */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* Base da Aplicação: Fundo Slate-50 */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #f8fafc !important;
         color: #0f172a !important;
     }
 
-    /* Container Global Centralizado */
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 3rem !important;
@@ -80,7 +77,6 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
-    /* TODOS OS CONTAINERS PRINCIPAIS BRANCOS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
@@ -89,7 +85,6 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
-    /* ESTRUTURA DA MARCA: LOGO + TÍTULOS */
     .brand-cluster {
         display: flex;
         align-items: center;
@@ -142,7 +137,6 @@ st.markdown("""
         font-weight: 400;
     }
 
-    /* SUBCONTAINER CINZA REALMENTE ACOPLADO AOS BOTÕES */
     div.subnav-wrapper-native div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #f1f5f9 !important;
         border: 1px solid #e2e8f0 !important;
@@ -152,7 +146,6 @@ st.markdown("""
         margin-bottom: 0px !important;
     }
 
-    /* PADRONIZAÇÃO COMPACTA DOS BOTÕES DE NAVEGAÇÃO */
     div.subnav-wrapper-native div.stButton > button {
         border-radius: 6px !important;
         font-size: 11.5px !important;
@@ -167,7 +160,6 @@ st.markdown("""
         letter-spacing: -0.1px;
     }
 
-    /* Botão Inativo */
     div.nav-btn-inactive div.stButton > button {
         background-color: #ffffff !important;
         color: #475569 !important;
@@ -179,7 +171,6 @@ st.markdown("""
         border-color: #cbd5e1 !important;
     }
 
-    /* Botão Ativo (Sky Blue) */
     div.nav-btn-active div.stButton > button {
         background-color: #0284c7 !important;
         color: #ffffff !important;
@@ -187,7 +178,6 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25) !important;
     }
 
-    /* Botão Sincronizar (Emerald) */
     div.nav-btn-sync div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
@@ -198,7 +188,6 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* KPI CARDS (SLATE/SKY HARMONIZADOS) */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -246,7 +235,6 @@ st.markdown("""
         line-height: 1.2;
     }
 
-    /* FORMULÁRIOS E INPUTS */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -289,7 +277,7 @@ st.markdown("""
 
     @media print {
         body * { visibility: hidden; }
-        .no-print, [data-testid="stToolbar"], footer, div.top-container-block {
+        .no-print, [data-testid="stToolbar"], footer {
             display: none !important;
         }
         .printable-area, .printable-area * {
@@ -554,6 +542,43 @@ def extrair_excel(uploaded_file):
 
     return itens
 
+# Função modular para gravação resiliente de conferência
+def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, justificativas_itens, nome_conferente_final):
+    itens_atualizar = []
+    resultados_exibicao = []
+
+    for _, row in editado.iterrows():
+        r_id = int(row["row_index"])
+        conf_val = float(row["conferencia"])
+        qtd_esp = mapa_esperado.get(r_id, 0.0)
+        div_val = conf_val - qtd_esp
+
+        obs_do_item = ""
+        if div_val != 0 and autorizar_divergencia:
+            obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
+
+        itens_atualizar.append({
+            "row_index": r_id,
+            "conferencia": conf_val,
+            "divergencia": div_val,
+            "conferente": nome_conferente_final,
+            "observacao": obs_do_item
+        })
+
+        status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
+        resultados_exibicao.append({
+            "produto": row["produto"],
+            "descricao": row["descricao"],
+            "conferencia": conf_val,
+            "conferente": nome_conferente_final,
+            "status": status,
+            "justificativa": obs_do_item,
+            "_tem_erro": (div_val != 0)
+        })
+
+    res = enviar_atualizacao_conferencia(itens_atualizar)
+    return res, resultados_exibicao
+
 # --- 4. CONTAINER SUPERIOR COM SUBCONTAINER INTEGRADO ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
@@ -566,7 +591,7 @@ if logo_src_b64:
 else:
     logo_markup = '<div class="brand-fallback-badge">📦</div>'
 
-# CONTAINER PRINCIPAL SUPERIOR (BRANCO)
+# Container Principal Superior
 with st.container(border=True):
     col_marca, col_nav = st.columns([3.8, 6.2], vertical_alignment="center")
 
@@ -583,7 +608,6 @@ with st.container(border=True):
 
     with col_nav:
         st.markdown('<div class="subnav-wrapper-native">', unsafe_allow_html=True)
-        # Subcontainer cinza envolvendo as colunas e botões
         with st.container(border=True):
             cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.1, 1.1, 1.25, 1.35, 1.3, 1.1])
 
@@ -644,7 +668,6 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
-        # Container Branco de Filtros
         with st.container(border=True):
             col_f1, col_f2 = st.columns([1, 1])
             with col_f1:
@@ -675,7 +698,6 @@ if menu == "Dashboard":
         acuracia_cor_class = "green" if taxa_acuracia >= 98 else "red"
         divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
 
-        # KPI Grid
         st.markdown(f"""
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -697,7 +719,6 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
-        # Container Branco de Gráficos
         with st.container(border=True):
             col_g1, col_g2 = st.columns(2)
 
@@ -749,7 +770,6 @@ if menu == "Dashboard":
                 else:
                     st.info("Sem dados suficientes para a evolução diária.")
 
-        # Container Branco de Diagnóstico & Ranking
         with st.container(border=True):
             col_e1, col_e2 = st.columns(2)
 
@@ -860,7 +880,7 @@ elif menu == "Importar Remessa":
 # ==============================================================================
 # OPÇÃO: FOLHA DE IMPRESSÃO CEGA (CONTAINER BRANCO)
 # ==============================================================================
-elif menu == "Folha de Impressão Cega":
+elif menu == "Folha de ImpressÃO Cega":
     with st.container(border=True):
         st.markdown("#### 🖨️ Ficha de Contagem Cega para Impressão")
 
@@ -1169,115 +1189,74 @@ elif menu == "Digitar Conferência Cega":
                                     if not linha_orig.empty and pd.notna(linha_orig["observacao"].iloc[0]):
                                         obs_anterior = str(linha_orig["observacao"].iloc[0]).strip()
 
-                            justificativas_itens[r_id] = st.text_input(
-                                f"Justificativa para {label_item} *",
-                                value=obs_anterior,
-                                placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
-                                key=f"justificativa_item_{r_id}"
-                            )
+                                justificativas_itens[r_id] = st.text_input(
+                                    f"Justificativa para {label_item} *",
+                                    value=obs_anterior,
+                                    placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
+                                    key=f"justificativa_item_{r_id}"
+                                )
 
                     if st.button("⚖️ Comparar e Gravar Conferência"):
                         if not nome_conferente_final:
                             st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
+                        elif autorizar_divergencia and any(not str(justificativas_itens.get(it["row_index"], "")).strip() for it in itens_com_divergencia_detectada):
+                            st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
                         else:
-                            justificativas_pendentes = False
-                            if autorizar_divergencia:
-                                for it in itens_com_divergencia_detectada:
-                                    r_id = it["row_index"]
-                                    if not str(justificativas_itens.get(r_id, "")).strip():
-                                        justificativas_pendentes = True
-                                        break
+                            with st.spinner("Gravando conferência na aba Conferencia..."):
+                                res, resultados_exibicao = salvar_conferencia_dados(
+                                    editado, mapa_esperado, autorizar_divergencia, justificativas_itens, nome_conferente_final
+                                )
 
-                            if autorizar_divergencia and justificativas_pendentes:
-                                st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
+                            if res.get("status") != "success":
+                                mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                                st.error(f"Erro ao salvar: {mensagem_erro}")
                             else:
-                                with st.spinner("Gravando conferência na aba Conferencia..."):
-                                    itens_atualizar = []
-                                    resultados_exibicao = []
+                                msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
+                                if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
+                                    msg_sucesso += " Justificativas lançadas na linha de cada produto divergente (Coluna J)."
+                                st.success(msg_sucesso)
 
-                                    for _, row in editado.iterrows():
-                                        r_id = int(row["row_index"])
-                                        conf_val = float(row["conferencia"])
-                                        qtd_esp = mapa_esperado.get(r_id, 0.0)
-                                        div_val = conf_val - qtd_esp
+                                df_resultado = pd.DataFrame(resultados_exibicao)
 
-                                        obs_do_item = ""
-                                        if div_val != 0 and autorizar_divergencia:
-                                            obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
+                                def colorir_status(val):
+                                    if "Divergente" in str(val):
+                                        return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                    return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
 
-                                        itens_atualizar.append({
-                                            "row_index": r_id,
-                                            "conferencia": conf_val,
-                                            "divergencia": div_val,
-                                            "conferente": nome_conferente_final,
-                                            "observacao": obs_do_item
-                                        })
+                                st.write("### 📊 Resultado da Conferência")
 
-                                        status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
-                                        resultados_exibicao.append({
-                                            "produto": row["produto"],
-                                            "descricao": row["descricao"],
-                                            "conferencia": conf_val,
-                                            "conferente": nome_conferente_final,
-                                            "status": status,
-                                            "justificativa": obs_do_item,
-                                            "_tem_erro": (div_val != 0)
-                                        })
+                                colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
+                                if autorizar_divergencia:
+                                    colunas_tabela.append("justificativa")
 
-                                    res = enviar_atualizacao_conferencia(itens_atualizar)
-
-                                    if res.get("status") == "success":
-                                        msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
-                                        if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
-                                            msg_sucesso += " Justificativas lançadas na linha de cada produto divergente (Coluna J)."
-                                        st.success(msg_sucesso)
-                                        
-                                        df_resultado = pd.DataFrame(resultados_exibicao)
-                                        
-                                        def colorir_status(val):
-                                            if "Divergente" in str(val):
-                                                return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
-                                            else:
-                                                return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
-
-                                        st.write("### 📊 Resultado da Conferência")
-                                        
-                                        colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
-                                        if autorizar_divergencia:
-                                            colunas_tabela.append("justificativa")
-
-                                        df_mostrar = df_resultado[colunas_tabela]
-                                        styler_res = df_mostrar.style
-                                        if hasattr(styler_res, "map"):
-                                            styler_res = styler_res.map(colorir_status, subset=["status"])
-                                        else:
-                                            styler_res = styler_res.applymap(colorir_status, subset=["status"])
-
-                                        st.dataframe(
-                                            styler_res,
-                                            column_config={
-                                                "produto": "Código",
-                                                "descricao": "Descrição",
-                                                "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
-                                                "conferente": "Conferente",
-                                                "status": "Situação da Contagem",
-                                                "justificativa": "Justificativa (Coluna J)"
-                                            },
-                                            use_container_width=True
-                                        )
-
-                                        total_erros = df_resultado["_tem_erro"].sum()
-                                        if total_erros == 0:
-                                            st.balloons()
-                                            st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
-                                        else:
-                                            if autorizar_divergencia:
-                                                st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
-                                        else:
-                                            st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
+                                df_mostrar = df_resultado[colunas_tabela]
+                                styler_res = df_mostrar.style
+                                if hasattr(styler_res, "map"):
+                                    styler_res = styler_res.map(colorir_status, subset=["status"])
                                 else:
-                                    mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
-                                    st.error(f"Erro ao salvar: {mensagem_erro}")
+                                    styler_res = styler_res.applymap(colorir_status, subset=["status"])
+
+                                st.dataframe(
+                                    styler_res,
+                                    column_config={
+                                        "produto": "Código",
+                                        "descricao": "Descrição",
+                                        "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
+                                        "conferente": "Conferente",
+                                        "status": "Situação da Contagem",
+                                        "justificativa": "Justificativa (Coluna J)"
+                                    },
+                                    use_container_width=True
+                                )
+
+                                total_erros = df_resultado["_tem_erro"].sum()
+                                if total_erros == 0:
+                                    st.balloons()
+                                    st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
+                                elif autorizar_divergencia:
+                                    st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
+                                else:
+                                    st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE (CONTAINER BRANCO)
