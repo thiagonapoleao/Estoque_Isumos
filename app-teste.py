@@ -13,49 +13,135 @@ st.set_page_config(
     page_title="Gestão de Conferência de Mercadorias",
     page_icon="📦",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Estilização Corporativa - Padrão painel_compras_solicitacoes_pecas
+# --- 2. CSS GLOBAL TEMA CLARO & NAVBAR SUPERIOR ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+    /* Ocultar barra lateral nativa e cabeçalho padrão */
+    [data-testid="stSidebar"], section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    }
-
-    /* Container base */
-    .block-container {
-        padding-top: 1.8rem !important;
-        padding-bottom: 2.5rem !important;
-        max-width: 96% !important;
-    }
-
-    /* Cabeçalhos de Página */
-    .page-header {
-        margin-bottom: 22px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .page-title {
-        font-size: 22px !important;
-        font-weight: 700 !important;
+        background-color: #f8fafc !important;
         color: #0f172a !important;
-        letter-spacing: -0.4px !important;
-        margin: 0 0 4px 0 !important;
+    }
+
+    .block-container {
+        padding-top: 0.8rem !important;
+        padding-bottom: 3rem !important;
+        max-width: 95% !important;
+    }
+
+    /* Top Header Container */
+    .top-header-wrapper {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         display: flex;
         align-items: center;
-        gap: 8px;
-    }
-    .page-subtitle {
-        font-size: 13px !important;
-        color: #64748b !important;
-        margin: 0 !important;
-        font-weight: 400;
+        justify-content: space-between;
+        gap: 16px;
     }
 
-    /* KPI / Metric Cards Modernos */
+    .brand-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .brand-icon-box {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .brand-title {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        letter-spacing: -0.3px;
+        margin: 0 !important;
+    }
+    .brand-subtitle {
+        font-size: 11.5px !important;
+        color: #64748b !important;
+        margin: 2px 0 0 0 !important;
+    }
+
+    /* Pílula de navegação superior */
+    .nav-pill-box {
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 4px;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    /* Customização dos botões Streamlit dentro da barra superior */
+    div[data-testid="column"] div.stButton > button {
+        border-radius: 10px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        padding: 7px 12px !important;
+        height: 38px !important;
+        transition: all 0.15s ease-in-out !important;
+        border: 1px solid transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Botão inativo da navbar */
+    div.nav-btn-inactive > div.stButton > button {
+        background-color: transparent !important;
+        color: #475569 !important;
+        border: 1px solid transparent !important;
+    }
+    div.nav-btn-inactive > div.stButton > button:hover {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    /* Botão ativo da navbar */
+    div.nav-btn-active > div.stButton > button {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* Botão de Sincronizar */
+    div.sync-btn > div.stButton > button {
+        background-color: #ecfdf5 !important;
+        color: #065f46 !important;
+        border: 1px solid #a7f3d0 !important;
+    }
+    div.sync-btn > div.stButton > button:hover {
+        background-color: #d1fae5 !important;
+        border-color: #6ee7b7 !important;
+        color: #047857 !important;
+    }
+
+    /* KPI Cards Pro */
     .metric-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -67,14 +153,9 @@ st.markdown("""
         border: 1px solid #e2e8f0;
         border-radius: 10px;
         padding: 14px 18px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         position: relative;
         overflow: hidden;
-    }
-    .metric-card-pro:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.07);
     }
     .metric-card-pro::before {
         content: "";
@@ -83,11 +164,10 @@ st.markdown("""
         left: 0;
         width: 4px;
         height: 100%;
-        background: #1e3a8a;
+        background: #2563eb;
     }
     .metric-card-pro.green::before { background: #16a34a; }
     .metric-card-pro.red::before { background: #dc2626; }
-    .metric-card-pro.amber::before { background: #d97706; }
 
     .metric-card-pro .kpi-label {
         font-size: 11px !important;
@@ -101,23 +181,22 @@ st.markdown("""
         font-size: 20px !important;
         font-weight: 700;
         color: #0f172a;
-        line-height: 1.2;
     }
 
-    /* Atalho e Callouts */
+    /* Helpers e avisos */
     .keyboard-hint {
-        background-color: #f8fafc;
-        border: 1px solid #cbd5e1;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
         padding: 8px 12px;
         border-radius: 6px;
         font-size: 11.5px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
     .keyboard-hint kbd {
-        background: #ffffff;
-        border: 1px solid #94a3b8;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
         padding: 2px 5px;
         border-radius: 4px;
@@ -136,107 +215,16 @@ st.markdown("""
         font-size: 12.5px !important;
     }
 
-    /* Sidebar Padronizada */
-    [data-testid="stSidebar"] {
-        background-color: #0f172a !important;
-        color: #ffffff !important;
-        border-right: 1px solid #1e293b;
-    }
-    [data-testid="stSidebar"] * {
-        color: #f1f5f9;
-    }
-    .sidebar-brand-box {
-        padding: 16px 12px;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-    .sidebar-brand-title {
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.6px;
-        color: #ffffff !important;
-        text-transform: uppercase;
-    }
-    .sidebar-brand-sub {
-        font-size: 10px;
-        color: #94a3b8 !important;
-        margin-top: 2px;
-        font-weight: 500;
-    }
-    .sidebar-section-title {
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        margin-bottom: 8px;
-        margin-top: 6px;
-    }
-
-    /* Botões da Sidebar */
-    [data-testid="stSidebar"] div.stButton > button {
-        background: transparent !important;
-        color: #cbd5e1 !important;
-        border: 1px solid transparent !important;
-        border-radius: 6px !important;
-        text-align: left !important;
-        font-weight: 500 !important;
-        font-size: 12.5px !important;
-        padding: 9px 12px !important;
-        width: 100% !important;
-        box-shadow: none !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    [data-testid="stSidebar"] div.stButton > button:hover {
-        background: rgba(255, 255, 255, 0.06) !important;
-        color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        transform: none !important;
-    }
-
-    /* Botões Padrão do Painel Principal */
-    div.stButton > button[kind="primary"],
-    div.stButton > button {
-        background: #1e3a8a !important;
-        color: #ffffff !important;
-        border: 1px solid #1d4ed8 !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        padding: 7px 18px !important;
-        font-size: 13px !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    div.stButton > button:hover {
-        background: #1d4ed8 !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* Inputs e Controles */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
-        border-radius: 6px !important;
+        background-color: #ffffff !important;
+        border-radius: 8px !important;
         font-size: 13px !important;
     }
-    label p {
-        font-size: 12.5px !important;
-        font-weight: 600 !important;
-        color: #334155 !important;
-    }
 
-    /* Dataframes & Tabelas */
-    [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
-        font-size: 12.5px !important;
-    }
-    
     @media print {
-        header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
+        header, .no-print, [data-testid="stToolbar"], footer, .top-header-wrapper {
             display: none !important;
         }
         .printable-area {
@@ -245,20 +233,11 @@ st.markdown("""
             margin: 0 !important;
             padding: 0 !important;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #1e293b !important;
-            padding: 3px 5px !important;
-            font-size: 9.5px !important;
-        }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
+# --- 3. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
 API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9w1kx4Ie7mxrWcQnjjOj1rf0ND7JIGEb1Jk-yCi/exec"
 
 def get_session():
@@ -274,7 +253,6 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
-# --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
 def enviar_dados_apps_script(payload: dict) -> dict:
     try:
         session = get_session()
@@ -300,7 +278,6 @@ def enviar_dados_apps_script(payload: dict) -> dict:
         return {"status": "error", "message": f"Falha de conexão: {str(ex)}"}
 
 def normalizar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    """Padroniza tipos e remove anomalias de formatação vindas do Sheets."""
     if df.empty:
         return df
 
@@ -430,7 +407,6 @@ def injetar_atalho_teclado_tab():
     </script>
     """, height=0, width=0)
 
-# --- 4. EXTRAÇÃO DO EXCEL ---
 def extrair_excel(uploaded_file):
     itens = []
     df_raw = pd.read_excel(uploaded_file, header=None, dtype=str)
@@ -507,55 +483,63 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO & SIDEBAR ---
+# --- 4. HEADER SUPERIOR COM TEMA CLARO & MENU ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
-st.sidebar.markdown("""
-<div class="sidebar-brand-box">
-    <div class="sidebar-brand-title">📦 ESTOQUE & CONFERÊNCIA</div>
-    <div class="sidebar-brand-sub">Painel Integrado de Suprimentos</div>
+# Carregamento prévio de contagem para o subtítulo do header
+df_stats = carregar_dados_planilha_cached()
+total_itens_carregados = len(df_stats) if not df_stats.empty else 0
+
+st.markdown(f"""
+<div class="top-header-wrapper no-print">
+    <div class="brand-section">
+        <div class="brand-icon-box">📦</div>
+        <div>
+            <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
+            <p class="brand-subtitle">Controle de Remessas, Contagem Cega & Divergências · <strong>{total_itens_carregados}</strong> registros na base</p>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.sidebar.markdown('<div class="sidebar-section-title">Navegação Principal</div>', unsafe_allow_html=True)
+# Barra de Botões de Navegação Superior (6 Colunas: 5 Menus + 1 Sync)
+col_nav1, col_nav2, col_nav3, col_nav4, col_nav5, col_sync = st.columns([1.3, 1.2, 1.4, 1.5, 1.4, 1.1])
 
-opcoes_menu = [
-    ("Dashboard de Resumo", "📊"),
-    ("Importar Remessa", "📥"),
-    ("Folha de Impressão Cega", "🖨️"),
-    ("Digitar Conferência Cega", "🔍"),
-    ("Cadastrar Novo Conferente", "👤")
+opcoes = [
+    (col_nav1, "Dashboard de Resumo", "📊 Resumo"),
+    (col_nav2, "Importar Remessa", "📥 Importar"),
+    (col_nav3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
+    (col_nav4, "Digitar Conferência Cega", "🔍 Conferência"),
+    (col_nav5, "Cadastrar Novo Conferente", "👤 Conferentes")
 ]
 
-for opcao, icon in opcoes_menu:
-    is_active = (st.session_state.menu_selecionado == opcao)
-    rotulo = f"● {icon}  {opcao}" if is_active else f"{icon}  {opcao}"
-    if st.sidebar.button(rotulo, key=f"btn_nav_{opcao}", use_container_width=True):
-        st.session_state.menu_selecionado = opcao
+for col, nome_menu, label_btn in opcoes:
+    with col:
+        is_active = (st.session_state.menu_selecionado == nome_menu)
+        classe_css = "nav-btn-active" if is_active else "nav-btn-inactive"
+        st.markdown(f'<div class="{classe_css}">', unsafe_allow_html=True)
+        if st.button(label_btn, key=f"top_nav_{nome_menu}", use_container_width=True):
+            st.session_state.menu_selecionado = nome_menu
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+with col_sync:
+    st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
+    if st.button("🔄 Sincronizar", key="top_btn_sync", use_container_width=True):
+        carregar_dados_planilha_cached.clear()
+        carregar_lista_conferentes.clear()
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.sidebar.markdown('<div style="margin: 16px 0; border-top: 1px solid #1e293b;"></div>', unsafe_allow_html=True)
-st.sidebar.markdown('<div class="sidebar-section-title">Ações do Sistema</div>', unsafe_allow_html=True)
-
-if st.sidebar.button("🔄 Sincronizar Base de Dados", use_container_width=True):
-    carregar_dados_planilha_cached.clear()
-    carregar_lista_conferentes.clear()
-    st.rerun()
+st.markdown("<hr style='margin: 14px 0 20px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM CORES CORPORATIVAS)
+# OPÇÃO: DASHBOARD DE RESUMO (TEMA CLARO)
 # ==============================================================================
 if menu == "Dashboard de Resumo":
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">📊 Resumo Gerencial de Conferência Cega</h1>
-        <p class="page-subtitle">Acompanhe a produtividade de conferência, divergências físicas e índices de acuracidade.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
     with st.spinner("Compilando indicadores..."):
         df_raw = carregar_dados_planilha()
 
@@ -635,7 +619,7 @@ if menu == "Dashboard de Resumo":
             df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                barras_mes = alt.Chart(df_mes).mark_bar(color="#1e3a8a", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#2563eb", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                     x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
                 )
@@ -659,7 +643,7 @@ if menu == "Dashboard de Resumo":
             df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
             if not df_dia.empty:
                 max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
-                barras_dia = alt.Chart(df_dia).mark_bar(color="#0284c7", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                barras_dia = alt.Chart(df_dia).mark_bar(color="#0ea5e9", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                     x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
                 )
@@ -735,12 +719,7 @@ if menu == "Dashboard de Resumo":
 # OPÇÃO: IMPORTAR REMESSA (Aba Conferencia)
 # ==============================================================================
 elif menu == "Importar Remessa":
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">📥 Importação de Remessa</h1>
-        <p class="page-subtitle">Suba a planilha original do fornecedor para iniciar o ciclo de auditoria física.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("#### 📥 Importação de Remessa do Fornecedor")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -750,7 +729,7 @@ elif menu == "Importar Remessa":
 
     arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa (.xlsx ou .xls)", type=["xlsx", "xls"])
 
-    if st.button("Processar e Salvar", type="primary"):
+    if st.button("Processar e Salvar Remessa"):
         if not num_remessa or not nome_local_input or not arquivo_excel:
             st.error("Preencha todos os campos obrigatórios e anexe o arquivo.")
         else:
@@ -768,16 +747,16 @@ elif menu == "Importar Remessa":
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        remessa_limpa,                  # A: Remessa
-                        nome_local,                     # B: Estoque
-                        data_importacao,                # C: Horario / Data
-                        str(item["Produto"]).strip(),   # D: Codigo
-                        str(item["Descricao"]).strip(), # E: Descrição
-                        float(item["Quantidade"]),      # F: Quantidade
-                        "",                             # G: Conferencia
-                        "",                             # H: Divergencia
-                        "",                             # I: Conferente
-                        ""                              # J: Justificativa para Divergencia
+                        remessa_limpa,
+                        nome_local,
+                        data_importacao,
+                        str(item["Produto"]).strip(),
+                        str(item["Descricao"]).strip(),
+                        float(item["Quantidade"]),
+                        "",
+                        "",
+                        "",
+                        ""
                     ])
 
                 with st.spinner("Gravando linhas na aba Conferencia..."):
@@ -793,12 +772,7 @@ elif menu == "Importar Remessa":
 # OPÇÃO: FOLHA DE IMPRESSÃO CEGA (ECONÔMICA)
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">🖨️ Folha de Separação / Contagem Cega</h1>
-        <p class="page-subtitle">Gere a ficha de conferência física pronta para impressão econômica em papel A4.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("#### 🖨️ Ficha de Contagem Cega para Impressão")
 
     with st.spinner("Consultando dados..."):
         df = carregar_dados_planilha()
@@ -847,17 +821,16 @@ elif menu == "Folha de Impressão Cega":
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 2px solid #1e3a8a;
+            border-bottom: 2px solid #0f172a;
             padding-bottom: 6px;
             margin-bottom: 8px;
         }}
         .header-title {{
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 800;
             margin: 0 0 4px 0;
-            color: #1e3a8a;
+            color: #0f172a;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
         }}
         .header-meta {{
             display: flex;
@@ -873,7 +846,7 @@ elif menu == "Folha de Impressão Cega":
         }}
         th {{
             border: 1px solid #94a3b8;
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
             padding: 5px 6px;
             font-size: 10px;
             text-align: left;
@@ -886,10 +859,9 @@ elif menu == "Folha de Impressão Cega":
             justify-content: space-between;
             font-size: 10px;
             color: #475569;
-            padding-top: 4px;
         }}
         .btn-imprimir {{
-            background: #1e3a8a;
+            background: #0f172a;
             color: white;
             border: none;
             padding: 7px 16px;
@@ -898,17 +870,10 @@ elif menu == "Folha de Impressão Cega":
             border-radius: 6px;
             cursor: pointer;
             margin-bottom: 10px;
-            transition: background 0.15s ease;
-        }}
-        .btn-imprimir:hover {{
-            background: #1d4ed8;
         }}
         @media print {{
             .btn-imprimir {{
                 display: none !important;
-            }}
-            body {{
-                padding: 0;
             }}
             @page {{
                 margin: 6mm;
@@ -955,12 +920,7 @@ elif menu == "Folha de Impressão Cega":
 # OPÇÃO: DIGITAR CONFERÊNCIA CEGA & JUSTIFICATIVA POR ITEM
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">🔍 Digitação de Conferência Cega e Validação</h1>
-        <p class="page-subtitle">Lance os quantitativos apurados fisicamente para validação instantânea contra o manifesto.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("#### 🔍 Digitação de Contagem e Validação de Divergências")
 
     with st.spinner("Buscando registros..."):
         df = carregar_dados_planilha()
@@ -1125,7 +1085,7 @@ elif menu == "Digitar Conferência Cega":
                                 key=f"justificativa_item_{r_id}"
                             )
 
-                if st.button("⚖️ Comparar e Gravar", type="primary"):
+                if st.button("⚖️ Comparar e Gravar Conferência"):
                     if not nome_conferente_final:
                         st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
                     else:
@@ -1232,17 +1192,13 @@ elif menu == "Digitar Conferência Cega":
 # OPÇÃO: CADASTRAR NOVO CONFERENTE (Aba Local-Estoque - Coluna D)
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">👤 Cadastro de Conferente</h1>
-        <p class="page-subtitle">Os conferentes são lidos e gravados na Coluna D da aba <strong>Local-Estoque</strong>.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("#### 👤 Cadastro de Novo Conferente")
+    st.caption("Os conferentes cadastrados são registrados na Coluna D da aba **Local-Estoque**.")
 
     col1, col2 = st.columns([2, 1])
     with col1:
         novo_conferente = st.text_input("Nome Completo do Conferente *", placeholder="Ex: JOÃO SILVA")
-        if st.button("Cadastrar Conferente", type="primary"):
+        if st.button("Cadastrar Conferente"):
             if not novo_conferente.strip():
                 st.error("Informe o nome do conferente para realizar o cadastro.")
             else:
