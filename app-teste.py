@@ -51,15 +51,17 @@ def encontrar_e_carregar_logotipo():
 
 img_logo_obj = encontrar_e_carregar_logotipo()
 
-# --- 2. CSS GLOBAL: HEADER SUPERIOR E TEMA CLARO ---
+# --- 2. CSS GLOBAL: FUNDO CINZA CLARO & TODOS OS CONTAINERS BRANCOS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+    /* Ocultar menus e barra lateral padrão */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
 
+    /* Fundo da Página Cinza Claro */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
         background-color: #f1f5f9 !important;
@@ -67,48 +69,50 @@ st.markdown("""
     }
 
     .block-container {
-        padding-top: 0rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 3rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
-        max-width: 1320px !important;
+        max-width: 1340px !important;
         margin: 0 auto !important;
     }
 
-    div[data-testid="stVerticalBlock"] > div:has(.navbar-header-marker) {
-        background: #ffffff !important;
-        border-bottom: 1px solid #e2e8f0 !important;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
-        padding: 10px 18px !important;
-        margin-bottom: 22px !important;
-        border-radius: 0 0 14px 14px !important;
+    /* TODOS OS CONTAINERS NA COR BRANCA */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        margin-bottom: 16px !important;
     }
 
+    /* Imagem do Logotipo */
     [data-testid="stImage"] {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-start !important;
     }
     [data-testid="stImage"] img {
-        max-height: 48px !important;
-        max-width: 125px !important;
+        max-height: 52px !important;
+        max-width: 130px !important;
         width: auto !important;
         object-fit: contain !important;
     }
+
     .brand-fallback-box {
-        width: 44px;
-        height: 44px;
+        width: 46px;
+        height: 46px;
         background: #0284c7;
         color: #ffffff;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 22px;
     }
 
     .header-title-text {
-        font-size: 16px !important;
+        font-size: 16.5px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         letter-spacing: -0.2px;
@@ -121,18 +125,17 @@ st.markdown("""
         margin: 2px 0 0 0 !important;
     }
 
-    div.nav-pill-wrapper {
-        background-color: #f1f5f9;
+    /* SUBCONTAINER DOS BOTÕES DE NAVEGAÇÃO */
+    div.subcontainer-nav-box {
+        background-color: #f8fafc;
         border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 4px;
-        display: flex;
-        gap: 6px;
-        align-items: center;
+        border-radius: 12px;
+        padding: 6px 8px;
     }
 
-    div.nav-pill-wrapper div.stButton > button {
-        border-radius: 10px !important;
+    /* Botões de Navegação */
+    div.subcontainer-nav-box div.stButton > button {
+        border-radius: 8px !important;
         font-size: 12px !important;
         font-weight: 600 !important;
         padding: 5px 12px !important;
@@ -142,6 +145,7 @@ st.markdown("""
         border: 1px solid transparent !important;
     }
 
+    /* Botão Inativo */
     div.nav-btn-inactive div.stButton > button {
         background-color: #ffffff !important;
         color: #64748b !important;
@@ -149,11 +153,12 @@ st.markdown("""
         box-shadow: none !important;
     }
     div.nav-btn-inactive div.stButton > button:hover {
-        background-color: #f8fafc !important;
+        background-color: #f1f5f9 !important;
         color: #0f172a !important;
         border-color: #cbd5e1 !important;
     }
 
+    /* Botão Ativo */
     div.nav-btn-active div.stButton > button {
         background-color: #0284c7 !important;
         color: #ffffff !important;
@@ -161,6 +166,7 @@ st.markdown("""
         box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25) !important;
     }
 
+    /* Botão Sincronizar */
     div.nav-btn-sync div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
@@ -171,11 +177,12 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
+    /* KPI CARDS (BRANCOS COM BORDA COLORIDA) */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         gap: 14px;
-        margin-bottom: 22px;
+        margin-bottom: 16px;
     }
     .kpi-card {
         background-color: #ffffff;
@@ -218,6 +225,7 @@ st.markdown("""
         line-height: 1.2;
     }
 
+    /* Inputs e Controles */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -260,7 +268,7 @@ st.markdown("""
 
     @media print {
         body * { visibility: hidden; }
-        .no-print, [data-testid="stToolbar"], footer, div:has(.navbar-header-marker) {
+        .no-print, [data-testid="stToolbar"], footer, div.top-container-block {
             display: none !important;
         }
         .printable-area, .printable-area * {
@@ -525,18 +533,18 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 4. HEADER SUPERIOR COM NAVEGAÇÃO ---
+# --- 4. CONTAINER INICIAL BRANCO COM SUBCONTAINER DE NAVEGAÇÃO ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-with st.container():
-    col_logo, col_info, col_nav = st.columns([0.8, 2.5, 6.7], vertical_alignment="center")
+# CONTAINER PRINCIPAL INICIAL BRANCO
+with st.container(border=True):
+    col_logo, col_info, col_subnav = st.columns([0.8, 2.5, 6.7], vertical_alignment="center")
 
     with col_logo:
-        st.markdown('<div class="navbar-header-marker"></div>', unsafe_allow_html=True)
         if img_logo_obj is not None:
             st.image(img_logo_obj, width=110)
         else:
@@ -550,49 +558,52 @@ with st.container():
         </div>
         """, unsafe_allow_html=True)
 
-    with col_nav:
-        st.markdown('<div class="nav-pill-wrapper">', unsafe_allow_html=True)
-        cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.2, 1.2, 1.4, 1.5, 1.5, 1.2])
+    with col_subnav:
+        # SUBCONTAINER INTERNO DEDICADO PARA OS BOTÕES
+        with st.container():
+            st.markdown('<div class="subcontainer-nav-box">', unsafe_allow_html=True)
+            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.2, 1.2, 1.4, 1.5, 1.5, 1.2])
 
-        opcoes_nav = [
-            (cb1, "Dashboard", "📊 Dashboard"),
-            (cb2, "Importar Remessa", "📥 Importar"),
-            (cb3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
-            (cb4, "Digitar Conferência Cega", "🔍 Conferência"),
-            (cb5, "Cadastrar Novo Conferente", "👤 Conferentes")
-        ]
+            opcoes_nav = [
+                (cb1, "Dashboard", "📊 Dashboard"),
+                (cb2, "Importar Remessa", "📥 Importar"),
+                (cb3, "Folha de Impressão Cega", "🖨️ Folha Cega"),
+                (cb4, "Digitar Conferência Cega", "🔍 Conferência"),
+                (cb5, "Cadastrar Novo Conferente", "👤 Conferentes")
+            ]
 
-        for col_btn, nome_menu, label_btn in opcoes_nav:
-            with col_btn:
-                is_active = (st.session_state.menu_selecionado == nome_menu)
-                classe = "nav-btn-active" if is_active else "nav-btn-inactive"
-                st.markdown(f'<div class="{classe}">', unsafe_allow_html=True)
-                if st.button(label_btn, key=f"nav_top_{nome_menu}", use_container_width=True):
-                    st.session_state.menu_selecionado = nome_menu
+            for col_btn, nome_menu, label_btn in opcoes_nav:
+                with col_btn:
+                    is_active = (st.session_state.menu_selecionado == nome_menu)
+                    classe = "nav-btn-active" if is_active else "nav-btn-inactive"
+                    st.markdown(f'<div class="{classe}">', unsafe_allow_html=True)
+                    if st.button(label_btn, key=f"nav_top_{nome_menu}", use_container_width=True):
+                        st.session_state.menu_selecionado = nome_menu
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+            with cb_sync:
+                st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
+                if st.button("🔄 Sincronizar", key="nav_top_sync", use_container_width=True):
+                    carregar_dados_planilha_cached.clear()
+                    carregar_lista_conferentes.clear()
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
 
-        with cb_sync:
-            st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
-            if st.button("🔄 Sincronizar", key="nav_top_sync", use_container_width=True):
-                carregar_dados_planilha_cached.clear()
-                carregar_lista_conferentes.clear()
-                st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD
+# OPÇÃO: DASHBOARD (CONTAINER BRANCO)
 # ==============================================================================
 if menu == "Dashboard":
     with st.spinner("Compilando indicadores..."):
         df_raw = carregar_dados_planilha()
 
     if df_raw.empty:
-        st.info("Nenhum registro encontrado na aba Conferencia para gerar o resumo.")
+        with st.container(border=True):
+            st.info("Nenhum registro encontrado na aba Conferencia para gerar o resumo.")
     else:
         df = df_raw.copy()
         
@@ -610,6 +621,7 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
+        # Container Branco de Filtros
         with st.container(border=True):
             col_f1, col_f2 = st.columns([1, 1])
             with col_f1:
@@ -640,6 +652,7 @@ if menu == "Dashboard":
         acuracia_cor_class = "green" if taxa_acuracia >= 98 else "red"
         divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
 
+        # KPI Grid
         st.markdown(f"""
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -661,6 +674,7 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
+        # Container Branco de Gráficos
         with st.container(border=True):
             col_g1, col_g2 = st.columns(2)
 
@@ -712,6 +726,7 @@ if menu == "Dashboard":
                 else:
                     st.info("Sem dados suficientes para a evolução diária.")
 
+        # Container Branco de Diagnóstico & Ranking
         with st.container(border=True):
             col_e1, col_e2 = st.columns(2)
 
@@ -766,7 +781,7 @@ if menu == "Dashboard":
                     st.success("🎉 Nenhuma divergência registrada no filtro atual!")
 
 # ==============================================================================
-# OPÇÃO: IMPORTAR REMESSA
+# OPÇÃO: IMPORTAR REMESSA (CONTAINER BRANCO)
 # ==============================================================================
 elif menu == "Importar Remessa":
     with st.container(border=True):
@@ -820,7 +835,7 @@ elif menu == "Importar Remessa":
                             st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
 
 # ==============================================================================
-# OPÇÃO: FOLHA DE IMPRESSÃO CEGA
+# OPÇÃO: FOLHA DE IMPRESSÃO CEGA (CONTAINER BRANCO)
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
     with st.container(border=True):
@@ -969,7 +984,7 @@ elif menu == "Folha de Impressão Cega":
                     components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA (CONTAINER BRANCO)
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
     with st.container(border=True):
@@ -1242,7 +1257,7 @@ elif menu == "Digitar Conferência Cega":
                                         st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
-# OPÇÃO: CADASTRAR NOVO CONFERENTE
+# OPÇÃO: CADASTRAR NOVO CONFERENTE (CONTAINER BRANCO)
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
     with st.container(border=True):
