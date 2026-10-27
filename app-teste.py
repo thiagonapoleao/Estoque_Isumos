@@ -57,7 +57,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL CORPORATIVO COM AS REGRAS SOLICITADAS ---
+# --- 2. CSS GLOBAL CORPORATIVO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -68,12 +68,12 @@ st.markdown("""
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-        background-color: #f1f5f9 !important;
+        background-color: #f8fafc !important;
         color: #1e293b !important;
     }
 
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 1.25rem !important;
         padding-bottom: 2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
@@ -81,10 +81,26 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
+    /* Header principal integrado */
+    .header-card {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
     /* Container envolvente dos botões:
        flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap */
-    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) {
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) {
         display: flex !important;
+        flex-direction: row !important;
         align-items: center !important;
         gap: 0.5rem !important; /* gap-2 */
         background-color: #f1f5f9 !important; /* bg-slate-100 */
@@ -93,19 +109,28 @@ st.markdown("""
         border: 1px solid #e2e8f0 !important; /* border border-slate-200 */
         flex-wrap: wrap !important; /* flex-wrap */
         width: 100% !important;
+        margin-bottom: 1.25rem !important;
     }
 
-    /* Reseta as colunas filhas dentro do container de navegação para alinhamento inline/flex */
-    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) > div[data-testid="column"] {
+    /* Ajuste das colunas internas do Streamlit no container de navegação */
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) > div[data-testid="column"] {
         flex: 1 1 auto !important;
         width: auto !important;
         min-width: fit-content !important;
         padding: 0 !important;
+        margin: 0 !important;
     }
 
-    /* Modelo base dos botões e inativos:
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) div[data-testid="stButton"] {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Base de todos os botões e estado Inativo:
        .nav-btn.inactive { background-color: #ffffff; color: #64748b; border: 1px solid #e2e8f0; } */
-    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button {
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) button {
+        width: 100% !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -113,40 +138,46 @@ st.markdown("""
         padding: 0.5rem 1rem !important;
         border-radius: 0.75rem !important;
         font-size: 0.8rem !important;
+        line-height: 1.2 !important;
         font-weight: 600 !important;
-        background-color: #ffffff !important; 
-        color: #64748b !important; 
-        border: 1px solid #e2e8f0 !important; 
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #64748b !important;
+        border: 1px solid #e2e8f0 !important;
         box-shadow: none !important;
+        outline: none !important;
         transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
         height: auto !important;
         min-height: unset !important;
-        cursor: pointer !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button:hover {
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) button:hover {
         background-color: #f8fafc !important;
         color: #0f172a !important;
         border-color: #cbd5e1 !important;
     }
 
-    /* Modelo dos botões ativos:
+    /* Estado Ativo do Botão:
        .nav-btn.active { 
            background-color: #0284c7; 
            color: #ffffff; 
-           box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25); 
+           box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25);
        } */
-    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button[kind="primary"] {
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) button[kind="primary"] {
+        background: #0284c7 !important;
         background-color: #0284c7 !important;
         color: #ffffff !important;
         border: 1px solid #0284c7 !important;
         box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25) !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button[kind="primary"]:hover {
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) button[kind="primary"] * {
+        color: #ffffff !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.nav-wrapper-marker) button[kind="primary"]:hover {
         background-color: #0369a1 !important;
         border-color: #0369a1 !important;
-        color: #ffffff !important;
     }
 
     /* Card Branco Padrão do Sistema */
@@ -545,67 +576,65 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER CORPORATIVO E BARRA DE NAVEGAÇÃO ESTILIZADA ---
+# --- 4. HEADER CORPORATIVO E NAVEGAÇÃO ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-st.markdown("""
-<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); padding: 0.85rem 1.25rem; margin-bottom: 1rem;">
-""", unsafe_allow_html=True)
+img_tag = f'<img src="{logo_src_b64}" style="max-height: 44px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 40px; height: 40px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px;">📦</div>'
 
-col_brand, col_nav = st.columns([1.2, 2.8], gap="medium")
-
-with col_brand:
-    img_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 40px; height: 40px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px;">📦</div>'
-    st.markdown(f"""
+st.markdown(f"""
+<div class="header-card">
     <div style="display: flex; align-items: center; gap: 1rem;">
-        <div style="display: flex; align-items: center; justify-content: center; padding: 0.25rem; background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 54px; min-width: 54px; overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: center; padding: 0.25rem; background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 50px; min-width: 50px; overflow: hidden;">
             {img_tag}
         </div>
         <div>
             <h1 style="font-size: 1.15rem; font-weight: 700; letter-spacing: -0.025em; color: #0f172a; margin: 0; line-height: 1.2;">
                 Gestão de Conferência de Mercadorias
             </h1>
-            <p style="font-size: 0.75rem; color: #64748b; font-weight: 500; margin: 0.25rem 0 0 0;">
+            <p style="font-size: 0.75rem; color: #64748b; font-weight: 500; margin: 0.2rem 0 0 0;">
                 Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base
             </p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-with col_nav:
-    # Div âncora para aplicar o container: flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap
-    st.markdown('<div class="nav-btn-container" style="display:none;"></div>', unsafe_allow_html=True)
-    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1.1, 0.75], gap="small")
+# Container da barra de navegação estilo:
+# flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap
+nav_cols = st.columns([1, 1, 1.1, 1.1, 1.2, 0.75], gap="small")
 
-    def btn_type(nome):
-        return "primary" if st.session_state.menu_selecionado == nome else "secondary"
-
-    if c1.button("Dashboard", type=btn_type("Dashboard"), use_container_width=True):
+with nav_cols[0]:
+    # Marcador invisível para aplicar o container CSS
+    st.markdown('<span class="nav-wrapper-marker" style="display:none;"></span>', unsafe_allow_html=True)
+    if st.button("Dashboard", type="primary" if st.session_state.menu_selecionado == "Dashboard" else "secondary", use_container_width=True):
         st.session_state.menu_selecionado = "Dashboard"
         st.rerun()
 
-    if c2.button("Importar", type=btn_type("Importar Remessa"), use_container_width=True):
+with nav_cols[1]:
+    if st.button("Importar", type="primary" if st.session_state.menu_selecionado == "Importar Remessa" else "secondary", use_container_width=True):
         st.session_state.menu_selecionado = "Importar Remessa"
         st.rerun()
 
-    if c3.button("Folha Cega", type=btn_type("Folha de Impressão Cega"), use_container_width=True):
+with nav_cols[2]:
+    if st.button("Folha Cega", type="primary" if st.session_state.menu_selecionado == "Folha de Impressão Cega" else "secondary", use_container_width=True):
         st.session_state.menu_selecionado = "Folha de Impressão Cega"
         st.rerun()
 
-    if c4.button("Conferência", type=btn_type("Digitar Conferência Cega"), use_container_width=True):
+with nav_cols[3]:
+    if st.button("Conferência", type="primary" if st.session_state.menu_selecionado == "Digitar Conferência Cega" else "secondary", use_container_width=True):
         st.session_state.menu_selecionado = "Digitar Conferência Cega"
         st.rerun()
 
-    if c5.button("Conferentes", type=btn_type("Cadastrar Novo Conferente"), use_container_width=True):
+with nav_cols[4]:
+    if st.button("Conferentes", type="primary" if st.session_state.menu_selecionado == "Cadastrar Novo Conferente" else "secondary", use_container_width=True):
         st.session_state.menu_selecionado = "Cadastrar Novo Conferente"
         st.rerun()
 
-    if c6.button("⟳ Sync", use_container_width=True, help="Recarregar dados da planilha"):
+with nav_cols[5]:
+    if st.button("⟳ Sync", use_container_width=True, help="Recarregar dados da planilha"):
         st.cache_data.clear()
         st.rerun()
-
-st.markdown("</div>", unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
