@@ -10,7 +10,7 @@ import altair as alt
 import os
 from pathlib import Path
 import base64
-import urllib.parse
+from streamlit_option_menu import option_menu
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -29,19 +29,8 @@ opcoes_validas = [
     "Cadastrar Novo Conferente"
 ]
 
-# Lê da URL se houver navegação pelo Header HTML
-query_menu = st.query_params.get("menu", None)
-if query_menu in opcoes_validas:
-    st.session_state.menu_selecionado = query_menu
-elif "menu_selecionado" not in st.session_state:
+if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
-
-# Trata ação de sincronização acionada pelo menu superior
-if st.query_params.get("action") == "sync":
-    st.cache_data.clear()
-    st.query_params.clear()
-    st.query_params["menu"] = st.session_state.menu_selecionado
-    st.rerun()
 
 # --- LOCALIZADOR E CONVERSOR DO LOGOTIPO EM BASE64 ---
 def obter_logotipo_base64():
@@ -108,6 +97,21 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         margin-bottom: 14px !important;
         padding: 14px 18px !important;
+    }
+
+    /* Header Card Unificado */
+    .header-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        padding: 0.65rem 1.25rem;
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
     }
 
     /* KPI Cards */
@@ -496,102 +500,55 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER NATIVO HTML COM A ESTRUTURA E CLASSES TAILWIND LITERAIS ---
+# --- 4. HEADER INTEGRADO COM NAVEGAÇÃO NATIVA ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
-menu_atual = st.session_state.menu_selecionado
 
-def obter_url_menu(nome):
-    return f"?menu={urllib.parse.quote_plus(nome)}"
+logo_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 42px; height: 42px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px;">📦</div>'
 
-# Gera o código do Header mantendo rigorosamente seu visual, layout e CSS
-header_component_html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {{
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: transparent;
-        }}
-        .header-card {{
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-            padding: 0.85rem 1.25rem;
-        }}
-        /* Botão Base Solicitado */
-        .nav-btn {{
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-            background-color: #ffffff;
-            color: #64748b;
-            text-decoration: none !important;
-            display: inline-flex;
-            user-select: none;
-        }}
-        .nav-btn:hover {{
-            background-color: #f8fafc;
-            color: #0f172a;
-            border-color: #cbd5e1;
-        }}
-        /* Botão Ativo: Destaque Azul Claro */
-        .nav-btn.active {{
-            background-color: #e0f2fe !important;
-            color: #0369a1 !important;
-            border: 1.5px solid #7dd3fc !important;
-            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12) !important;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header-card flex flex-col lg:flex-row justify-between items-center gap-4">
-        <!-- Cluster da Marca e Título -->
-        <div class="flex items-center gap-4">
-            <div class="flex items-center justify-center p-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" style="height: 54px; min-width: 54px;">
-                {'<img src="' + logo_src_b64 + '" alt="Logotipo" class="max-h-12 w-auto object-contain">' if logo_src_b64 else '<div class="w-10 h-10 bg-sky-600 text-white rounded-lg flex items-center justify-center font-black text-sm">📦</div>'}
-            </div>
-            <div>
-                <h1 class="text-lg lg:text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                    Gestão de Conferência de Mercadorias
-                </h1>
-                <p class="text-xs text-slate-500 font-medium">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base</p>
-            </div>
+col_header_left, col_header_right = st.columns([1.1, 1.9])
+
+with col_header_left:
+    st.markdown(f"""
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); padding: 0.5rem 1rem; display: flex; align-items: center; gap: 14px; height: 60px;">
+        <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; height: 46px; min-width: 46px;">
+            {logo_tag}
         </div>
-
-        <!-- DIV ENVOLVENTE PADRÃO SOLICITADO -->
-        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap">
-            <a href="{obter_url_menu('Dashboard')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Dashboard' else ''}">
-                Dashboard
-            </a>
-            <a href="{obter_url_menu('Importar Remessa')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Importar Remessa' else ''}">
-                Importar
-            </a>
-            <a href="{obter_url_menu('Folha de Impressão Cega')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Folha de Impressão Cega' else ''}">
-                Folha Cega
-            </a>
-            <a href="{obter_url_menu('Digitar Conferência Cega')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Digitar Conferência Cega' else ''}">
-                Conferência
-            </a>
-            <a href="{obter_url_menu('Cadastrar Novo Conferente')}" target="_top" class="nav-btn items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Cadastrar Novo Conferente' else ''}">
-                Conferentes
-            </a>
-            <a href="?action=sync" target="_top" title="Clique para recarregar da planilha" class="inline-flex items-center px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 cursor-pointer transition no-underline">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> ⟳ Sync
-            </a>
+        <div>
+            <h1 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2;">
+                Gestão de Conferência de Mercadorias
+            </h1>
+            <p style="font-size: 11px; color: #64748b; font-weight: 500; margin: 2px 0 0 0;">
+                Controle Operacional & Estoque · <strong style="color: #0f172a;">{total_itens_carregados}</strong> registros na base
+            </p>
         </div>
     </div>
-</body>
-</html>
-"""
+    """, unsafe_allow_html=True)
 
-components.html(header_component_html, height=84, scrolling=False)
+with col_header_right:
+    col_menu, col_sync = st.columns([5.5, 1.0])
+    with col_menu:
+        selecionado = option_menu(
+            menu_title=None,
+            options=opcoes_validas,
+            icons=["bar-chart", "cloud-upload", "printer", "pencil-square", "person-plus"],
+            default_index=opcoes_validas.index(st.session_state.menu_selecionado) if st.session_state.menu_selecionado in opcoes_validas else 0,
+            orientation="horizontal",
+            styles={
+                "container": {"padding": "3px 6px", "background-color": "#f1f5f9", "border-radius": "14px", "border": "1px solid #e2e8f0", "height": "60px", "display": "flex", "align-items": "center"},
+                "nav-link": {"font-size": "11.5px", "font-weight": "600", "color": "#64748b", "padding": "7px 11px", "border-radius": "10px", "margin": "0 2px", "border": "1px solid transparent", "white-space": "nowrap"},
+                "nav-link-selected": {"background-color": "#e0f2fe", "color": "#0369a1", "font-weight": "700", "border": "1.5px solid #7dd3fc", "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12)"},
+            }
+        )
+        if selecionado and selecionado != st.session_state.menu_selecionado:
+            st.session_state.menu_selecionado = selecionado
+            st.rerun()
+
+    with col_sync:
+        st.markdown('<div style="height: 11px;"></div>', unsafe_allow_html=True)
+        if st.button("⟳ Sync", help="Recarregar dados da planilha"):
+            st.cache_data.clear()
+            st.rerun()
 
 menu = st.session_state.menu_selecionado
 
