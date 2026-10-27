@@ -66,7 +66,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL CORPORATIVO ---
+# --- 2. CSS GLOBAL CORPORATIVO ORIGINAL ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -99,43 +99,7 @@ st.markdown("""
         padding: 14px 18px !important;
     }
 
-    /* Card Unificado do Cabeçalho */
-    .header-card-wrapper {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.75rem;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        padding: 0.75rem 1.25rem;
-        margin-bottom: 14px;
-    }
-
-    /* Alinhamento dos blocos nas colunas do Streamlit */
-    div[data-testid="column"] {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    /* Botão Sync Verde com borda arredondada */
-    .btn-sync-custom button {
-        background-color: #ecfdf5 !important;
-        color: #065f46 !important;
-        border: 1px solid #a7f3d0 !important;
-        border-radius: 12px !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        height: 44px !important;
-        transition: all 0.2s ease !important;
-        padding: 0 14px !important;
-        margin-top: 0 !important;
-    }
-    .btn-sync-custom button:hover {
-        background-color: #d1fae5 !important;
-        border-color: #6ee7b7 !important;
-        color: #064e3b !important;
-    }
-
-    /* KPI Cards */
+    /* KPI Cards Originais */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -216,6 +180,34 @@ st.markdown("""
         padding: 12px 14px;
         margin: 10px 0;
         font-size: 12px !important;
+    }
+
+    /* Container de Cabeçalho Corporativo Unificado */
+    .header-card-wrapper {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 14px;
+    }
+
+    /* Botão Sync Verde com Pulso */
+    .btn-sync-custom button {
+        background-color: #ecfdf5 !important;
+        color: #065f46 !important;
+        border: 1px solid #a7f3d0 !important;
+        border-radius: 12px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        height: 40px !important;
+        transition: all 0.2s ease !important;
+        padding: 0 14px !important;
+    }
+    .btn-sync-custom button:hover {
+        background-color: #d1fae5 !important;
+        border-color: #6ee7b7 !important;
+        color: #064e3b !important;
     }
 
     @media print {
@@ -521,33 +513,34 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. CABEÇALHO UNIFICADO E INTEGRADO (CONTAINER + LOGOTIPO + BOTÕES) ---
+# --- 4. HEADER INTEGRADO COM LAYOUT, CSS E BOTÕES ORIGINAIS ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
-logo_tag = f'<img src="{logo_src_b64}" alt="Logotipo" style="max-height: 44px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 44px; height: 44px; background-color: #0284c7; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px;">📦</div>'
+logo_tag = f'<img src="{logo_src_b64}" alt="Logotipo" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 40px; height: 40px; background-color: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px;">📦</div>'
 
+# Card Único Envolvente com o Layout e Estilo Idênticos ao Original
 st.markdown('<div class="header-card-wrapper">', unsafe_allow_html=True)
-col_marca, col_menu, col_sync = st.columns([1.1, 1.85, 0.25])
+col_marca, col_menu_botoes, col_sync_btn = st.columns([1.05, 1.85, 0.28])
 
 with col_marca:
     st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 12px; height: 100%;">
-        <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,0.04); height: 50px; min-width: 50px;">
+    <div style="display: flex; align-items: center; gap: 14px; min-height: 52px;">
+        <div style="display: flex; align-items: center; justify-content: center; padding: 4px; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,0.04); height: 52px; min-width: 52px;">
             {logo_tag}
         </div>
-        <div style="display: flex; flex-direction: column; justify-content: center;">
-            <h1 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
+        <div>
+            <h1 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.02em;">
                 Gestão de Conferência de Mercadorias
             </h1>
-            <p style="font-size: 11.5px; color: #64748b; font-weight: 500; margin: 2px 0 0 0;">
+            <p style="font-size: 12px; color: #64748b; font-weight: 500; margin: 3px 0 0 0;">
                 Controle Operacional & Estoque · <strong style="color: #0f172a;">{total_itens_carregados}</strong> registros na base
             </p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-with col_menu:
+with col_menu_botoes:
     selecionado = option_menu(
         menu_title=None,
         options=opcoes_validas,
@@ -555,25 +548,25 @@ with col_menu:
         orientation="horizontal",
         styles={
             "container": {
-                "padding": "4px",
+                "padding": "6px",
                 "background-color": "#f1f5f9",
-                "border-radius": "14px",
+                "border-radius": "16px",
                 "border": "1px solid #e2e8f0",
                 "display": "flex",
                 "align-items": "center",
                 "justify-content": "center",
-                "gap": "4px",
+                "gap": "6px",
                 "margin": "0"
             },
             "nav-link": {
                 "font-family": "'Inter', system-ui, sans-serif",
-                "font-size": "11.5px",
+                "font-size": "12px",
                 "font-weight": "600",
                 "color": "#64748b",
                 "background-color": "#ffffff",
                 "border": "1px solid #e2e8f0",
-                "border-radius": "10px",
-                "padding": "6px 12px",
+                "border-radius": "12px",
+                "padding": "8px 14px",
                 "margin": "0",
                 "white-space": "nowrap",
                 "transition": "all 0.15s ease",
@@ -591,9 +584,9 @@ with col_menu:
         st.session_state.menu_selecionado = selecionado
         st.rerun()
 
-with col_sync:
-    st.markdown('<div class="btn-sync-custom">', unsafe_allow_html=True)
-    if st.button("⟳ Sync", use_container_width=True, help="Recarregar dados da planilha"):
+with col_sync_btn:
+    st.markdown('<div class="btn-sync-custom" style="padding-top: 5px;">', unsafe_allow_html=True)
+    if st.button("⟳ Sync", help="Recarregar dados da planilha"):
         st.cache_data.clear()
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
