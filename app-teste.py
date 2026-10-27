@@ -53,11 +53,12 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS CORPORATIVO REFINADO (SLATE & SKY DESIGN SYSTEM) ---
+# --- 2. CSS CORPORATIVO ULTRA-COMPACTO (SLATE & SKY DESIGN) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+    /* Oculta Sidebar e Header padrão */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
@@ -66,103 +67,110 @@ st.markdown("""
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #f8fafc !important;
         color: #0f172a !important;
+        font-size: 12.5px !important;
     }
 
+    /* Container Global Ultracompacto */
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 3rem !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-        max-width: 1380px !important;
+        padding-top: 0.4rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
+        max-width: 1400px !important;
         margin: 0 auto !important;
     }
 
+    /* Redução de margens de todos os containers brancos */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-        margin-bottom: 16px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+        margin-bottom: 10px !important;
+        padding: 10px 14px !important;
     }
 
+    /* Header Compacto */
     .brand-cluster {
         display: flex;
         align-items: center;
-        gap: 14px;
-        min-height: 52px;
+        gap: 10px;
+        min-height: 42px;
     }
     .brand-logo-frame {
-        height: 48px;
-        max-width: 120px;
+        height: 38px;
+        max-width: 100px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     .brand-logo-frame img {
-        max-height: 46px;
+        max-height: 38px;
         width: auto;
         max-width: 100%;
         object-fit: contain;
     }
     .brand-fallback-badge {
-        width: 44px;
-        height: 44px;
+        width: 36px;
+        height: 36px;
         background: #0284c7;
         color: #ffffff;
-        border-radius: 10px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+        font-size: 18px;
     }
     .brand-text-block {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.25;
+        line-height: 1.15;
     }
     .brand-title {
-        font-size: 16px !important;
+        font-size: 14.5px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
-        letter-spacing: -0.3px;
+        letter-spacing: -0.2px;
         margin: 0 !important;
     }
     .brand-subtitle {
-        font-size: 11.5px !important;
+        font-size: 10.5px !important;
         color: #64748b !important;
-        margin: 2px 0 0 0 !important;
+        margin: 1px 0 0 0 !important;
         font-weight: 400;
     }
 
+    /* Subcontainer Cinza da Barra de Navegação */
     div.subnav-wrapper-native div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #f1f5f9 !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 4px 6px !important;
+        border-radius: 8px !important;
+        padding: 3px 4px !important;
         box-shadow: none !important;
         margin-bottom: 0px !important;
     }
 
+    /* BOTÕES MODERNOS, MENORES E ULTRACOMPACTOS */
     div.subnav-wrapper-native div.stButton > button {
         border-radius: 6px !important;
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
-        padding: 4px 6px !important;
-        height: 34px !important;
+        padding: 3px 8px !important;
+        height: 30px !important;
+        min-height: 30px !important;
         transition: all 0.15s ease-in-out !important;
         white-space: nowrap !important;
-        border: 1px solid transparent !important;
         box-shadow: none !important;
         width: 100% !important;
         letter-spacing: -0.1px;
     }
 
+    /* Botão Inativo */
     div.nav-btn-inactive div.stButton > button {
         background-color: #ffffff !important;
-        color: #475569 !important;
+        color: #64748b !important;
         border: 1px solid #e2e8f0 !important;
     }
     div.nav-btn-inactive div.stButton > button:hover {
@@ -171,13 +179,15 @@ st.markdown("""
         border-color: #cbd5e1 !important;
     }
 
+    /* BOTÃO ATIVO EM DESTAQUE AZUL CLARO MODERNO */
     div.nav-btn-active div.stButton > button {
-        background-color: #0284c7 !important;
-        color: #ffffff !important;
-        border: 1px solid #0284c7 !important;
-        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25) !important;
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1.5px solid #7dd3fc !important;
+        box-shadow: 0 1px 3px rgba(2, 132, 199, 0.12) !important;
     }
 
+    /* Botão Sincronizar */
     div.nav-btn-sync div.stButton > button {
         background-color: #ecfdf5 !important;
         color: #065f46 !important;
@@ -188,32 +198,28 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
+    /* KPI CARDS COMPACTOS */
     .kpi-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 14px;
-        margin-bottom: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
     }
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 14px 18px;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+        padding: 10px 14px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
         position: relative;
         overflow: hidden;
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
     }
     .kpi-card::before {
         content: "";
         position: absolute;
         top: 0;
         left: 0;
-        width: 4px;
+        width: 3.5px;
         height: 100%;
         background: #0284c7;
     }
@@ -221,58 +227,60 @@ st.markdown("""
     .kpi-card.red::before { background: #dc2626; }
 
     .kpi-label {
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
         color: #64748b;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
     }
     .kpi-value {
-        font-size: 20px !important;
+        font-size: 17px !important;
         font-weight: 700;
         color: #0f172a;
         line-height: 1.2;
     }
 
+    /* Inputs e Controles Compactados */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
         background-color: #ffffff !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         border: 1px solid #cbd5e1 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
+        min-height: 32px !important;
     }
 
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 11.5px !important;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11px !important;
         color: #334155;
         display: inline-block;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
     }
     .keyboard-hint kbd {
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
-        padding: 2px 5px;
-        border-radius: 4px;
+        padding: 1px 4px;
+        border-radius: 3px;
         font-weight: 700;
-        font-size: 11px !important;
+        font-size: 10px !important;
         color: #0f172a;
     }
 
     .divergence-box {
         background-color: #fff7ed;
         border: 1px solid #fed7aa;
-        border-left: 4px solid #ea580c;
-        border-radius: 8px;
-        padding: 14px 16px;
-        margin: 14px 0;
-        font-size: 12.5px !important;
+        border-left: 3px solid #ea580c;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin: 10px 0;
+        font-size: 11.5px !important;
     }
 
     @media print {
@@ -288,7 +296,7 @@ st.markdown("""
             left: 0;
             top: 0;
             width: 100%;
-            padding: 20px;
+            padding: 16px;
             background: #ffffff !important;
             color: #000000 !important;
         }
@@ -542,7 +550,6 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# Função modular para gravação resiliente de conferência
 def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, justificativas_itens, nome_conferente_final):
     itens_atualizar = []
     resultados_exibicao = []
@@ -579,7 +586,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. CONTAINER SUPERIOR COM SUBCONTAINER INTEGRADO ---
+# --- 4. CONTAINER SUPERIOR COMPACTO COM SUBCONTAINER INTEGRADO ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
@@ -591,9 +598,9 @@ if logo_src_b64:
 else:
     logo_markup = '<div class="brand-fallback-badge">📦</div>'
 
-# Container Principal Superior
+# Container Principal Superior Compacto
 with st.container(border=True):
-    col_marca, col_nav = st.columns([3.8, 6.2], vertical_alignment="center")
+    col_marca, col_nav = st.columns([3.6, 6.4], vertical_alignment="center")
 
     with col_marca:
         st.markdown(f"""
@@ -601,7 +608,7 @@ with st.container(border=True):
             {logo_markup}
             <div class="brand-text-block">
                 <h1 class="brand-title">Gestão de Conferência de Mercadorias</h1>
-                <p class="brand-subtitle">Controle Operacional, Ordens & Estoque · <strong>{total_itens_carregados}</strong> itens na base</p>
+                <p class="brand-subtitle">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros</p>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -609,14 +616,14 @@ with st.container(border=True):
     with col_nav:
         st.markdown('<div class="subnav-wrapper-native">', unsafe_allow_html=True)
         with st.container(border=True):
-            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.1, 1.1, 1.25, 1.35, 1.3, 1.1])
+            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.15, 1.1, 1.25, 1.35, 1.3, 0.85])
 
             opcoes_nav = [
-                (cb1, "Dashboard", "▪ Dashboard"),
-                (cb2, "Importar Remessa", "▪ Importar"),
-                (cb3, "Folha de Impressão Cega", "▪ Folha Cega"),
-                (cb4, "Digitar Conferência Cega", "▪ Conferência"),
-                (cb5, "Cadastrar Novo Conferente", "▪ Conferentes")
+                (cb1, "Dashboard", "Dashboard"),
+                (cb2, "Importar Remessa", "Importar"),
+                (cb3, "Folha de Impressão Cega", "Folha Cega"),
+                (cb4, "Digitar Conferência Cega", "Conferência"),
+                (cb5, "Cadastrar Novo Conferente", "Conferentes")
             ]
 
             for col_btn, nome_menu, label_btn in opcoes_nav:
@@ -631,7 +638,7 @@ with st.container(border=True):
 
             with cb_sync:
                 st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
-                if st.button("⟳ Sync", key="nav_top_sync", use_container_width=True):
+                if st.button("⟳", key="nav_top_sync", help="Sincronizar dados", use_container_width=True):
                     carregar_dados_planilha_cached.clear()
                     carregar_lista_conferentes.clear()
                     st.rerun()
@@ -668,6 +675,7 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
+        # Container Branco de Filtros
         with st.container(border=True):
             col_f1, col_f2 = st.columns([1, 1])
             with col_f1:
@@ -698,6 +706,7 @@ if menu == "Dashboard":
         acuracia_cor_class = "green" if taxa_acuracia >= 98 else "red"
         divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
 
+        # KPI Grid Compacto
         st.markdown(f"""
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -706,7 +715,7 @@ if menu == "Dashboard":
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Itens Conferidos</div>
-                <div class="kpi-value">{total_conferidos} <span style="font-size: 13px; font-weight: 500; color: #64748b;">/ {total_itens}</span></div>
+                <div class="kpi-value">{total_conferidos} <span style="font-size: 11px; font-weight: 500; color: #64748b;">/ {total_itens}</span></div>
             </div>
             <div class="kpi-card {acuracia_cor_class}">
                 <div class="kpi-label">Acuracidade Físico x Remessa</div>
@@ -719,62 +728,64 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
+        # Gráficos
         with st.container(border=True):
             col_g1, col_g2 = st.columns(2)
 
             with col_g1:
-                st.markdown("##### 📅 Conferências Realizadas por Mês")
+                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Conferências Realizadas por Mês</p>", unsafe_allow_html=True)
                 df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
                 if not df_mes.empty:
                     max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                    barras_mes = alt.Chart(df_mes).mark_bar(color="#0284c7", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    barras_mes = alt.Chart(df_mes).mark_bar(color="#0284c7", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
                         x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
                         y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
                     )
                     textos_mes = barras_mes.mark_text(
                         align="center",
                         baseline="bottom",
-                        dy=-4,
-                        fontSize=11,
+                        dy=-3,
+                        fontSize=10.5,
                         fontWeight=600,
                         color="#0f172a"
                     ).encode(
                         text="Qtd:Q"
                     )
-                    chart_mes = (barras_mes + textos_mes).properties(height=260)
+                    chart_mes = (barras_mes + textos_mes).properties(height=220)
                     st.altair_chart(chart_mes, use_container_width=True)
                 else:
                     st.info("Sem dados suficientes para a evolução mensal.")
 
             with col_g2:
-                st.markdown("##### 📊 Volume de Conferência por Dia")
+                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Volume de Conferência por Dia</p>", unsafe_allow_html=True)
                 df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
                 if not df_dia.empty:
                     max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
-                    barras_dia = alt.Chart(df_dia).mark_bar(color="#38bdf8", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    barras_dia = alt.Chart(df_dia).mark_bar(color="#38bdf8", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
                         x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
                         y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
                     )
                     textos_dia = barras_dia.mark_text(
                         align="center",
                         baseline="bottom",
-                        dy=-4,
-                        fontSize=11,
+                        dy=-3,
+                        fontSize=10.5,
                         fontWeight=600,
                         color="#0f172a"
                     ).encode(
                         text="Qtd:Q"
                     )
-                    chart_dia = (barras_dia + textos_dia).properties(height=260)
+                    chart_dia = (barras_dia + textos_dia).properties(height=220)
                     st.altair_chart(chart_dia, use_container_width=True)
                 else:
                     st.info("Sem dados suficientes para a evolução diária.")
 
+        # Diagnóstico & Ranking
         with st.container(border=True):
             col_e1, col_e2 = st.columns(2)
 
             with col_e1:
-                st.markdown("##### ⚠️ Diagnóstico Geral de Divergências")
+                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Diagnóstico Geral de Divergências</p>", unsafe_allow_html=True)
                 
                 def classificar_erro(div):
                     if pd.isna(div):
@@ -804,7 +815,7 @@ if menu == "Dashboard":
                 )
 
             with col_e2:
-                st.markdown("##### 🏷️ Ranking de Produtos com Maior Divergência")
+                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Ranking de Produtos com Maior Divergência</p>", unsafe_allow_html=True)
                 df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
                 
                 if not df_erros_itens.empty and "produto" in df_erros_itens.columns:
@@ -821,14 +832,14 @@ if menu == "Dashboard":
                         use_container_width=True
                     )
                 else:
-                    st.success("🎉 Nenhuma divergência registrada no filtro atual!")
+                    st.success("Nenhuma divergência registrada no filtro atual.")
 
 # ==============================================================================
-# OPÇÃO: IMPORTAR REMESSA (CONTAINER BRANCO)
+# OPÇÃO: IMPORTAR REMESSA
 # ==============================================================================
 elif menu == "Importar Remessa":
     with st.container(border=True):
-        st.markdown("#### 📥 Importação de Remessa do Fornecedor")
+        st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 8px;'>Importação de Remessa do Fornecedor</p>", unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
         with col1:
@@ -845,14 +856,13 @@ elif menu == "Importar Remessa":
                 nome_local = str(nome_local_input).strip().upper()
                 remessa_limpa = str(num_remessa).strip()
 
-                with st.spinner("Processando linhas a partir da coluna 'Produto'..."):
+                with st.spinner("Processando linhas..."):
                     itens = extrair_excel(arquivo_excel)
 
                 if not itens:
                     st.warning("Nenhum item válido encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
                 else:
                     data_importacao = datetime.now().strftime("%d/%m/%Y")
-                    
                     linhas_para_sheets = []
                     for item in itens:
                         linhas_para_sheets.append([
@@ -871,18 +881,18 @@ elif menu == "Importar Remessa":
                     with st.spinner("Gravando linhas na aba Conferencia..."):
                         res = enviar_importacao_planilha(linhas_para_sheets)
                         if res.get("status") == "success":
-                            st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{remessa_limpa}** (Estoque: **{nome_local}**)!")
+                            st.success(f"{len(linhas_para_sheets)} itens gravados com sucesso para a remessa {remessa_limpa}!")
                             df_preview = pd.DataFrame(itens)
                             st.dataframe(df_preview, use_container_width=True)
                         else:
                             st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
 
 # ==============================================================================
-# OPÇÃO: FOLHA DE IMPRESSÃO CEGA (CONTAINER BRANCO)
+# OPÇÃO: FOLHA DE IMPRESSÃO CEGA
 # ==============================================================================
-elif menu == "Folha de ImpressÃO Cega":
+elif menu == "Folha de Impressão Cega":
     with st.container(border=True):
-        st.markdown("#### 🖨️ Ficha de Contagem Cega para Impressão")
+        st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 8px;'>Ficha de Contagem Cega para Impressão</p>", unsafe_allow_html=True)
 
         with st.spinner("Consultando dados..."):
             df = carregar_dados_planilha()
@@ -914,7 +924,7 @@ elif menu == "Folha de ImpressÃO Cega":
                             "<tr>"
                             f"<td style='border: 1px solid #cbd5e1; padding: 4px 6px; font-weight: 700; font-size: 10px; color: #0f172a;'>{cod_item}</td>"
                             f"<td style='border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 10px; color: #334155; line-height: 1.2;'>{desc_item}</td>"
-                            "<td style='border: 1px solid #cbd5e1; padding: 4px 6px; height: 22px;'></td>"
+                            "<td style='border: 1px solid #cbd5e1; padding: 4px 6px; height: 20px;'></td>"
                             "</tr>"
                         )
 
@@ -936,7 +946,7 @@ elif menu == "Folha de ImpressÃO Cega":
             margin-bottom: 8px;
         }}
         .header-title {{
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: 800;
             margin: 0 0 4px 0;
             color: #0f172a;
@@ -945,7 +955,7 @@ elif menu == "Folha de ImpressÃO Cega":
         .header-meta {{
             display: flex;
             gap: 20px;
-            font-size: 10.5px;
+            font-size: 10px;
             color: #475569;
             font-weight: 600;
         }}
@@ -957,29 +967,29 @@ elif menu == "Folha de ImpressÃO Cega":
         th {{
             border: 1px solid #94a3b8;
             background-color: #f8fafc;
-            padding: 5px 6px;
-            font-size: 10px;
+            padding: 4px 6px;
+            font-size: 9.5px;
             text-align: left;
             font-weight: 700;
             color: #0f172a;
         }}
         .signature-box {{
-            margin-top: 24px;
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
-            font-size: 10px;
+            font-size: 9.5px;
             color: #475569;
         }}
         .btn-imprimir {{
             background: #0284c7;
             color: white;
             border: none;
-            padding: 7px 16px;
-            font-size: 11.5px;
+            padding: 6px 14px;
+            font-size: 11px;
             font-weight: 600;
             border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }}
         @media print {{
             .btn-imprimir {{
@@ -992,7 +1002,7 @@ elif menu == "Folha de ImpressÃO Cega":
     </style>
 </head>
 <body>
-    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha de Contagem</button>
+    <button class="btn-imprimir" onclick="window.print()">Imprimir Folha de Contagem</button>
 
     <div class="header-box">
         <div class="header-title">Folha de Conferência Física (Contagem Cega)</div>
@@ -1023,15 +1033,15 @@ elif menu == "Folha de ImpressÃO Cega":
 </body>
 </html>"""
 
-                    altura_calculada = max(360, 110 + (len(dados_remessa) * 28))
+                    altura_calculada = max(340, 100 + (len(dados_remessa) * 26))
                     components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA (CONTAINER BRANCO)
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
     with st.container(border=True):
-        st.markdown("#### 🔍 Digitação de Contagem e Validação de Divergências")
+        st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 8px;'>Digitação de Contagem e Validação</p>", unsafe_allow_html=True)
 
         with st.spinner("Buscando registros..."):
             df = carregar_dados_planilha()
@@ -1065,15 +1075,15 @@ elif menu == "Digitar Conferência Cega":
                     if ja_conferida and len(itens_divergentes) > 0:
                         modo_reconferencia = True
                         dados_trabalho = itens_divergentes.copy()
-                        st.warning(f"⚠️ **Segunda Conferência (Apenas Divergências):** Foram identificados **{len(itens_divergentes)} item(ns)** divergentes. Reconte apenas os itens listados abaixo.")
+                        st.warning(f"Segunda Conferência (Apenas Divergências): Foram identificados {len(itens_divergentes)} item(ns) divergentes.")
                     elif ja_conferida and len(itens_divergentes) == 0:
                         modo_reconferencia = False
                         dados_trabalho = itens_remessa.copy()
-                        st.success("✨ **Remessa 100% Conferida e Sem Divergências!** Todos os itens foram validados com sucesso.")
+                        st.success("Remessa 100% Conferida e Sem Divergências!")
                     else:
                         modo_reconferencia = False
                         dados_trabalho = itens_remessa.copy()
-                        st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
+                        st.info("Primeira Conferência: Digite a quantidade física contada.")
 
                     st.markdown(f"""
                     <div class="kpi-grid">
@@ -1102,7 +1112,7 @@ elif menu == "Digitar Conferência Cega":
                         conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
 
                     if not lista_conferentes:
-                        st.warning("⚠️ Nenhum conferente localizado na coluna D da aba 'Local-Estoque'.")
+                        st.warning("Nenhum conferente localizado na coluna D da aba 'Local-Estoque'.")
                         nome_conferente_final = ""
                     else:
                         idx_default = 0
@@ -1121,7 +1131,7 @@ elif menu == "Digitar Conferência Cega":
 
                     st.markdown("""
                     <div class="keyboard-hint">
-                        ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para registrar e descer direto para o próximo produto.
+                        Digite o valor e aperte <kbd>Enter</kbd> para descer direto para o próximo produto.
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -1162,19 +1172,19 @@ elif menu == "Digitar Conferência Cega":
                                 "divergencia": conf_val - qtd_esp
                             })
 
-                    st.markdown("<hr style='margin: 18px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
-                    autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência com divergência")
+                    st.markdown("<hr style='margin: 12px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
+                    autorizar_divergencia = st.checkbox("Autorizar encerramento/finalização da conferência com divergência")
                     justificativas_itens = {}
 
                     if autorizar_divergencia:
                         if len(itens_com_divergencia_detectada) == 0:
-                            st.info("✨ Não há itens divergentes no momento. Ao salvar, todos os itens constarão como conferidos sem divergência.")
+                            st.info("Não há itens divergentes no momento. Ao salvar, todos os itens constarão como conferidos sem divergência.")
                         else:
                             st.markdown("""
                             <div class="divergence-box">
-                                <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
-                                <span style="font-size: 12px; color: #7c2d12;">
-                                    Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
+                                <strong style="color: #9a3412;">Justificativa Individual por Item Divergente</strong><br>
+                                <span style="font-size: 11px; color: #7c2d12;">
+                                    Informe a justificativa específica para cada produto com divergência (Coluna J).
                                 </span>
                             </div>
                             """, unsafe_allow_html=True)
@@ -1192,17 +1202,17 @@ elif menu == "Digitar Conferência Cega":
                                 justificativas_itens[r_id] = st.text_input(
                                     f"Justificativa para {label_item} *",
                                     value=obs_anterior,
-                                    placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
+                                    placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada",
                                     key=f"justificativa_item_{r_id}"
                                 )
 
-                    if st.button("⚖️ Comparar e Gravar Conferência"):
+                    if st.button("Comparar e Gravar Conferência"):
                         if not nome_conferente_final:
-                            st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
+                            st.error("Selecione o Nome do Conferente na lista antes de gravar.")
                         elif autorizar_divergencia and any(not str(justificativas_itens.get(it["row_index"], "")).strip() for it in itens_com_divergencia_detectada):
-                            st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
+                            st.error("É obrigatório preencher a justificativa para todos os produtos divergentes listados.")
                         else:
-                            with st.spinner("Gravando conferência na aba Conferencia..."):
+                            with st.spinner("Gravando conferência..."):
                                 res, resultados_exibicao = salvar_conferencia_dados(
                                     editado, mapa_esperado, autorizar_divergencia, justificativas_itens, nome_conferente_final
                                 )
@@ -1211,9 +1221,9 @@ elif menu == "Digitar Conferência Cega":
                                 mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
                                 st.error(f"Erro ao salvar: {mensagem_erro}")
                             else:
-                                msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
+                                msg_sucesso = f"Dados gravados com sucesso! Conferente: {nome_conferente_final}."
                                 if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
-                                    msg_sucesso += " Justificativas lançadas na linha de cada produto divergente (Coluna J)."
+                                    msg_sucesso += " Justificativas lançadas na Coluna J."
                                 st.success(msg_sucesso)
 
                                 df_resultado = pd.DataFrame(resultados_exibicao)
@@ -1223,7 +1233,7 @@ elif menu == "Digitar Conferência Cega":
                                         return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
                                     return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
 
-                                st.write("### 📊 Resultado da Conferência")
+                                st.write("### Resultado da Conferência")
 
                                 colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
                                 if autorizar_divergencia:
@@ -1252,19 +1262,19 @@ elif menu == "Digitar Conferência Cega":
                                 total_erros = df_resultado["_tem_erro"].sum()
                                 if total_erros == 0:
                                     st.balloons()
-                                    st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
+                                    st.success("Perfeito! Todos os itens batem com a remessa.")
                                 elif autorizar_divergencia:
-                                    st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
+                                    st.info("Conferência Finalizada com Justificativa.")
                                 else:
-                                    st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
+                                    st.warning(f"Existem {total_erros} item(ns) divergente(s). Realize a segunda conferência ou autorize a divergência.")
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE (CONTAINER BRANCO)
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
     with st.container(border=True):
-        st.markdown("#### 👤 Cadastro de Novo Conferente")
-        st.caption("Os conferentes cadastrados são registrados na Coluna D da aba **Local-Estoque**.")
+        st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 4px;'>Cadastro de Novo Conferente</p>", unsafe_allow_html=True)
+        st.caption("Os conferentes cadastrados são registrados na Coluna D da aba Local-Estoque.")
 
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -1277,14 +1287,14 @@ elif menu == "Cadastrar Novo Conferente":
                     with st.spinner("Salvando novo conferente..."):
                         res = enviar_cadastro_conferente(nome_formatado)
                         if res.get("status") == "success":
-                            st.success(f"✅ Conferente **{nome_formatado}** cadastrado com sucesso!")
+                            st.success(f"Conferente {nome_formatado} cadastrado com sucesso!")
                             st.balloons()
                         else:
                             mensagem_erro = res.get("message", "Falha de comunicação")
                             st.error(f"Erro ao cadastrar: {mensagem_erro}")
 
-        st.markdown("<hr style='margin: 18px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
-        st.write("#### 👥 Conferentes Atualmente Cadastrados:")
+        st.markdown("<hr style='margin: 14px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
+        st.write("#### Conferentes Atualmente Cadastrados:")
         conferentes_atuais = carregar_lista_conferentes()
         if conferentes_atuais:
             df_conf = pd.DataFrame(conferentes_atuais, columns=["Nome do Conferente"])
