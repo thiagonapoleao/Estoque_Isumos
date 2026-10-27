@@ -66,7 +66,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL CORPORATIVO ---
+# --- 2. CSS GLOBAL CORPORATIVO & DESIGN SYSTEM ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -76,13 +76,13 @@ st.markdown("""
     }
 
     html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-        background-color: #f1f5f9 !important;
-        color: #1e293b !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
     }
 
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 0.65rem !important;
         padding-bottom: 2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
@@ -90,41 +90,49 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
+    /* Container base cards */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-        margin-bottom: 14px !important;
+        box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05) !important;
+        margin-bottom: 12px !important;
         padding: 14px 18px !important;
     }
 
-    /* Caixa Unificada do Container de Navegação (Cinza Claro) */
-    .nav-unified-container {
-        background-color: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 4px 6px;
-        display: flex;
-        align-items: center;
-        width: 100%;
-        box-sizing: border-box;
+    /* Barra de Navegação Corporativa Cinza Claro */
+    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sync_topo) {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 4px 6px !important;
+        align-items: center !important;
+        gap: 6px !important;
     }
 
-    /* Botão Sincronizar com Preenchimento Total em Verde */
+    /* Remove espaçamentos extras de colunas dentro da barra */
+    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sync_topo) > div[data-testid="column"] {
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* Botão Sincronizar: Preenchimento Total Verde e Altura Idêntica ao Menu */
     div.st-key-btn_sync_topo {
+        width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
-        height: 48px !important;
+        justify-content: center !important;
     }
 
     div.st-key-btn_sync_topo button {
-        height: 40px !important;
-        min-height: 40px !important;
-        background-color: #16a34a !important; /* Preenchimento Verde Sólido */
-        color: #ffffff !important;           /* Texto e Ícone em Branco */
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+        background-color: #16a34a !important;
+        color: #ffffff !important;
         border: 1px solid #15803d !important;
         border-radius: 9px !important;
         font-weight: 700 !important;
@@ -132,11 +140,11 @@ st.markdown("""
         padding: 0 12px !important;
         margin: 0 !important;
         white-space: nowrap !important;
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        box-shadow: 0 1px 3px rgba(22, 163, 74, 0.25) !important;
-        transition: all 0.2s ease-in-out !important;
+        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2) !important;
+        transition: all 0.15s ease-in-out !important;
         width: 100% !important;
     }
 
@@ -144,8 +152,8 @@ st.markdown("""
         background-color: #15803d !important;
         border-color: #166534 !important;
         color: #ffffff !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 3px 6px rgba(21, 128, 61, 0.35) !important;
+        box-shadow: 0 2px 4px rgba(21, 128, 61, 0.3) !important;
+        transform: translateY(-0.5px) !important;
     }
 
     div.st-key-btn_sync_topo button:active,
@@ -153,7 +161,8 @@ st.markdown("""
         background-color: #14532d !important;
         border-color: #052e16 !important;
         color: #ffffff !important;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4) !important;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35) !important;
+        transform: translateY(0px) !important;
     }
 
     /* KPI Cards */
@@ -161,14 +170,14 @@ st.markdown("""
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         gap: 12px;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 14px 18px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        border-radius: 10px;
+        padding: 12px 16px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         position: relative;
         overflow: hidden;
     }
@@ -190,11 +199,11 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.4px;
         color: #64748b;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
     }
     .kpi-value {
-        font-size: 20px !important;
-        font-weight: 700;
+        font-size: 21px !important;
+        font-weight: 800;
         color: #0f172a;
         line-height: 1.2;
     }
@@ -211,12 +220,12 @@ st.markdown("""
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 8px 12px;
+        padding: 6px 12px;
         border-radius: 8px;
         font-size: 11.5px !important;
-        color: #334155;
+        color: #475569;
         display: inline-block;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .keyboard-hint kbd {
         background: #f1f5f9;
@@ -234,7 +243,7 @@ st.markdown("""
         border: 1px solid #fed7aa;
         border-left: 4px solid #ea580c;
         border-radius: 8px;
-        padding: 12px 14px;
+        padding: 10px 14px;
         margin: 10px 0;
         font-size: 12px !important;
     }
@@ -542,7 +551,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER: CONTAINER PRINCIPAL BRANCO E BOTÕES UNIFICADOS EM CONTAINER CINZA ---
+# --- 4. HEADER: CONTAINER PRINCIPAL BRANCO E NAVEGAÇÃO UNIFICADA EM CINZA ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
@@ -550,19 +559,19 @@ logo_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; obj
 
 # Container Principal 100% Branco
 with st.container(border=True):
-    col_header_left, col_header_right = st.columns([1.1, 1.9], gap="medium")
+    col_header_left, col_header_right = st.columns([1.05, 1.95], gap="medium")
 
     with col_header_left:
         st.markdown(f"""
-        <div style="background: #ffffff; padding: 2px 0; display: flex; align-items: center; gap: 14px; height: 56px;">
-            <div style="display: flex; align-items: center; justify-content: center; padding: 3px; background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; height: 50px; min-width: 50px;">
+        <div style="background: #ffffff; padding: 0; display: flex; align-items: center; gap: 14px; height: 50px;">
+            <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; height: 46px; min-width: 46px;">
                 {logo_tag}
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center;">
-                <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.3px;">
+                <h1 style="font-size: 19px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.3px;">
                     Gestão de Conferência
                 </h1>
-                <p style="font-size: 11.5px; color: #64748b; font-weight: 500; margin: 3px 0 0 0;">
+                <p style="font-size: 11.5px; color: #64748b; font-weight: 500; margin: 2px 0 0 0;">
                     Controle Operacional & Estoque · <strong style="color: #0284c7;">{total_itens_carregados}</strong> registros na base
                 </p>
             </div>
@@ -570,9 +579,8 @@ with st.container(border=True):
         """, unsafe_allow_html=True)
 
     with col_header_right:
-        # Container unificado cinza claro contendo todos os botões e Sincronizar
-        st.markdown('<div class="nav-unified-container">', unsafe_allow_html=True)
-        col_menu, col_sync = st.columns([5.2, 1.2], gap="small")
+        # Container de navegação: os botões e a sincronização habitam o mesmo bloco estilizado
+        col_menu, col_sync = st.columns([5.25, 1.15], gap="small")
         
         with col_menu:
             selecionado = option_menu(
@@ -586,7 +594,7 @@ with st.container(border=True):
                         "padding": "0px",
                         "background-color": "transparent",
                         "border": "none",
-                        "height": "48px",
+                        "height": "46px",
                         "display": "flex",
                         "align-items": "center",
                         "width": "100%",
@@ -605,7 +613,7 @@ with st.container(border=True):
                         "align-items": "center",
                         "justify-content": "center",
                         "flex": "1 1 0%",
-                        "height": "40px",
+                        "height": "38px",
                         "text-align": "center"
                     },
                     "nav-link-selected": {
@@ -613,7 +621,7 @@ with st.container(border=True):
                         "color": "#0369a1",
                         "font-weight": "700",
                         "border": "1.5px solid #7dd3fc",
-                        "box-shadow": "0 2px 4px rgba(2, 132, 199, 0.12)"
+                        "box-shadow": "0 1px 3px rgba(2, 132, 199, 0.12)"
                     },
                 }
             )
@@ -625,8 +633,6 @@ with st.container(border=True):
             if st.button("⟳ Sincronizar", key="btn_sync_topo", help="Recarregar dados atualizados da planilha", use_container_width=True):
                 st.cache_data.clear()
                 st.rerun()
-
-        st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
