@@ -57,7 +57,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS GLOBAL CORPORATIVO COM ESTILO LITERAL SOLICITADO ---
+# --- 2. CSS GLOBAL CORPORATIVO COM AS REGRAS SOLICITADAS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -86,17 +86,25 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) {
         display: flex !important;
         align-items: center !important;
-        gap: 0.5rem !important;
-        background-color: #f1f5f9 !important;
-        padding: 0.375rem !important;
-        border-radius: 1rem !important;
-        border: 1px solid #e2e8f0 !important;
-        flex-wrap: wrap !important;
+        gap: 0.5rem !important; /* gap-2 */
+        background-color: #f1f5f9 !important; /* bg-slate-100 */
+        padding: 0.375rem !important; /* p-1.5 */
+        border-radius: 1rem !important; /* rounded-2xl */
+        border: 1px solid #e2e8f0 !important; /* border border-slate-200 */
+        flex-wrap: wrap !important; /* flex-wrap */
         width: 100% !important;
     }
 
-    /* Formatação dos botões no modelo nav-btn:
-       nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition */
+    /* Reseta as colunas filhas dentro do container de navegação para alinhamento inline/flex */
+    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) > div[data-testid="column"] {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: fit-content !important;
+        padding: 0 !important;
+    }
+
+    /* Modelo base dos botões e inativos:
+       .nav-btn.inactive { background-color: #ffffff; color: #64748b; border: 1px solid #e2e8f0; } */
     div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button {
         display: flex !important;
         align-items: center !important;
@@ -104,17 +112,16 @@ st.markdown("""
         gap: 0.5rem !important;
         padding: 0.5rem 1rem !important;
         border-radius: 0.75rem !important;
-        font-size: 0.75rem !important;
-        line-height: 1rem !important;
+        font-size: 0.8rem !important;
         font-weight: 600 !important;
-        border: 1px solid #e2e8f0 !important;
-        background-color: #ffffff !important;
-        color: #64748b !important;
-        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke !important;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
-        transition-duration: 150ms !important;
+        background-color: #ffffff !important; 
+        color: #64748b !important; 
+        border: 1px solid #e2e8f0 !important; 
+        box-shadow: none !important;
+        transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
         height: auto !important;
         min-height: unset !important;
+        cursor: pointer !important;
     }
 
     div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button:hover {
@@ -123,13 +130,23 @@ st.markdown("""
         border-color: #cbd5e1 !important;
     }
 
-    /* Estilo quando ativo (kind="primary"):
-       active -> destaque azul claro */
+    /* Modelo dos botões ativos:
+       .nav-btn.active { 
+           background-color: #0284c7; 
+           color: #ffffff; 
+           box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25); 
+       } */
     div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button[kind="primary"] {
-        background-color: #e0f2fe !important;
-        color: #0369a1 !important;
-        border: 1.5px solid #7dd3fc !important;
-        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12) !important;
+        background-color: #0284c7 !important;
+        color: #ffffff !important;
+        border: 1px solid #0284c7 !important;
+        box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25) !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.nav-btn-container) button[kind="primary"]:hover {
+        background-color: #0369a1 !important;
+        border-color: #0369a1 !important;
+        color: #ffffff !important;
     }
 
     /* Card Branco Padrão do Sistema */
@@ -528,7 +545,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER CORPORATIVO COM A ESTRUTURA E CLASSES SOLICITADAS ---
+# --- 4. HEADER CORPORATIVO E BARRA DE NAVEGAÇÃO ESTILIZADA ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 
@@ -536,7 +553,7 @@ st.markdown("""
 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); padding: 0.85rem 1.25rem; margin-bottom: 1rem;">
 """, unsafe_allow_html=True)
 
-col_brand, col_nav = st.columns([1.3, 2.7], gap="medium")
+col_brand, col_nav = st.columns([1.2, 2.8], gap="medium")
 
 with col_brand:
     img_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 40px; height: 40px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px;">📦</div>'
@@ -557,7 +574,7 @@ with col_brand:
     """, unsafe_allow_html=True)
 
 with col_nav:
-    # Marca invisível para aplicar o container CSS estilizado
+    # Div âncora para aplicar o container: flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap
     st.markdown('<div class="nav-btn-container" style="display:none;"></div>', unsafe_allow_html=True)
     c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1.1, 0.75], gap="small")
 
@@ -1213,7 +1230,7 @@ elif menu == "Digitar Conferência Cega":
                                     st.warning(f"Existem {total_erros} item(ns) divergente(s). Realize a segunda conferência ou autorize a divergência.")
 
 # ==============================================================================
-# OPÇÃO: CADASTRAR NOVO CONFERENTE (CONTAINER BRANCO)
+# OPÇÃO: CADASTRAR NOVO CONFERENTE
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
     with st.container(border=True):
