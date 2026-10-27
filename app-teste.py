@@ -213,7 +213,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Listener nativo na janela principal para responder ao postMessage do iframe sem violação de CORS
+# Listener nativo na janela principal para responder ao postMessage do iframe sem violar restrições de navegação
 components.html("""
 <script>
 (function() {
@@ -520,7 +520,7 @@ df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
 menu_atual = st.session_state.menu_selecionado
 
-# Gera o código do Header com Tailwind CSS
+# Gera o código do Header com Tailwind CSS mantendo todas as chaves escapadas
 header_component_html = f"""
 <!DOCTYPE html>
 <html>
@@ -602,12 +602,12 @@ header_component_html = f"""
     </div>
 
     <script>
-        function navegar(menuNome) {
-            window.parent.postMessage({ type: 'streamlit_nav', menu: menuNome }, '*');
-        }
-        function sincronizar() {
-            window.parent.postMessage({ type: 'streamlit_nav', action: 'sync' }, '*');
-        }
+        function navegar(menuNome) {{
+            window.parent.postMessage({{ type: 'streamlit_nav', menu: menuNome }}, '*');
+        }}
+        function sincronizar() {{
+            window.parent.postMessage({{ type: 'streamlit_nav', action: 'sync' }}, '*');
+        }}
     </script>
 </body>
 </html>
