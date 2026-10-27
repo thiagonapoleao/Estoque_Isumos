@@ -10,7 +10,6 @@ import altair as alt
 import os
 from pathlib import Path
 import base64
-from streamlit_option_menu import option_menu
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -21,13 +20,15 @@ st.set_page_config(
 )
 
 # --- SINCRONIZAÇÃO DO MENU ATIVO ---
-opcoes_validas = [
-    "Dashboard",
-    "Importar Remessa",
-    "Folha de Impressão Cega",
-    "Digitar Conferência Cega",
-    "Cadastrar Novo Conferente"
+menu_itens = [
+    ("Dashboard", "📊"),
+    ("Importar Remessa", "☁️"),
+    ("Folha de Impressão Cega", "🖨️"),
+    ("Digitar Conferência Cega", "✏️"),
+    ("Cadastrar Novo Conferente", "👤")
 ]
+
+opcoes_validas = [nome for nome, _ in menu_itens]
 
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
@@ -100,34 +101,58 @@ st.markdown("""
         padding: 14px 18px !important;
     }
 
-    /* Barra de Navegação Corporativa Cinza Claro */
-    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sync_topo) {
+    /* Barra de Navegação Corporativa Cinza Claro (Mesma div unificada) */
+    div[data-testid="stHorizontalBlock"]:has(div.nav-btn-wrapper) {
         background-color: #f1f5f9 !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
-        padding: 4px 6px !important;
+        padding: 5px 6px !important;
+        gap: 4px !important;
         align-items: center !important;
-        gap: 6px !important;
+        box-sizing: border-box !important;
     }
 
-    /* Remove espaçamentos extras de colunas dentro da barra */
-    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sync_topo) > div[data-testid="column"] {
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-
-    /* Botão Sincronizar: Preenchimento Total Verde e Altura Idêntica ao Menu */
-    div.st-key-btn_sync_topo {
-        width: 100% !important;
-        margin: 0 !important;
+    div[data-testid="stHorizontalBlock"]:has(div.nav-btn-wrapper) > div[data-testid="column"] {
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
 
-    div.st-key-btn_sync_topo button {
+    /* Botões da Régua de Navegação */
+    div.nav-btn-wrapper button {
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        background-color: transparent !important;
+        border: 1px solid transparent !important;
+        border-radius: 9px !important;
+        padding: 0 8px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        width: 100% !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+
+    div.nav-btn-wrapper button:hover {
+        background-color: #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+
+    /* Botão de Navegação Selecionado/Ativo */
+    div.nav-btn-active button {
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
+        font-weight: 700 !important;
+        border: 1.5px solid #7dd3fc !important;
+        box-shadow: 0 1px 3px rgba(2, 132, 199, 0.12) !important;
+    }
+
+    /* Botão Sincronizar: Preenchimento Total Verde, mesma altura e alinhamento */
+    div.nav-sync-wrapper button {
         height: 38px !important;
         min-height: 38px !important;
         max-height: 38px !important;
@@ -137,27 +162,24 @@ st.markdown("""
         border-radius: 9px !important;
         font-weight: 700 !important;
         font-size: 11.5px !important;
-        padding: 0 12px !important;
+        padding: 0 10px !important;
         margin: 0 !important;
         white-space: nowrap !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2) !important;
-        transition: all 0.15s ease-in-out !important;
         width: 100% !important;
+        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.25) !important;
+        transition: all 0.15s ease-in-out !important;
     }
 
-    div.st-key-btn_sync_topo button:hover {
+    div.nav-sync-wrapper button:hover {
         background-color: #15803d !important;
         border-color: #166534 !important;
         color: #ffffff !important;
-        box-shadow: 0 2px 4px rgba(21, 128, 61, 0.3) !important;
+        box-shadow: 0 2px 4px rgba(21, 128, 61, 0.35) !important;
         transform: translateY(-0.5px) !important;
     }
 
-    div.st-key-btn_sync_topo button:active,
-    div.st-key-btn_sync_topo button:focus {
+    div.nav-sync-wrapper button:active,
+    div.nav-sync-wrapper button:focus {
         background-color: #14532d !important;
         border-color: #052e16 !important;
         color: #ffffff !important;
@@ -559,7 +581,7 @@ logo_tag = f'<img src="{logo_src_b64}" style="max-height: 48px; width: auto; obj
 
 # Container Principal 100% Branco
 with st.container(border=True):
-    col_header_left, col_header_right = st.columns([1.05, 1.95], gap="medium")
+    col_header_left, col_header_right = st.columns([1.0, 2.0], gap="medium")
 
     with col_header_left:
         st.markdown(f"""
@@ -579,60 +601,27 @@ with st.container(border=True):
         """, unsafe_allow_html=True)
 
     with col_header_right:
-        # Container de navegação: os botões e a sincronização habitam o mesmo bloco estilizado
-        col_menu, col_sync = st.columns([5.25, 1.15], gap="small")
+        # Container unificado: todos os 5 botões de navegação + botão Sincronizar na mesma div
+        cols_nav = st.columns([1.0, 1.15, 1.35, 1.35, 1.35, 1.15], gap="small")
         
-        with col_menu:
-            selecionado = option_menu(
-                menu_title=None,
-                options=opcoes_validas,
-                icons=["bar-chart", "cloud-upload", "printer", "pencil-square", "person-plus"],
-                default_index=opcoes_validas.index(st.session_state.menu_selecionado) if st.session_state.menu_selecionado in opcoes_validas else 0,
-                orientation="horizontal",
-                styles={
-                    "container": {
-                        "padding": "0px",
-                        "background-color": "transparent",
-                        "border": "none",
-                        "height": "46px",
-                        "display": "flex",
-                        "align-items": "center",
-                        "width": "100%",
-                        "gap": "3px"
-                    },
-                    "nav-link": {
-                        "font-size": "11.5px",
-                        "font-weight": "600",
-                        "color": "#64748b",
-                        "padding": "0 6px",
-                        "border-radius": "9px",
-                        "margin": "0",
-                        "border": "1px solid transparent",
-                        "white-space": "nowrap",
-                        "display": "flex",
-                        "align-items": "center",
-                        "justify-content": "center",
-                        "flex": "1 1 0%",
-                        "height": "38px",
-                        "text-align": "center"
-                    },
-                    "nav-link-selected": {
-                        "background-color": "#e0f2fe",
-                        "color": "#0369a1",
-                        "font-weight": "700",
-                        "border": "1.5px solid #7dd3fc",
-                        "box-shadow": "0 1px 3px rgba(2, 132, 199, 0.12)"
-                    },
-                }
-            )
-            if selecionado and selecionado != st.session_state.menu_selecionado:
-                st.session_state.menu_selecionado = selecionado
-                st.rerun()
-
-        with col_sync:
-            if st.button("⟳ Sincronizar", key="btn_sync_topo", help="Recarregar dados atualizados da planilha", use_container_width=True):
+        for idx, (nome, icone) in enumerate(menu_itens):
+            with cols_nav[idx]:
+                esta_ativo = (st.session_state.menu_selecionado == nome)
+                wrapper_class = "nav-btn-wrapper nav-btn-active" if esta_ativo else "nav-btn-wrapper"
+                
+                st.markdown(f'<div class="{wrapper_class}">', unsafe_allow_html=True)
+                if st.button(f"{icone} {nome}", key=f"nav_btn_{idx}", use_container_width=True):
+                    if st.session_state.menu_selecionado != nome:
+                        st.session_state.menu_selecionado = nome
+                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+        with cols_nav[5]:
+            st.markdown('<div class="nav-btn-wrapper nav-sync-wrapper">', unsafe_allow_html=True)
+            if st.button("⟳ Sincronizar", key="nav_btn_sync", help="Recarregar dados atualizados da planilha", use_container_width=True):
                 st.cache_data.clear()
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
