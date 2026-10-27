@@ -19,28 +19,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- SINCRONIZAÇÃO DO MENU ATIVO ---
-opcoes_validas = [
-    "Dashboard",
-    "Importar Remessa",
-    "Folha de Impressão Cega",
-    "Digitar Conferência Cega",
-    "Cadastrar Novo Conferente"
-]
-
-# Lê da URL se houver navegação pelo Header HTML
-query_menu = st.query_params.get("menu", None)
-if query_menu in opcoes_validas:
-    st.session_state.menu_selecionado = query_menu
-elif "menu_selecionado" not in st.session_state:
+# Inicialização do estado de navegação
+if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
-
-# Trata ação de sincronização acionada pelo menu superior
-if st.query_params.get("action") == "sync":
-    st.cache_data.clear()
-    st.query_params.clear()
-    st.query_params["menu"] = st.session_state.menu_selecionado
-    st.rerun()
 
 # --- LOCALIZADOR E CONVERSOR DO LOGOTIPO EM BASE64 ---
 def obter_logotipo_base64():
@@ -92,7 +73,7 @@ st.markdown("""
     }
 
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
@@ -107,6 +88,41 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         margin-bottom: 14px !important;
         padding: 14px 18px !important;
+    }
+
+    /* Barra de Navegação Superior */
+    div[data-testid="stHorizontalBlock"]:has(.nav-marker) {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        padding: 10px 16px;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.nav-marker) button {
+        border-radius: 10px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        padding: 4px 10px !important;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
+        color: #64748b !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.nav-marker) button:hover {
+        background-color: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.nav-marker) button[kind="primary"] {
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1.5px solid #7dd3fc !important;
+        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12) !important;
     }
 
     /* KPI Cards */
@@ -495,110 +511,55 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. HEADER NATIVO HTML COM A ESTRUTURA E CLASSES TAILWIND LITERAIS ---
+# --- 4. HEADER CORPORATIVO E NAVEGAÇÃO NATIVA ---
 df_stats = carregar_dados_planilha_cached()
 total_itens_carregados = len(df_stats) if not df_stats.empty else 0
-menu_atual = st.session_state.menu_selecionado
 
-# Gera o código do Header com Tailwind CSS
-header_component_html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {{
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: transparent;
-        }}
-        .header-card {{
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-            padding: 0.85rem 1.25rem;
-        }}
-        /* Botão Base Solicitado */
-        .nav-btn {{
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-            background-color: #ffffff;
-            color: #64748b;
-        }}
-        .nav-btn:hover {{
-            background-color: #f8fafc;
-            color: #0f172a;
-            border-color: #cbd5e1;
-        }}
-        /* Botão Ativo: Destaque Azul Claro */
-        .nav-btn.active {{
-            background-color: #e0f2fe !important;
-            color: #0369a1 !important;
-            border: 1.5px solid #7dd3fc !important;
-            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12) !important;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header-card flex flex-col lg:flex-row justify-between items-center gap-4">
-        <!-- Cluster da Marca e Título -->
-        <div class="flex items-center gap-4">
-            <div class="flex items-center justify-center p-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" style="height: 54px; min-width: 54px;">
-                {'<img src="' + logo_src_b64 + '" alt="Logotipo" class="max-h-12 w-auto object-contain">' if logo_src_b64 else '<div class="w-10 h-10 bg-sky-600 text-white rounded-lg flex items-center justify-center font-black text-sm">📦</div>'}
-            </div>
-            <div>
-                <h1 class="text-lg lg:text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                    Gestão de Conferência de Mercadorias
-                </h1>
-                <p class="text-xs text-slate-500 font-medium">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base</p>
-            </div>
+col_brand, col_nav = st.columns([1.5, 2.5])
+
+with col_brand:
+    img_tag = f'<img src="{logo_src_b64}" style="max-height: 44px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 38px; height: 38px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">📦</div>'
+    st.markdown(f"""
+    <div class="nav-marker" style="display: flex; align-items: center; gap: 12px;">
+        <div style="min-width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 2px;">
+            {img_tag}
         </div>
-
-        <!-- DIV ENVOLVENTE PADRÃO SOLICITADO -->
-        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap">
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Dashboard' else ''}" onclick="navegar('Dashboard')">
-                Dashboard
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Importar Remessa' else ''}" onclick="navegar('Importar Remessa')">
-                Importar
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Folha de Impressão Cega' else ''}" onclick="navegar('Folha de Impressão Cega')">
-                Folha Cega
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Digitar Conferência Cega' else ''}" onclick="navegar('Digitar Conferência Cega')">
-                Conferência
-            </button>
-            <button class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition {'active' if menu_atual == 'Cadastrar Novo Conferente' else ''}" onclick="navegar('Cadastrar Novo Conferente')">
-                Conferentes
-            </button>
-            <button onclick="sincronizar()" title="Clique para recarregar da planilha" class="inline-flex items-center px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 cursor-pointer transition">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> ⟳ Sync
-            </button>
+        <div>
+            <h1 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2;">Gestão de Conferência de Mercadorias</h1>
+            <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">Controle Operacional & Estoque · <strong>{total_itens_carregados}</strong> registros na base</p>
         </div>
     </div>
+    """, unsafe_allow_html=True)
 
-    <script>
-        function navegar(menuNome) {{
-            const url = new URL(window.parent.location.href);
-            url.searchParams.set('menu', menuNome);
-            url.searchParams.delete('action');
-            window.parent.location.href = url.href;
-        }}
-        function sincronizar() {{
-            const url = new URL(window.parent.location.href);
-            url.searchParams.set('action', 'sync');
-            window.parent.location.href = url.href;
-        }}
-    </script>
-</body>
-</html>
-"""
+with col_nav:
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1.1, 0.8])
+    
+    def btn_type(nome):
+        return "primary" if st.session_state.menu_selecionado == nome else "secondary"
 
-components.html(header_component_html, height=84, scrolling=False)
+    if c1.button("Dashboard", type=btn_type("Dashboard"), use_container_width=True):
+        st.session_state.menu_selecionado = "Dashboard"
+        st.rerun()
+
+    if c2.button("Importar", type=btn_type("Importar Remessa"), use_container_width=True):
+        st.session_state.menu_selecionado = "Importar Remessa"
+        st.rerun()
+
+    if c3.button("Folha Cega", type=btn_type("Folha de Impressão Cega"), use_container_width=True):
+        st.session_state.menu_selecionado = "Folha de Impressão Cega"
+        st.rerun()
+
+    if c4.button("Conferência", type=btn_type("Digitar Conferência Cega"), use_container_width=True):
+        st.session_state.menu_selecionado = "Digitar Conferência Cega"
+        st.rerun()
+
+    if c5.button("Conferentes", type=btn_type("Cadastrar Novo Conferente"), use_container_width=True):
+        st.session_state.menu_selecionado = "Cadastrar Novo Conferente"
+        st.rerun()
+
+    if c6.button("⟳ Sync", use_container_width=True, help="Recarregar dados da planilha"):
+        st.cache_data.clear()
+        st.rerun()
 
 menu = st.session_state.menu_selecionado
 
