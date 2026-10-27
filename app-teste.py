@@ -53,7 +53,7 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS CORPORATIVO: DESTAQUE REAL NATIVO (TAILWIND SKY) ---
+# --- 2. CSS CORPORATIVO: DESTAQUE REAL NATIVO (TAILWIND SKY / LIGHT BLUE) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -171,6 +171,7 @@ st.markdown("""
     /* BOTÃO INATIVO (type="secondary") */
     div.subnav-wrapper-native button[kind="secondary"] {
         background-color: #ffffff !important;
+        background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         box-shadow: none !important;
     }
@@ -188,32 +189,30 @@ st.markdown("""
         color: #0f172a !important;
     }
 
-    /* BOTÃO ATIVO: DESTAQUE REAL EM AZUL CLARO (type="primary") */
+    /* BOTÃO ATIVO: FUNDO PREENCHIDO EM AZUL CLARO (Tailwind Sky-100) */
     div.subnav-wrapper-native button[kind="primary"],
+    div.subnav-wrapper-native button[kind="primary"]:hover,
     div.subnav-wrapper-native button[kind="primary"]:focus,
     div.subnav-wrapper-native button[kind="primary"]:active {
-        background-color: #e0f2fe !important;
-        background: #e0f2fe !important;
-        border: 1.5px solid #38bdf8 !important;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.16) !important;
+        background-color: #bae6fd !important;
+        background: #bae6fd !important;
+        border: 1.5px solid #0284c7 !important;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.20) !important;
     }
     div.subnav-wrapper-native button[kind="primary"] p,
-    div.subnav-wrapper-native button[kind="primary"] span {
-        color: #0369a1 !important;
-        font-weight: 750 !important;
-    }
-    div.subnav-wrapper-native button[kind="primary"]:hover {
-        background-color: #bae6fd !important;
-        border-color: #0ea5e9 !important;
-    }
+    div.subnav-wrapper-native button[kind="primary"] span,
     div.subnav-wrapper-native button[kind="primary"]:hover p,
-    div.subnav-wrapper-native button[kind="primary"]:hover span {
-        color: #0284c7 !important;
+    div.subnav-wrapper-native button[kind="primary"]:hover span,
+    div.subnav-wrapper-native button[kind="primary"]:focus p,
+    div.subnav-wrapper-native button[kind="primary"]:focus span {
+        color: #0369a1 !important;
+        font-weight: 800 !important;
     }
 
     /* BOTÃO SINCRONIZAR (EMERALD) */
     div.btn-sync-box button {
         background-color: #ecfdf5 !important;
+        background: #ecfdf5 !important;
         border: 1px solid #a7f3d0 !important;
     }
     div.btn-sync-box button p,
@@ -223,6 +222,7 @@ st.markdown("""
     }
     div.btn-sync-box button:hover {
         background-color: #d1fae5 !important;
+        background: #d1fae5 !important;
         border-color: #6ee7b7 !important;
     }
     div.btn-sync-box button:hover p,
@@ -662,7 +662,7 @@ with st.container(border=True):
                 (cb5, "Cadastrar Novo Conferente", "Conferentes")
             ]
 
-            # Uso direto de type="primary" (destaque azul claro) ou type="secondary" (inativo)
+            # type="primary" garante o fundo preenchido em azul claro para a página ativa
             for col_btn, nome_menu, label_btn in opcoes_nav:
                 with col_btn:
                     is_active = (st.session_state.menu_selecionado == nome_menu)
