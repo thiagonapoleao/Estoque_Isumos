@@ -53,12 +53,12 @@ def obter_logotipo_base64():
 
 logo_src_b64 = obter_logotipo_base64()
 
-# --- 2. CSS CORPORATIVO: DESTAQUE REAL NATIVO (TAILWIND SKY / LIGHT BLUE) ---
+# --- 2. CSS CORPORATIVO: BLINDAGEM VISUAL E ALINHAMENTO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* Oculta Sidebar e Header padrão */
+    /* Oculta Sidebar e Header nativos do Streamlit */
     [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
         display: none !important;
     }
@@ -88,7 +88,7 @@ st.markdown("""
         border-radius: 12px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         margin-bottom: 12px !important;
-        padding: 12px 16px !important;
+        padding: 10px 14px !important;
     }
 
     /* ESTRUTURA DA MARCA: LOGOTIPO & TÍTULOS AMPLIADOS */
@@ -96,151 +96,132 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 16px;
-        min-height: 66px;
+        min-height: 60px;
     }
     .brand-logo-frame {
-        height: 64px;
-        max-width: 160px;
+        height: 60px;
+        max-width: 155px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     .brand-logo-frame img {
-        max-height: 62px;
+        max-height: 56px;
         width: auto;
         max-width: 100%;
         object-fit: contain;
     }
     .brand-fallback-badge {
-        width: 56px;
-        height: 56px;
+        width: 52px;
+        height: 52px;
         background: #0284c7;
         color: #ffffff;
-        border-radius: 12px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 28px;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
+        font-size: 26px;
+        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.2);
     }
     .brand-text-block {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.22;
+        line-height: 1.2;
     }
     .brand-title {
-        font-size: 21px !important;
+        font-size: 20px !important;
         font-weight: 800 !important;
         color: #0f172a !important;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.4px;
         margin: 0 !important;
     }
     .brand-subtitle {
-        font-size: 13px !important;
+        font-size: 12.5px !important;
         color: #64748b !important;
-        margin: 3px 0 0 0 !important;
+        margin: 2px 0 0 0 !important;
         font-weight: 500;
     }
 
-    /* SUBCONTAINER CINZA DOS BOTÕES */
-    div.subnav-wrapper-native div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #f1f5f9 !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 4px 6px !important;
-        box-shadow: none !important;
-        margin-bottom: 0px !important;
+    /* SUBCONTAINER CINZA COM ALINHAMENTO VERTICAL PRECISO */
+    .subnav-cluster-box {
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 5px 6px;
+        display: flex;
+        align-items: center;
     }
 
-    /* BASE DE TODOS OS BOTÕES DO SUBCONTAINER */
-    div.subnav-wrapper-native button {
-        border-radius: 7px !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        padding: 4px 8px !important;
+    /* FORÇAR ALTURA E LINHA PADRONIZADA EM TODOS OS BOTÕES DA NAVBAR */
+    div[class*="st-key-nav_top_"] button {
         height: 34px !important;
         min-height: 34px !important;
-        transition: all 0.18s ease-in-out !important;
+        max-height: 34px !important;
+        border-radius: 7px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        padding: 2px 8px !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         white-space: nowrap !important;
+        line-height: 1 !important;
         width: 100% !important;
-        letter-spacing: -0.15px;
     }
 
-    /* BOTÃO INATIVO (type="secondary") */
-    div.subnav-wrapper-native button[kind="secondary"],
-    div.subnav-wrapper-native button[data-testid="baseButton-secondary"] {
+    /* ESTILO BOTÃO INATIVO (BRANCO PURO) */
+    div[class*="st-key-nav_top_"] button[kind="secondary"] {
         background-color: #ffffff !important;
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         box-shadow: none !important;
     }
-    div.subnav-wrapper-native button[kind="secondary"] p,
-    div.subnav-wrapper-native button[kind="secondary"] span,
-    div.subnav-wrapper-native button[kind="secondary"] div,
-    div.subnav-wrapper-native button[data-testid="baseButton-secondary"] p,
-    div.subnav-wrapper-native button[data-testid="baseButton-secondary"] span {
+    div[class*="st-key-nav_top_"] button[kind="secondary"] *,
+    div[class*="st-key-nav_top_"] button[kind="secondary"] p {
         color: #64748b !important;
         font-weight: 600 !important;
     }
-    div.subnav-wrapper-native button[kind="secondary"]:hover,
-    div.subnav-wrapper-native button[data-testid="baseButton-secondary"]:hover {
+    div[class*="st-key-nav_top_"] button[kind="secondary"]:hover {
         background-color: #f8fafc !important;
         border-color: #cbd5e1 !important;
     }
-    div.subnav-wrapper-native button[kind="secondary"]:hover p,
-    div.subnav-wrapper-native button[kind="secondary"]:hover span {
+    div[class*="st-key-nav_top_"] button[kind="secondary"]:hover * {
         color: #0f172a !important;
     }
 
-    /* BOTÃO ATIVO: FUNDO PREENCHIDO EM AZUL CLARO TOTALMENTE FORÇADO */
-    div.subnav-wrapper-native button[kind="primary"],
-    div.subnav-wrapper-native button[data-testid="baseButton-primary"],
-    div.subnav-wrapper-native button[kind="primary"]:hover,
-    div.subnav-wrapper-native button[kind="primary"]:focus,
-    div.subnav-wrapper-native button[kind="primary"]:active,
-    div.subnav-wrapper-native button[data-testid="baseButton-primary"]:hover,
-    div.subnav-wrapper-native button[data-testid="baseButton-primary"]:focus,
-    div.subnav-wrapper-native button[data-testid="baseButton-primary"]:active {
+    /* ATIVAÇÃO DEFINITIVA DO BOTÃO SELECIONADO: FUNDO AZUL CLARO MODERNO */
+    div[class*="st-key-nav_top_"] button[kind="primary"],
+    div[class*="st-key-nav_top_"] button[kind="primary"]:hover,
+    div[class*="st-key-nav_top_"] button[kind="primary"]:focus,
+    div[class*="st-key-nav_top_"] button[kind="primary"]:active {
         background-color: #bae6fd !important;
         background: #bae6fd !important;
         border: 1.5px solid #0284c7 !important;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.22) !important;
+        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.18) !important;
     }
-    
-    div.subnav-wrapper-native button[kind="primary"] *,
-    div.subnav-wrapper-native button[data-testid="baseButton-primary"] *,
-    div.subnav-wrapper-native button[kind="primary"] p,
-    div.subnav-wrapper-native button[kind="primary"] span,
-    div.subnav-wrapper-native button[data-testid="baseButton-primary"] p,
-    div.subnav-wrapper-native button[data-testid="baseButton-primary"] span {
+    div[class*="st-key-nav_top_"] button[kind="primary"] *,
+    div[class*="st-key-nav_top_"] button[kind="primary"] p,
+    div[class*="st-key-nav_top_"] button[kind="primary"] span {
         color: #0369a1 !important;
         font-weight: 800 !important;
     }
 
-    /* BOTÃO SINCRONIZAR (EMERALD) */
-    div.btn-sync-box button,
-    div.btn-sync-box button[data-testid="baseButton-secondary"] {
+    /* BOTÃO SINCRONIZAR */
+    div.st-key-nav_top_sync button {
         background-color: #ecfdf5 !important;
         background: #ecfdf5 !important;
         border: 1px solid #a7f3d0 !important;
     }
-    div.btn-sync-box button p,
-    div.btn-sync-box button span,
-    div.btn-sync-box button * {
+    div.st-key-nav_top_sync button * {
         color: #065f46 !important;
         font-weight: 700 !important;
     }
-    div.btn-sync-box button:hover {
+    div.st-key-nav_top_sync button:hover {
         background-color: #d1fae5 !important;
-        background: #d1fae5 !important;
         border-color: #6ee7b7 !important;
-    }
-    div.btn-sync-box button:hover p,
-    div.btn-sync-box button:hover span,
-    div.btn-sync-box button:hover * {
-        color: #047857 !important;
     }
 
     /* KPI CARDS */
@@ -291,7 +272,7 @@ st.markdown("""
         line-height: 1.2;
     }
 
-    /* Inputs e Controles */
+    /* Formulários e Inputs */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
@@ -635,7 +616,7 @@ def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, just
     res = enviar_atualizacao_conferencia(itens_atualizar)
     return res, resultados_exibicao
 
-# --- 4. CONTAINER SUPERIOR COM MARCA E BOTÕES DINÂMICOS ---
+# --- 4. CONTAINER SUPERIOR COM ALINHAMENTO PERFEITO ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard"
 
@@ -649,7 +630,7 @@ else:
 
 # Container Principal Superior
 with st.container(border=True):
-    col_marca, col_nav = st.columns([4.4, 5.6], vertical_alignment="center")
+    col_marca, col_nav = st.columns([4.0, 6.0], vertical_alignment="center")
 
     with col_marca:
         st.markdown(f"""
@@ -663,35 +644,33 @@ with st.container(border=True):
         """, unsafe_allow_html=True)
 
     with col_nav:
-        st.markdown('<div class="subnav-wrapper-native">', unsafe_allow_html=True)
-        with st.container(border=True):
-            cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.18, 1.1, 1.25, 1.35, 1.32, 0.8])
+        # Subcontainer cinza sem colunas aninhadas quebradas
+        st.markdown('<div class="subnav-cluster-box">', unsafe_allow_html=True)
+        cb1, cb2, cb3, cb4, cb5, cb_sync = st.columns([1.18, 1.1, 1.25, 1.35, 1.32, 0.75], vertical_alignment="center")
 
-            opcoes_nav = [
-                (cb1, "Dashboard", "Dashboard"),
-                (cb2, "Importar Remessa", "Importar"),
-                (cb3, "Folha de Impressão Cega", "Folha Cega"),
-                (cb4, "Digitar Conferência Cega", "Conferência"),
-                (cb5, "Cadastrar Novo Conferente", "Conferentes")
-            ]
+        opcoes_nav = [
+            (cb1, "Dashboard", "Dashboard"),
+            (cb2, "Importar Remessa", "Importar"),
+            (cb3, "Folha de Impressão Cega", "Folha Cega"),
+            (cb4, "Digitar Conferência Cega", "Conferência"),
+            (cb5, "Cadastrar Novo Conferente", "Conferentes")
+        ]
 
-            # type="primary" força o preenchimento azul claro no selecionado
-            for col_btn, nome_menu, label_btn in opcoes_nav:
-                with col_btn:
-                    is_active = (st.session_state.menu_selecionado == nome_menu)
-                    tipo_btn = "primary" if is_active else "secondary"
-                    
-                    if st.button(label_btn, key=f"nav_top_{nome_menu}", type=tipo_btn, use_container_width=True):
-                        st.session_state.menu_selecionado = nome_menu
-                        st.rerun()
-
-            with cb_sync:
-                st.markdown('<div class="btn-sync-box">', unsafe_allow_html=True)
-                if st.button("⟳", key="nav_top_sync", help="Sincronizar dados com a planilha", use_container_width=True):
-                    carregar_dados_planilha_cached.clear()
-                    carregar_lista_conferentes.clear()
+        # Injeção direta de tipo primary (azul claro) ou secondary (branco)
+        for col_btn, nome_menu, label_btn in opcoes_nav:
+            with col_btn:
+                is_active = (st.session_state.menu_selecionado == nome_menu)
+                tipo_btn = "primary" if is_active else "secondary"
+                
+                if st.button(label_btn, key=f"nav_top_{nome_menu}", type=tipo_btn, use_container_width=True):
+                    st.session_state.menu_selecionado = nome_menu
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+
+        with cb_sync:
+            if st.button("⟳", key="nav_top_sync", help="Sincronizar dados com a planilha", use_container_width=True):
+                carregar_dados_planilha_cached.clear()
+                carregar_lista_conferentes.clear()
+                st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
