@@ -7,290 +7,188 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
 import altair as alt
-import os
-from pathlib import Path
-import base64
-from streamlit_option_menu import option_menu
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Gestão de Conferência de Mercadorias",
     page_icon="📦",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# --- SINCRONIZAÇÃO DO MENU ATIVO ---
-opcoes_validas = [
-    "Dashboard",
-    "Importar Remessa",
-    "Folha de Impressão Cega",
-    "Digitar Conferência Cega",
-    "Cadastrar Novo Conferente"
-]
-
-if "menu_selecionado" not in st.session_state:
-    st.session_state.menu_selecionado = "Dashboard"
-
-# --- LOCALIZADOR E CONVERSOR DO LOGOTIPO EM BASE64 ---
-def obter_logotipo_base64():
-    nomes_possiveis = [
-        "logotipo.png", "logotipo.PNG", "logotipo.jpg", "logotipo.jpeg",
-        "logo.png", "logo.PNG", "logo.jpg", "logo.jpeg"
-    ]
-    pastas_busca = [
-        Path.cwd(),
-        Path(__file__).parent.resolve() if "__file__" in locals() else Path.cwd()
-    ]
-    for pasta in pastas_busca:
-        for nome in nomes_possiveis:
-            candidato = pasta / nome
-            if candidato.is_file():
-                try:
-                    with open(candidato, "rb") as f:
-                        return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
-                except Exception:
-                    pass
-    for pasta in pastas_busca:
-        try:
-            for arq in pasta.rglob("*"):
-                if arq.is_file() and arq.name.lower() in [n.lower() for n in nomes_possiveis]:
-                    try:
-                        with open(arq, "rb") as f:
-                            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-    return ""
-
-logo_src_b64 = obter_logotipo_base64()
-
-# --- 2. CSS GLOBAL CORPORATIVO ---
+# Estilização Corporativa Compacta
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-    [data-testid="stSidebar"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
-        display: none !important;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-        background-color: #f8fafc !important;
-        color: #1e293b !important;
-    }
-
-    .block-container {
-        padding-top: 0.65rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 1.25rem !important;
-        padding-right: 1.25rem !important;
-        max-width: 1440px !important;
-        margin: 0 auto !important;
-    }
-
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-        margin-bottom: 12px !important;
-        padding: 12px 16px !important;
-    }
-
-    /* BARRA UNIFICADA DOS BOTÕES DE NAVEGAÇÃO */
-    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sincronizar_topo) {
-        background-color: #f1f5f9 !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        padding: 4px 6px !important;
-        display: flex !important;
-        align-items: center !important;
-        height: 52px !important;
-        box-sizing: border-box !important;
-    }
-
-    div[data-testid="stHorizontalBlock"]:has(div.st-key-btn_sincronizar_topo) iframe {
-        height: 44px !important;
-        border: none !important;
-        margin-bottom: 0px !important;
-    }
-
-    /* BOTÃO SINCRONIZAR: VERDE ESMERALDA MODERNO */
-    div.st-key-btn_sincronizar_topo {
-        margin: 0 !important;
-        padding: 0 !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    div.st-key-btn_sincronizar_topo button {
-        height: 38px !important;
-        min-height: 38px !important;
-        max-height: 38px !important;
-        background-color: #059669 !important;
-        color: #ffffff !important;
-        border: 1px solid #047857 !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 11.5px !important;
-        letter-spacing: 0.2px !important;
-        padding: 0 10px !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2) !important;
-        transition: all 0.15s ease-in-out !important;
-        width: 100% !important;
-    }
-
-    div.st-key-btn_sincronizar_topo button:hover {
-        background-color: #047857 !important;
-        border-color: #065f46 !important;
-        color: #ffffff !important;
-        transform: translateY(-0.5px) !important;
-        box-shadow: 0 2px 4px rgba(4, 120, 87, 0.25) !important;
-    }
-
-    div.st-key-btn_sincronizar_topo button:active,
-    div.st-key-btn_sincronizar_topo button:focus {
-        background-color: #065f46 !important;
-        border-color: #022c22 !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.35) !important;
-    }
-
-    /* BOTÃO DE CADASTRO DE CONFERENTE REESTRUTURADO */
-    div.st-key-btn_cadastrar_conf button {
-        height: 42px !important;
-        background-color: #0284c7 !important;
-        color: #ffffff !important;
-        border: 1px solid #0369a1 !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-size: 13px !important;
-        transition: all 0.15s ease-in-out !important;
-        box-shadow: 0 1px 2px rgba(2, 132, 199, 0.2) !important;
+    }
+    
+    .main-title {
+        font-size: 19px !important;
+        font-weight: 700 !important;
+        color: #0f134f !important;
+        margin-bottom: 4px !important;
+        padding-bottom: 6px !important;
+        border-bottom: 1.5px solid #e2e8f0 !important;
+        letter-spacing: -0.2px !important;
+    }
+    .sub-title {
+        font-size: 12px !important;
+        color: #64748b !important;
+        margin-bottom: 16px !important;
     }
 
-    div.st-key-btn_cadastrar_conf button:hover {
-        background-color: #0369a1 !important;
-        border-color: #075985 !important;
-        color: #ffffff !important;
-        transform: translateY(-0.5px) !important;
-        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3) !important;
-    }
-
-    /* KPI Cards */
-    .kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    .metric-container {
+        display: flex;
         gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
     }
-    .kpi-card {
-        background-color: #ffffff;
+    .metric-card {
+        background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 12px 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-        position: relative;
-        overflow: hidden;
+        border-left: 4px solid #273270;
+        padding: 10px 14px;
+        border-radius: 8px;
+        flex: 1;
+        min-width: 170px;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.04);
+        transition: all 0.2s ease-in-out;
     }
-    .kpi-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: #0284c7;
+    .metric-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(15, 19, 79, 0.08);
     }
-    .kpi-card.green::before { background: #059669; }
-    .kpi-card.red::before { background: #dc2626; }
-
-    .kpi-label {
-        font-size: 11px !important;
-        font-weight: 600;
+    .metric-card span {
+        font-size: 10.5px !important;
+        color: #64748b;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.4px;
-        color: #64748b;
-        margin-bottom: 2px;
     }
-    .kpi-value {
-        font-size: 20px !important;
+    .metric-card strong {
+        display: block;
+        font-size: 15px !important;
+        color: #0f134f;
+        margin-top: 3px;
         font-weight: 700;
-        color: #0f172a;
-        line-height: 1.2;
+    }
+
+    .keyboard-hint {
+        background-color: #f8fafc;
+        border: 1px solid #cbd5e1;
+        padding: 6px 10px;
+        border-radius: 5px;
+        font-size: 11px !important;
+        color: #334155;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+    .keyboard-hint kbd {
+        background: #ffffff;
+        border: 1px solid #94a3b8;
+        border-bottom-width: 2px;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-weight: 700;
+        font-size: 10.5px !important;
+        color: #0f134f;
+    }
+
+    .divergence-box {
+        background-color: #fff7ed;
+        border: 1px solid #fdba74;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        font-size: 12px !important;
     }
 
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
-        background-color: #ffffff !important;
-        border-radius: 8px !important;
-        border: 1px solid #cbd5e1 !important;
-        font-size: 13px !important;
+        font-size: 12.5px !important;
+    }
+    label p {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
     }
 
-    .keyboard-hint {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 11.5px !important;
-        color: #334155;
-        display: inline-block;
-        margin-bottom: 8px;
+    div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
+        background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
+        background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        padding: 7px 16px !important;
+        font-size: 12.5px !important;
+        letter-spacing: 0.2px !important;
+        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
+        transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
     }
-    .keyboard-hint kbd {
-        background: #f1f5f9;
-        border: 1px solid #cbd5e1;
-        border-bottom-width: 2px;
-        padding: 2px 5px;
-        border-radius: 4px;
+    div.stButton > button:hover {
+        opacity: 0.95 !important;
+        transform: scale(1.005) !important;
+    }
+
+    [data-testid="stSidebar"] {
+        background-color: #f8fafc;
+        border-right: 1px solid #e2e8f0;
+    }
+    .sidebar-brand {
+        padding: 10px 12px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
+        color: #ffffff;
+        margin-bottom: 14px;
+        text-align: center;
         font-weight: 700;
-        font-size: 11px !important;
-        color: #0f172a;
+        font-size: 13px !important;
+        letter-spacing: 0.4px;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.15);
+    }
+    .sidebar-menu-title {
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        margin-bottom: 6px !important;
+        letter-spacing: 0.5px !important;
     }
 
-    .divergence-box {
-        background-color: #fff7ed;
-        border: 1px solid #fed7aa;
-        border-left: 4px solid #ea580c;
-        border-radius: 8px;
-        padding: 10px 14px;
-        margin: 10px 0;
+    [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
         font-size: 12px !important;
     }
 
     @media print {
-        body * { visibility: hidden; }
-        .no-print, [data-testid="stToolbar"], footer, iframe {
+        header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
             display: none !important;
         }
-        .printable-area, .printable-area * {
-            visibility: visible;
-        }
         .printable-area {
-            position: absolute;
-            left: 0;
-            top: 0;
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        table {
             width: 100%;
-            padding: 20px;
-            background: #ffffff !important;
-            color: #000000 !important;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #1e293b !important;
+            padding: 3px 5px !important;
+            font-size: 9.5px !important;
         }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
+# --- 2. CONFIGURAÇÃO DA API & SESSÃO RESILIENTE ---
 API_URL = "https://script.google.com/macros/s/AKfycbx6Dvaz55Vd9gzOmG5HHhvdrkRSF9w1kx4Ie7mxrWcQnjjOj1rf0ND7JIGEb1Jk-yCi/exec"
 
 def get_session():
@@ -306,6 +204,7 @@ def get_session():
     session.mount("http://", adapter)
     return session
 
+# --- 3. COMUNICAÇÃO HTTP COM GOOGLE APPS SCRIPT ---
 def enviar_dados_apps_script(payload: dict) -> dict:
     try:
         session = get_session()
@@ -331,13 +230,16 @@ def enviar_dados_apps_script(payload: dict) -> dict:
         return {"status": "error", "message": f"Falha de conexão: {str(ex)}"}
 
 def normalizar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Padroniza tipos e remove anomalias de formatação vindas do Sheets."""
     if df.empty:
         return df
 
+    # Normaliza a coluna Remessa para texto sem '.0' e sem espaços
     if "remessa" in df.columns:
         df["remessa"] = df["remessa"].fillna("").astype(str)
         df["remessa"] = df["remessa"].str.replace(r"\.0$", "", regex=True).str.strip()
 
+    # Normaliza campos de texto
     for col in ["produto", "descricao", "local", "conferente", "observacao"]:
         if col in df.columns:
             df[col] = df[col].fillna("").astype(str).str.strip()
@@ -460,6 +362,7 @@ def injetar_atalho_teclado_tab():
     </script>
     """, height=0, width=0)
 
+# --- 4. EXTRAÇÃO DO EXCEL ---
 def extrair_excel(uploaded_file):
     itens = []
     df_raw = pd.read_excel(uploaded_file, header=None, dtype=str)
@@ -536,134 +439,48 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-def salvar_conferencia_dados(editado, mapa_esperado, autorizar_divergencia, justificativas_itens, nome_conferente_final):
-    itens_atualizar = []
-    resultados_exibicao = []
+# --- 5. NAVEGAÇÃO POR BOTÕES ---
+if "menu_selecionado" not in st.session_state:
+    st.session_state.menu_selecionado = "Dashboard de Resumo"
 
-    for _, row in editado.iterrows():
-        r_id = int(row["row_index"])
-        conf_val = float(row["conferencia"])
-        qtd_esp = mapa_esperado.get(r_id, 0.0)
-        div_val = conf_val - qtd_esp
+st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<p class="sidebar-menu-title">MENU DE NAVEGAÇÃO</p>', unsafe_allow_html=True)
 
-        obs_do_item = ""
-        if div_val != 0 and autorizar_divergencia:
-            obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
+opcoes_menu = [
+    "Dashboard de Resumo",
+    "Importar Remessa",
+    "Folha de Impressão Cega",
+    "Digitar Conferência Cega",
+    "Cadastrar Novo Conferente"
+]
 
-        itens_atualizar.append({
-            "row_index": r_id,
-            "conferencia": conf_val,
-            "divergencia": div_val,
-            "conferente": nome_conferente_final,
-            "observacao": obs_do_item
-        })
+for opcao in opcoes_menu:
+    is_active = (st.session_state.menu_selecionado == opcao)
+    rotulo = f"▶ {opcao}" if is_active else opcao
+    if st.sidebar.button(rotulo, key=f"btn_nav_{opcao}", use_container_width=True):
+        st.session_state.menu_selecionado = opcao
+        st.rerun()
 
-        status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
-        resultados_exibicao.append({
-            "produto": row["produto"],
-            "descricao": row["descricao"],
-            "conferencia": conf_val,
-            "conferente": nome_conferente_final,
-            "status": status,
-            "justificativa": obs_do_item,
-            "_tem_erro": (div_val != 0)
-        })
-
-    res = enviar_atualizacao_conferencia(itens_atualizar)
-    return res, resultados_exibicao
-
-# --- 4. HEADER: CONTAINER PRINCIPAL COM MARGENS ENXUTAS E NAVEGAÇÃO ALINHADA ---
-df_stats = carregar_dados_planilha_cached()
-total_itens_carregados = len(df_stats) if not df_stats.empty else 0
-
-logo_tag = f'<img src="{logo_src_b64}" style="max-height: 46px; width: auto; object-fit: contain;">' if logo_src_b64 else '<div style="width: 42px; height: 42px; background: #0284c7; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px;">📦</div>'
-
-# Container Principal 100% Branco com margens e paddings refinados
-with st.container(border=True):
-    col_header_left, col_header_right = st.columns([1.0, 2.0], gap="medium")
-
-    with col_header_left:
-        st.markdown(f"""
-        <div style="background: #ffffff; padding: 2px 0; display: flex; align-items: center; gap: 12px; height: 52px;">
-            <div style="display: flex; align-items: center; justify-content: center; padding: 2px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; height: 44px; min-width: 44px;">
-                {logo_tag}
-            </div>
-            <div style="display: flex; flex-direction: column; justify-content: center;">
-                <h1 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.3px;">
-                    Gestão de Conferência
-                </h1>
-                <p style="font-size: 11px; color: #64748b; font-weight: 500; margin: 2px 0 0 0;">
-                    Controle Operacional & Estoque · <strong style="color: #0284c7;">{total_itens_carregados}</strong> registros na base
-                </p>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_header_right:
-        col_menu, col_sync = st.columns([5.4, 1.0], gap="small")
-        
-        with col_menu:
-            selecionado = option_menu(
-                menu_title=None,
-                options=opcoes_validas,
-                icons=["bar-chart", "cloud-upload", "printer", "pencil-square", "person-plus"],
-                default_index=opcoes_validas.index(st.session_state.menu_selecionado) if st.session_state.menu_selecionado in opcoes_validas else 0,
-                orientation="horizontal",
-                styles={
-                    "container": {
-                        "padding": "0px",
-                        "background-color": "transparent",
-                        "border": "none",
-                        "height": "44px",
-                        "display": "flex",
-                        "align-items": "center",
-                        "width": "100%",
-                        "margin": "0px"
-                    },
-                    "nav-link": {
-                        "font-size": "11.5px",
-                        "font-weight": "600",
-                        "color": "#64748b",
-                        "padding": "6px 8px",
-                        "border-radius": "8px",
-                        "margin": "0 1px",
-                        "border": "1px solid transparent",
-                        "white-space": "nowrap",
-                        "display": "flex",
-                        "align-items": "center",
-                        "justify-content": "center",
-                        "flex": "1 1 auto"
-                    },
-                    "nav-link-selected": {
-                        "background-color": "#e0f2fe",
-                        "color": "#0369a1",
-                        "font-weight": "700",
-                        "border": "1.5px solid #7dd3fc",
-                        "box-shadow": "0 1px 3px rgba(2, 132, 199, 0.12)"
-                    },
-                }
-            )
-            if selecionado and selecionado != st.session_state.menu_selecionado:
-                st.session_state.menu_selecionado = selecionado
-                st.rerun()
-
-        with col_sync:
-            if st.button("⟳ Sincronizar", key="btn_sincronizar_topo", help="Recarregar dados atualizados da planilha", use_container_width=True):
-                st.cache_data.clear()
-                st.rerun()
+st.sidebar.write("---")
+if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_width=True):
+    carregar_dados_planilha_cached.clear()
+    carregar_lista_conferentes.clear()
+    st.rerun()
 
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD
+# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS)
 # ==============================================================================
-if menu == "Dashboard":
+if menu == "Dashboard de Resumo":
+    st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e índice de acuracidade em tempo real.</div>', unsafe_allow_html=True)
+
     with st.spinner("Compilando indicadores..."):
         df_raw = carregar_dados_planilha()
 
     if df_raw.empty:
-        with st.container(border=True):
-            st.info("Nenhum registro encontrado na aba Conferencia para gerar o resumo.")
+        st.info("Nenhum registro encontrado na aba Conferencia para gerar o resumo.")
     else:
         df = df_raw.copy()
         
@@ -681,17 +498,15 @@ if menu == "Dashboard":
         df["conferencia"] = pd.to_numeric(df.get("conferencia", None), errors="coerce")
         df["divergencia"] = pd.to_numeric(df.get("divergencia", None), errors="coerce")
 
-        # Filtros
-        with st.container(border=True):
-            col_f1, col_f2 = st.columns([1, 1])
-            with col_f1:
-                confs_unicos = sorted([str(c).strip() for c in df.get("conferente", pd.Series()).dropna().unique() if str(c).strip() != ""])
-                lista_confs = ["TODOS"] + confs_unicos
-                filtro_conf = st.selectbox("Filtrar por Conferente:", lista_confs)
-            with col_f2:
-                remessas_unicas = sorted([str(r).strip() for r in df.get("remessa", pd.Series()).dropna().unique() if str(r).strip() not in ["", "nan", "None"]])
-                remessas_todas = ["TODAS"] + remessas_unicas
-                filtro_rem = st.selectbox("Filtrar por Remessa:", remessas_todas)
+        col_f1, col_f2 = st.columns([2, 2])
+        with col_f1:
+            confs_unicos = sorted([str(c).strip() for c in df.get("conferente", pd.Series()).dropna().unique() if str(c).strip() != ""])
+            lista_confs = ["TODOS"] + confs_unicos
+            filtro_conf = st.selectbox("Filtrar por Conferente:", lista_confs)
+        with col_f2:
+            remessas_unicas = sorted([str(r).strip() for r in df.get("remessa", pd.Series()).dropna().unique() if str(r).strip() not in ["", "nan", "None"]])
+            remessas_todas = ["TODAS"] + remessas_unicas
+            filtro_rem = st.selectbox("Filtrar por Remessa:", remessas_todas)
 
         df_filtrado = df.copy()
         if filtro_conf != "TODOS" and "conferente" in df_filtrado.columns:
@@ -709,297 +524,296 @@ if menu == "Dashboard":
         
         taxa_acuracia = (len(itens_sem_erro) / total_conferidos * 100) if total_conferidos > 0 else 100.0
 
-        acuracia_cor_class = "green" if taxa_acuracia >= 98 else "red"
-        divergencias_cor_class = "red" if len(itens_com_erro) > 0 else "green"
-
-        # KPI Grid
         st.markdown(f"""
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-label">Remessas Auditadas</div>
-                <div class="kpi-value">{total_remessas}</div>
+        <div class="metric-container">
+            <div class="metric-card">
+                <span>Remessas Auditadas</span>
+                <strong>{total_remessas}</strong>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Itens Conferidos</div>
-                <div class="kpi-value">{total_conferidos} <span style="font-size: 11px; font-weight: 500; color: #64748b;">/ {total_itens}</span></div>
+            <div class="metric-card">
+                <span>Itens Conferidos</span>
+                <strong>{total_conferidos} de {total_itens}</strong>
             </div>
-            <div class="kpi-card {acuracia_cor_class}">
-                <div class="kpi-label">Acuracidade Físico x Remessa</div>
-                <div class="kpi-value">{taxa_acuracia:.1f}%</div>
+            <div class="metric-card">
+                <span>Acuracidade Físico x Remessa</span>
+                <strong style="color: {'#16a34a' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
             </div>
-            <div class="kpi-card {divergencias_cor_class}">
-                <div class="kpi-label">Itens com Divergência</div>
-                <div class="kpi-value">{len(itens_com_erro)}</div>
+            <div class="metric-card">
+                <span>Itens com Divergência</span>
+                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#16a34a'};">{len(itens_com_erro)}</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Gráficos
-        with st.container(border=True):
-            col_g1, col_g2 = st.columns(2)
+        st.write("---")
 
-            with col_g1:
-                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Conferências Realizadas por Mês</p>", unsafe_allow_html=True)
-                df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
-                if not df_mes.empty:
-                    max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                    barras_mes = alt.Chart(df_mes).mark_bar(color="#0284c7", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
-                        x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
-                        y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
-                    )
-                    textos_mes = barras_mes.mark_text(
-                        align="center",
-                        baseline="bottom",
-                        dy=-3,
-                        fontSize=10.5,
-                        fontWeight=600,
-                        color="#0f172a"
-                    ).encode(
-                        text="Qtd:Q"
-                    )
-                    chart_mes = (barras_mes + textos_mes).properties(height=210)
-                    st.altair_chart(chart_mes, use_container_width=True)
+        col_g1, col_g2 = st.columns(2)
+
+        with col_g1:
+            st.markdown("##### 📅 Conferências Realizadas por Mês")
+            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
+            if not df_mes.empty:
+                max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
+                )
+                textos_mes = barras_mes.mark_text(
+                    align="center",
+                    baseline="bottom",
+                    dy=-4,
+                    fontSize=11,
+                    fontWeight=600,
+                    color="#0f134f"
+                ).encode(
+                    text="Qtd:Q"
+                )
+                chart_mes = (barras_mes + textos_mes).properties(height=260)
+                st.altair_chart(chart_mes, use_container_width=True)
+            else:
+                st.info("Sem dados suficientes para a evolução mensal.")
+
+        with col_g2:
+            st.markdown("##### 📊 Volume de Conferência por Dia")
+            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
+            if not df_dia.empty:
+                max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
+                barras_dia = alt.Chart(df_dia).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
+                )
+                textos_dia = barras_dia.mark_text(
+                    align="center",
+                    baseline="bottom",
+                    dy=-4,
+                    fontSize=11,
+                    fontWeight=600,
+                    color="#0f134f"
+                ).encode(
+                    text="Qtd:Q"
+                )
+                chart_dia = (barras_dia + textos_dia).properties(height=260)
+                st.altair_chart(chart_dia, use_container_width=True)
+            else:
+                st.info("Sem dados suficientes para a evolução diária.")
+
+        st.write("---")
+        col_e1, col_e2 = st.columns(2)
+
+        with col_e1:
+            st.markdown("##### ⚠️ Diagnóstico Geral de Divergências")
+            
+            def classificar_erro(div):
+                if pd.isna(div):
+                    return "Pendente"
+                elif div == 0:
+                    return "Sem Divergência"
+                elif div < 0:
+                    return "Falta Física"
                 else:
-                    st.info("Sem dados suficientes para a evolução mensal.")
+                    return "Sobra Física"
 
-            with col_g2:
-                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Volume de Conferência por Dia</p>", unsafe_allow_html=True)
-                df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
-                if not df_dia.empty:
-                    max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
-                    barras_dia = alt.Chart(df_dia).mark_bar(color="#38bdf8", cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
-                        x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
-                        y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
-                    )
-                    textos_dia = barras_dia.mark_text(
-                        align="center",
-                        baseline="bottom",
-                        dy=-3,
-                        fontSize=10.5,
-                        fontWeight=600,
-                        color="#0f172a"
-                    ).encode(
-                        text="Qtd:Q"
-                    )
-                    chart_dia = (barras_dia + textos_dia).properties(height=210)
-                    st.altair_chart(chart_dia, use_container_width=True)
-                else:
-                    st.info("Sem dados suficientes para a evolução diária.")
+            df_status = df_filtrado.copy()
+            df_status["Diagnóstico"] = df_status["divergencia"].apply(classificar_erro)
+            df_resumo_erros = df_status["Diagnóstico"].value_counts().reset_index()
+            df_resumo_erros.columns = ["Diagnóstico", "Qtd. Itens"]
+            df_resumo_erros["Percentual (%)"] = ((df_resumo_erros["Qtd. Itens"] / len(df_status)) * 100).round(1)
 
-        # Diagnóstico & Ranking
-        with st.container(border=True):
-            col_e1, col_e2 = st.columns(2)
+            st.dataframe(
+                df_resumo_erros,
+                column_config={
+                    "Diagnóstico": "Diagnóstico",
+                    "Qtd. Itens": st.column_config.NumberColumn("Qtd. Itens", format="%d"),
+                    "Percentual (%)": st.column_config.NumberColumn("Percentual", format="%.1f%%")
+                },
+                hide_index=True,
+                use_container_width=True
+            )
 
-            with col_e1:
-                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Diagnóstico Geral de Divergências</p>", unsafe_allow_html=True)
-                
-                def classificar_erro(div):
-                    if pd.isna(div):
-                        return "Pendente"
-                    elif div == 0:
-                        return "Sem Divergência"
-                    elif div < 0:
-                        return "Falta Física"
-                    else:
-                        return "Sobra Física"
-
-                df_status = df_filtrado.copy()
-                df_status["Diagnóstico"] = df_status["divergencia"].apply(classificar_erro)
-                df_resumo_erros = df_status["Diagnóstico"].value_counts().reset_index()
-                df_resumo_erros.columns = ["Diagnóstico", "Qtd. Itens"]
-                df_resumo_erros["Percentual (%)"] = ((df_resumo_erros["Qtd. Itens"] / len(df_status)) * 100).round(1)
-
+        with col_e2:
+            st.markdown("##### 🏷️ Ranking de Produtos com Maior Divergência")
+            df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
+            
+            if not df_erros_itens.empty and "produto" in df_erros_itens.columns:
+                df_top_erros = df_erros_itens.groupby(["produto", "descricao"])["divergencia"].count().reset_index(name="Ocorrências")
+                df_top_erros = df_top_erros.sort_values("Ocorrências", ascending=False).head(10)
                 st.dataframe(
-                    df_resumo_erros,
+                    df_top_erros,
                     column_config={
-                        "Diagnóstico": "Diagnóstico",
-                        "Qtd. Itens": st.column_config.NumberColumn("Qtd. Itens", format="%d"),
-                        "Percentual (%)": st.column_config.NumberColumn("Percentual", format="%.1f%%")
+                        "produto": "Código",
+                        "descricao": "Descrição do Produto",
+                        "Ocorrências": st.column_config.NumberColumn("Qtd. Divergências", format="%d")
                     },
                     hide_index=True,
                     use_container_width=True
                 )
-
-            with col_e2:
-                st.markdown("<p style='font-weight: 700; margin-bottom: 4px;'>Ranking de Produtos com Maior Divergência</p>", unsafe_allow_html=True)
-                df_erros_itens = df_filtrado[df_filtrado["divergencia"].fillna(0) != 0].copy()
-                
-                if not df_erros_itens.empty and "produto" in df_erros_itens.columns:
-                    df_top_erros = df_erros_itens.groupby(["produto", "descricao"])["divergencia"].count().reset_index(name="Ocorrências")
-                    df_top_erros = df_top_erros.sort_values("Ocorrências", ascending=False).head(10)
-                    st.dataframe(
-                        df_top_erros,
-                        column_config={
-                            "produto": "Código",
-                            "descricao": "Descrição do Produto",
-                            "Ocorrências": st.column_config.NumberColumn("Qtd. Divergências", format="%d")
-                        },
-                        hide_index=True,
-                        use_container_width=True
-                    )
-                else:
-                    st.success("Nenhuma divergência registrada no filtro atual.")
+            else:
+                st.success("🎉 Nenhuma divergência registrada no filtro atual!")
 
 # ==============================================================================
-# OPÇÃO: IMPORTAR REMESSA
+# OPÇÃO: IMPORTAR REMESSA (Aba Conferencia)
 # ==============================================================================
 elif menu == "Importar Remessa":
-    with st.container(border=True):
-        st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 8px;'>Importação de Remessa do Fornecedor</p>", unsafe_allow_html=True)
+    st.markdown('<div class="main-title">📥 Importação de Remessa</div>', unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-        with col1:
-            num_remessa = st.text_input("Número da Remessa *", placeholder="Ex: 268326")
-        with col2:
-            nome_local_input = st.text_input("Local / Estoque de Destino *", placeholder="Ex: S.R. EMBALAGENS")
+    col1, col2 = st.columns(2)
+    with col1:
+        num_remessa = st.text_input("Número da Remessa *", placeholder="Ex: 268326")
+    with col2:
+        nome_local_input = st.text_input("Local / Estoque de Destino *", placeholder="Ex: S.R. EMBALAGENS")
 
-        arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa (.xlsx ou .xls)", type=["xlsx", "xls"])
+    arquivo_excel = st.file_uploader("Selecione o arquivo da Remessa", type=["xlsx", "xls"])
 
-        if st.button("Processar e Salvar Remessa"):
-            if not num_remessa or not nome_local_input or not arquivo_excel:
-                st.error("Preencha todos os campos obrigatórios e anexe o arquivo.")
+    if st.button("Processar e Salvar", type="primary"):
+        if not num_remessa or not nome_local_input or not arquivo_excel:
+            st.error("Preencha todos os campos obrigatórios e anexe o arquivo.")
+        else:
+            nome_local = str(nome_local_input).strip().upper()
+            remessa_limpa = str(num_remessa).strip()
+
+            with st.spinner("Processando linhas a partir da coluna 'Produto'..."):
+                itens = extrair_excel(arquivo_excel)
+
+            if not itens:
+                st.warning("Nenhum item válido encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
             else:
-                nome_local = str(nome_local_input).strip().upper()
-                remessa_limpa = str(num_remessa).strip()
+                data_importacao = datetime.now().strftime("%d/%m/%Y")
+                
+                linhas_para_sheets = []
+                for item in itens:
+                    linhas_para_sheets.append([
+                        remessa_limpa,             # A: Remessa
+                        nome_local,                # B: Estoque
+                        data_importacao,           # C: Horario / Data
+                        str(item["Produto"]).strip(), # D: Codigo
+                        str(item["Descricao"]).strip(), # E: Descrição
+                        float(item["Quantidade"]), # F: Quantidade
+                        "",                        # G: Conferencia
+                        "",                        # H: Divergencia
+                        "",                        # I: Conferente
+                        ""                         # J: Justificstiva para Divergencia
+                    ])
 
-                with st.spinner("Processando linhas..."):
-                    itens = extrair_excel(arquivo_excel)
-
-                if not itens:
-                    st.warning("Nenhum item válido encontrado no arquivo. Verifique se o cabeçalho possui a coluna 'Produto' ou 'Código'.")
-                else:
-                    data_importacao = datetime.now().strftime("%d/%m/%Y")
-                    linhas_para_sheets = []
-                    for item in itens:
-                        linhas_para_sheets.append([
-                            remessa_limpa,
-                            nome_local,
-                            data_importacao,
-                            str(item["Produto"]).strip(),
-                            str(item["Descricao"]).strip(),
-                            float(item["Quantidade"]),
-                            "",
-                            "",
-                            "",
-                            ""
-                        ])
-
-                    with st.spinner("Gravando linhas na aba Conferencia..."):
-                        res = enviar_importacao_planilha(linhas_para_sheets)
-                        if res.get("status") == "success":
-                            st.success(f"{len(linhas_para_sheets)} itens gravados com sucesso para a remessa {remessa_limpa}!")
-                            df_preview = pd.DataFrame(itens)
-                            st.dataframe(df_preview, use_container_width=True)
-                        else:
-                            st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
+                with st.spinner("Gravando linhas na aba Conferencia..."):
+                    res = enviar_importacao_planilha(linhas_para_sheets)
+                    if res.get("status") == "success":
+                        st.success(f"✅ {len(linhas_para_sheets)} itens gravados com sucesso para a remessa **{remessa_limpa}** (Estoque: **{nome_local}**)!")
+                        df_preview = pd.DataFrame(itens)
+                        st.dataframe(df_preview, use_container_width=True)
+                    else:
+                        st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
 
 # ==============================================================================
-# OPÇÃO: FOLHA DE IMPRESSÃO CEGA
+# OPÇÃO: FOLHA DE IMPRESSÃO CEGA (ECONÔMICA)
 # ==============================================================================
 elif menu == "Folha de Impressão Cega":
-    with st.container(border=True):
-        st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 8px;'>Ficha de Contagem Cega para Impressão</p>", unsafe_allow_html=True)
+    st.markdown('<div class="main-title">🖨️ Folha de Separação / Contagem Cega</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Gere a folha física com formato compacto para economia de papel.</div>', unsafe_allow_html=True)
 
-        with st.spinner("Consultando dados..."):
-            df = carregar_dados_planilha()
+    with st.spinner("Consultando dados..."):
+        df = carregar_dados_planilha()
 
-        if df.empty:
-            st.info("Nenhuma remessa encontrada na aba Conferencia.")
-        else:
-            remessas_disponiveis = [
-                str(r).strip() for r in df["remessa"].dropna().unique().tolist()
-                if str(r).strip() not in ["", "nan", "None"]
-            ]
-            remessa_selecionada = st.selectbox("Selecione a Remessa para Gerar a Impressão:", [""] + remessas_disponiveis)
+    if df.empty:
+        st.info("Nenhuma remessa encontrada na aba Conferencia.")
+    else:
+        # Extrai lista de remessas sem duplicatas e sem vazios
+        remessas_disponiveis = [
+            str(r).strip() for r in df["remessa"].dropna().unique().tolist()
+            if str(r).strip() not in ["", "nan", "None"]
+        ]
+        remessa_selecionada = st.selectbox("Selecione a Remessa para Gerar a Impressão:", [""] + remessas_disponiveis)
 
-            if remessa_selecionada:
-                remessa_busca = str(remessa_selecionada).strip()
-                dados_remessa = df[df["remessa"].astype(str).str.strip() == remessa_busca].copy()
+        if remessa_selecionada:
+            remessa_busca = str(remessa_selecionada).strip()
+            dados_remessa = df[df["remessa"].astype(str).str.strip() == remessa_busca].copy()
 
-                if dados_remessa.empty:
-                    st.warning("Nenhum item localizado para a remessa selecionada.")
-                else:
-                    data_cad = formatar_data_br(dados_remessa["data_importacao"].iloc[0])
-                    local_cad = str(dados_remessa["local"].iloc[0]).upper()
+            if dados_remessa.empty:
+                st.warning("Nenhum item localizado para a remessa selecionada.")
+            else:
+                data_cad = formatar_data_br(dados_remessa["data_importacao"].iloc[0])
+                local_cad = str(dados_remessa["local"].iloc[0]).upper()
 
-                    linhas_tabela = ""
-                    for _, row in dados_remessa.iterrows():
-                        cod_item = str(row.get('produto', ''))
-                        desc_item = str(row.get('descricao', ''))
-                        linhas_tabela += (
-                            "<tr>"
-                            f"<td style='border: 1px solid #cbd5e1; padding: 4px 6px; font-weight: 700; font-size: 10px; color: #0f172a;'>{cod_item}</td>"
-                            f"<td style='border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 10px; color: #334155; line-height: 1.2;'>{desc_item}</td>"
-                            "<td style='border: 1px solid #cbd5e1; padding: 4px 6px; height: 20px;'></td>"
-                            "</tr>"
-                        )
+                linhas_tabela = ""
+                for _, row in dados_remessa.iterrows():
+                    cod_item = str(row.get('produto', ''))
+                    desc_item = str(row.get('descricao', ''))
+                    linhas_tabela += (
+                        "<tr>"
+                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-weight: bold; font-size: 9.5px;'>{cod_item}</td>"
+                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-size: 9.5px; line-height: 1.15;'>{desc_item}</td>"
+                        "<td style='border: 1px solid #475569; padding: 3px 5px; height: 20px;'></td>"
+                        "</tr>"
+                    )
 
-                    documento_html = f"""<!DOCTYPE html>
+                documento_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <style>
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             color: #0f172a;
             margin: 0;
             padding: 4px;
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 2px solid #0f172a;
-            padding-bottom: 6px;
-            margin-bottom: 8px;
+            border-bottom: 1.5px solid #0f134f;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
         }}
         .header-title {{
-            font-size: 13px;
-            font-weight: 800;
-            margin: 0 0 4px 0;
-            color: #0f172a;
+            font-size: 13.5px;
+            font-weight: bold;
+            margin: 0 0 3px 0;
+            color: #0f134f;
             text-transform: uppercase;
         }}
         .header-meta {{
             display: flex;
-            gap: 20px;
+            gap: 16px;
             font-size: 10px;
-            color: #475569;
+            color: #334155;
             font-weight: 600;
         }}
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
+            margin-top: 5px;
         }}
         th {{
-            border: 1px solid #94a3b8;
-            background-color: #f8fafc;
-            padding: 4px 6px;
-            font-size: 9.5px;
+            border: 1px solid #0f134f;
+            background-color: #f1f5f9;
+            padding: 4px 5px;
+            font-size: 10px;
             text-align: left;
-            font-weight: 700;
-            color: #0f172a;
+            font-weight: bold;
         }}
         .signature-box {{
             margin-top: 20px;
             display: flex;
             justify-content: space-between;
             font-size: 9.5px;
-            color: #475569;
+            color: #334155;
+            padding-top: 4px;
         }}
         .btn-imprimir {{
-            background: #0284c7;
+            background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
             color: white;
             border: none;
             padding: 6px 14px;
             font-size: 11px;
             font-weight: 600;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             margin-bottom: 8px;
         }}
         @media print {{
             .btn-imprimir {{
                 display: none !important;
+            }}
+            body {{
+                padding: 0;
             }}
             @page {{
                 margin: 6mm;
@@ -1008,22 +822,22 @@ elif menu == "Folha de Impressão Cega":
     </style>
 </head>
 <body>
-    <button class="btn-imprimir" onclick="window.print()">Imprimir Folha de Contagem</button>
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Folha Econômica</button>
 
     <div class="header-box">
-        <div class="header-title">Folha de Conferência Física (Contagem Cega)</div>
+        <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
         <div class="header-meta">
-            <div>REMESSA: <strong>{remessa_selecionada}</strong></div>
-            <div>LOCAL: <strong>{local_cad}</strong></div>
-            <div>DATA: <strong>{data_cad}</strong></div>
+            <div>REMESSA: {remessa_selecionada}</div>
+            <div>LOCAL: {local_cad}</div>
+            <div>DATA: {data_cad}</div>
         </div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th style="width: 20%;">CÓDIGO</th>
-                <th style="width: 60%;">DESCRIÇÃO DO PRODUTO</th>
+                <th style="width: 18%;">CÓDIGO</th>
+                <th style="width: 62%;">DESCRIÇÃO DO PRODUTO</th>
                 <th style="width: 20%; text-align: center;">QTD. CONFERIDA</th>
             </tr>
         </thead>
@@ -1039,277 +853,310 @@ elif menu == "Folha de Impressão Cega":
 </body>
 </html>"""
 
-                    altura_calculada = max(340, 100 + (len(dados_remessa) * 26))
-                    components.html(documento_html, height=altura_calculada, scrolling=True)
+                altura_calculada = max(360, 100 + (len(dados_remessa) * 26))
+                components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA & JUSTIFICATIVA POR ITEM
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
-    with st.container(border=True):
-        st.markdown("<p style='font-size: 15px; font-weight: 700; margin-bottom: 8px;'>Digitação de Contagem e Validação</p>", unsafe_allow_html=True)
+    st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
 
-        with st.spinner("Buscando registros..."):
-            df = carregar_dados_planilha()
+    with st.spinner("Buscando registros..."):
+        df = carregar_dados_planilha()
 
-        if df.empty:
-            st.info("Nenhuma remessa encontrada para conferência.")
-        else:
-            remessas = [
-                str(r).strip() for r in df["remessa"].dropna().unique().tolist()
-                if str(r).strip() not in ["", "nan", "None"]
-            ]
-            remessa_pesquisa = st.selectbox("Pesquisar pelo Número da Remessa:", [""] + remessas)
+    if df.empty:
+        st.info("Nenhuma remessa encontrada para conferência.")
+    else:
+        remessas = [
+            str(r).strip() for r in df["remessa"].dropna().unique().tolist()
+            if str(r).strip() not in ["", "nan", "None"]
+        ]
+        remessa_pesquisa = st.selectbox("Pesquisar pelo Número da Remessa:", [""] + remessas)
 
-            if remessa_pesquisa:
-                remessa_alvo = str(remessa_pesquisa).strip()
-                itens_remessa = df[df["remessa"].astype(str).str.strip() == remessa_alvo].copy()
+        if remessa_pesquisa:
+            remessa_alvo = str(remessa_pesquisa).strip()
+            itens_remessa = df[df["remessa"].astype(str).str.strip() == remessa_alvo].copy()
 
-                if itens_remessa.empty:
-                    st.warning("Nenhum item localizado para a remessa selecionada.")
+            if itens_remessa.empty:
+                st.warning("Nenhum item localizado para a remessa selecionada.")
+            else:
+                local_atual = str(itens_remessa["local"].iloc[0]).upper()
+                data_atual_br = formatar_data_br(itens_remessa["data_importacao"].iloc[0])
+
+                itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
+                itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
+                itens_remessa["divergencia"] = pd.to_numeric(itens_remessa["divergencia"], errors="coerce")
+
+                ja_conferida = itens_remessa["conferencia"].notna().any()
+                itens_divergentes = itens_remessa[itens_remessa["divergencia"].fillna(1) != 0].copy()
+
+                if ja_conferida and len(itens_divergentes) > 0:
+                    modo_reconferencia = True
+                    dados_trabalho = itens_divergentes.copy()
+                    st.warning(f"⚠️ **Segunda Conferência (Apenas Divergências):** Foram identificados **{len(itens_divergentes)} item(ns)** divergentes. Reconte apenas os itens listados abaixo.")
+                elif ja_conferida and len(itens_divergentes) == 0:
+                    modo_reconferencia = False
+                    dados_trabalho = itens_remessa.copy()
+                    st.success("✨ **Remessa 100% Conferida e Sem Divergências!** Todos os itens foram validados com sucesso.")
                 else:
-                    local_atual = str(itens_remessa["local"].iloc[0]).upper()
-                    data_atual_br = formatar_data_br(itens_remessa["data_importacao"].iloc[0])
+                    modo_reconferencia = False
+                    dados_trabalho = itens_remessa.copy()
+                    st.info("📋 **Primeira Conferência (Contagem Cega):** Digite a quantidade física contada para cada produto.")
 
-                    itens_remessa["quantidade"] = pd.to_numeric(itens_remessa["quantidade"], errors="coerce").fillna(0.0)
-                    itens_remessa["conferencia"] = pd.to_numeric(itens_remessa["conferencia"], errors="coerce")
-                    itens_remessa["divergencia"] = pd.to_numeric(itens_remessa["divergencia"], errors="coerce")
-
-                    ja_conferida = itens_remessa["conferencia"].notna().any()
-                    itens_divergentes = itens_remessa[itens_remessa["divergencia"].fillna(1) != 0].copy()
-
-                    if ja_conferida and len(itens_divergentes) > 0:
-                        modo_reconferencia = True
-                        dados_trabalho = itens_divergentes.copy()
-                        st.warning(f"Segunda Conferência (Apenas Divergências): Foram identificados {len(itens_divergentes)} item(ns) divergentes.")
-                    elif ja_conferida and len(itens_divergentes) == 0:
-                        modo_reconferencia = False
-                        dados_trabalho = itens_remessa.copy()
-                        st.success("Remessa 100% Conferida e Sem Divergências!")
-                    else:
-                        modo_reconferencia = False
-                        dados_trabalho = itens_remessa.copy()
-                        st.info("Primeira Conferência: Digite a quantidade física contada.")
-
-                    st.markdown(f"""
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-label">Remessa</div>
-                            <div class="kpi-value">{remessa_alvo}</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Local / Depósito</div>
-                            <div class="kpi-value">{local_atual}</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Data de Importação</div>
-                            <div class="kpi-value">{data_atual_br}</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Itens a Conferir</div>
-                            <div class="kpi-value">{len(dados_trabalho)}</div>
-                        </div>
+                st.markdown(f"""
+                <div class="metric-container">
+                    <div class="metric-card">
+                        <span>Remessa</span>
+                        <strong>{remessa_alvo}</strong>
                     </div>
-                    """, unsafe_allow_html=True)
-
-                    lista_conferentes = carregar_lista_conferentes()
-                    conferente_anterior = ""
-                    if "conferente" in dados_trabalho.columns and dados_trabalho["conferente"].dropna().any():
-                        conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
-
-                    if not lista_conferentes:
-                        st.warning("Nenhum conferente localizado na coluna D da aba 'Local-Estoque'.")
-                        nome_conferente_final = ""
-                    else:
-                        idx_default = 0
-                        if conferente_anterior in lista_conferentes:
-                            idx_default = lista_conferentes.index(conferente_anterior) + 1
-                        
-                        nome_conferente_sel = st.selectbox(
-                            "Selecione o Conferente Responsável *",
-                            ["-- Selecione o conferente --"] + lista_conferentes,
-                            index=idx_default
-                        )
-                        nome_conferente_final = "" if nome_conferente_sel == "-- Selecione o conferente --" else nome_conferente_sel
-
-                    dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
-                    df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
-
-                    st.markdown("""
-                    <div class="keyboard-hint">
-                        Digite o valor e aperte <kbd>Enter</kbd> para descer direto para o próximo produto.
+                    <div class="metric-card">
+                        <span>Local / Depósito</span>
+                        <strong>{local_atual}</strong>
                     </div>
-                    """, unsafe_allow_html=True)
+                    <div class="metric-card">
+                        <span>Data de Importação</span>
+                        <strong>{data_atual_br}</strong>
+                    </div>
+                    <div class="metric-card">
+                        <span>Itens a Conferir</span>
+                        <strong>{len(dados_trabalho)}</strong>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                    injetar_atalho_teclado_tab()
+                lista_conferentes = carregar_lista_conferentes()
+                conferente_anterior = ""
+                if "conferente" in dados_trabalho.columns and dados_trabalho["conferente"].dropna().any():
+                    conferente_anterior = str(dados_trabalho["conferente"].dropna().iloc[0]).strip().upper()
 
-                    editado = st.data_editor(
-                        df_editavel,
-                        column_config={
-                            "row_index": None,
-                            "produto": st.column_config.TextColumn("Código", disabled=True),
-                            "descricao": st.column_config.TextColumn("Descrição", disabled=True),
-                            "conferencia": st.column_config.NumberColumn(
-                                "Conferência (Físico)",
-                                min_value=0.0,
-                                step=1.0,
-                                format="%.2f",
-                                required=True
-                            ),
-                        },
-                        use_container_width=True,
-                        hide_index=True,
-                        key=f"editor_conferencia_{remessa_alvo}_{modo_reconferencia}"
+                if not lista_conferentes:
+                    st.warning("⚠️ Nenhum conferente localizado na coluna D da aba 'Local-Estoque'.")
+                    nome_conferente_final = ""
+                else:
+                    idx_default = 0
+                    if conferente_anterior in lista_conferentes:
+                        idx_default = lista_conferentes.index(conferente_anterior) + 1
+                    
+                    nome_conferente_sel = st.selectbox(
+                        "Selecione o Conferente Responsável *",
+                        ["-- Selecione o conferente --"] + lista_conferentes,
+                        index=idx_default
                     )
+                    nome_conferente_final = "" if nome_conferente_sel == "-- Selecione o conferente --" else nome_conferente_sel
 
-                    mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
-                    itens_com_divergencia_detectada = []
+                dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
+                df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-                    for _, row in editado.iterrows():
-                        r_id = int(row["row_index"])
-                        conf_val = float(row["conferencia"])
-                        qtd_esp = mapa_esperado.get(r_id, 0.0)
-                        if conf_val - qtd_esp != 0:
-                            itens_com_divergencia_detectada.append({
-                                "row_index": r_id,
-                                "produto": str(row["produto"]),
-                                "descricao": str(row["descricao"]),
-                                "conferido": conf_val,
-                                "divergencia": conf_val - qtd_esp
-                            })
+                st.markdown("""
+                <div class="keyboard-hint">
+                    ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+                </div>
+                """, unsafe_allow_html=True)
 
-                    st.markdown("<hr style='margin: 12px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
-                    autorizar_divergencia = st.checkbox("Autorizar encerramento/finalização da conferência com divergência")
-                    justificativas_itens = {}
+                injetar_atalho_teclado_tab()
 
-                    if autorizar_divergencia:
-                        if len(itens_com_divergencia_detectada) == 0:
-                            st.info("Não há itens divergentes no momento. Ao salvar, todos os itens constarão como conferidos sem divergência.")
+                editado = st.data_editor(
+                    df_editavel,
+                    column_config={
+                        "row_index": None,
+                        "produto": st.column_config.TextColumn("Código", disabled=True),
+                        "descricao": st.column_config.TextColumn("Descrição", disabled=True),
+                        "conferencia": st.column_config.NumberColumn(
+                            "Conferência (Físico)",
+                            min_value=0.0,
+                            step=1.0,
+                            format="%.2f",
+                            required=True
+                        ),
+                    },
+                    use_container_width=True,
+                    hide_index=True,
+                    key=f"editor_conferencia_{remessa_alvo}_{modo_reconferencia}"
+                )
+
+                mapa_esperado = dados_trabalho.set_index("row_index")["quantidade"].to_dict()
+                itens_com_divergencia_detectada = []
+
+                for _, row in editado.iterrows():
+                    r_id = int(row["row_index"])
+                    conf_val = float(row["conferencia"])
+                    qtd_esp = mapa_esperado.get(r_id, 0.0)
+                    if conf_val - qtd_esp != 0:
+                        itens_com_divergencia_detectada.append({
+                            "row_index": r_id,
+                            "produto": str(row["produto"]),
+                            "descricao": str(row["descricao"]),
+                            "conferido": conf_val,
+                            "divergencia": conf_val - qtd_esp
+                        })
+
+                st.write("---")
+                autorizar_divergencia = st.checkbox("⚠️ Autorizar encerramento/finalização da conferência com divergência")
+                justificativas_itens = {}
+
+                if autorizar_divergencia:
+                    if len(itens_com_divergencia_detectada) == 0:
+                        st.info("✨ Não há itens divergentes no momento. Ao salvar, todos os itens constarão como conferidos sem divergência.")
+                    else:
+                        st.markdown("""
+                        <div class="divergence-box">
+                            <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
+                            <span style="font-size: 11.5px; color: #431407;">
+                                Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
+                            </span>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        for item_div in itens_com_divergencia_detectada:
+                            r_id = item_div["row_index"]
+                            label_item = f"Produto: {item_div['produto']} - {item_div['descricao']} (Qtd Físico: {item_div['conferido']:.2f})"
+                            
+                            obs_anterior = ""
+                            if "observacao" in dados_trabalho.columns:
+                                linha_orig = dados_trabalho[dados_trabalho["row_index"] == r_id]
+                                if not linha_orig.empty and pd.notna(linha_orig["observacao"].iloc[0]):
+                                    obs_anterior = str(linha_orig["observacao"].iloc[0]).strip()
+
+                            justificativas_itens[r_id] = st.text_input(
+                                f"Justificativa para {label_item} *",
+                                value=obs_anterior,
+                                placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada no fornecedor",
+                                key=f"justificativa_item_{r_id}"
+                            )
+
+                if st.button("⚖️ Comparar e Gravar", type="primary"):
+                    if not nome_conferente_final:
+                        st.error("⚠️ Selecione o **Nome do Conferente** na lista antes de gravar.")
+                    else:
+                        justificativas_pendentes = False
+                        if autorizar_divergencia:
+                            for it in itens_com_divergencia_detectada:
+                                r_id = it["row_index"]
+                                if not str(justificativas_itens.get(r_id, "")).strip():
+                                    justificativas_pendentes = True
+                                    break
+
+                        if autorizar_divergencia and justificativas_pendentes:
+                            st.error("⚠️ Você optou por autorizar a divergência. É **obrigatório** preencher a justificativa para todos os produtos divergentes listados acima.")
                         else:
-                            st.markdown("""
-                            <div class="divergence-box">
-                                <strong style="color: #9a3412;">Justificativa Individual por Item Divergente</strong><br>
-                                <span style="font-size: 11px; color: #7c2d12;">
-                                    Informe a justificativa específica para cada produto com divergência (Coluna J).
-                                </span>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            with st.spinner("Gravando conferência na aba Conferencia..."):
+                                itens_atualizar = []
+                                resultados_exibicao = []
 
-                            for item_div in itens_com_divergencia_detectada:
-                                r_id = item_div["row_index"]
-                                label_item = f"Produto: {item_div['produto']} - {item_div['descricao']} (Qtd Físico: {item_div['conferido']:.2f})"
-                                
-                                obs_anterior = ""
-                                if "observacao" in dados_trabalho.columns:
-                                    linha_orig = dados_trabalho[dados_trabalho["row_index"] == r_id]
-                                    if not linha_orig.empty and pd.notna(linha_orig["observacao"].iloc[0]):
-                                        obs_anterior = str(linha_orig["observacao"].iloc[0]).strip()
+                                for _, row in editado.iterrows():
+                                    r_id = int(row["row_index"])
+                                    conf_val = float(row["conferencia"])
+                                    qtd_esp = mapa_esperado.get(r_id, 0.0)
+                                    div_val = conf_val - qtd_esp
 
-                                justificativas_itens[r_id] = st.text_input(
-                                    f"Justificativa para {label_item} *",
-                                    value=obs_anterior,
-                                    placeholder="Ex: Mercadoria avariada / Sobra de lote / Falta confirmada",
-                                    key=f"justificativa_item_{r_id}"
-                                )
+                                    obs_do_item = ""
+                                    if div_val != 0 and autorizar_divergencia:
+                                        obs_do_item = str(justificativas_itens.get(r_id, "")).strip().upper()
 
-                    if st.button("Comparar e Gravar Conferência"):
-                        if not nome_conferente_final:
-                            st.error("Selecione o Nome do Conferente na lista antes de gravar.")
-                        elif autorizar_divergencia and any(not str(justificativas_itens.get(it["row_index"], "")).strip() for it in itens_com_divergencia_detectada):
-                            st.error("É obrigatório preencher a justificativa para todos os produtos divergentes listados.")
-                        else:
-                            with st.spinner("Gravando conferência..."):
-                                res, resultados_exibicao = salvar_conferencia_dados(
-                                    editado, mapa_esperado, autorizar_divergencia, justificativas_itens, nome_conferente_final
-                                )
+                                    itens_atualizar.append({
+                                        "row_index": r_id,
+                                        "conferencia": conf_val,
+                                        "divergencia": div_val,
+                                        "conferente": nome_conferente_final,
+                                        "observacao": obs_do_item
+                                    })
 
-                            if res.get("status") != "success":
-                                mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
-                                st.error(f"Erro ao salvar: {mensagem_erro}")
-                            else:
-                                msg_sucesso = f"Dados gravados com sucesso! Conferente: {nome_conferente_final}."
-                                if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
-                                    msg_sucesso += " Justificativas lançadas na Coluna J."
-                                st.success(msg_sucesso)
+                                    status = "Correto (Sem Divergência)" if div_val == 0 else "Divergente"
+                                    resultados_exibicao.append({
+                                        "produto": row["produto"],
+                                        "descricao": row["descricao"],
+                                        "conferencia": conf_val,
+                                        "conferente": nome_conferente_final,
+                                        "status": status,
+                                        "justificativa": obs_do_item,
+                                        "_tem_erro": (div_val != 0)
+                                    })
 
-                                df_resultado = pd.DataFrame(resultados_exibicao)
+                                res = enviar_atualizacao_conferencia(itens_atualizar)
 
-                                def colorir_status(val):
-                                    if "Divergente" in str(val):
-                                        return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
-                                    return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+                                if res.get("status") == "success":
+                                    msg_sucesso = f"✅ Dados gravados com sucesso! Conferente: **{nome_conferente_final}**."
+                                    if autorizar_divergencia and len(itens_com_divergencia_detectada) > 0:
+                                        msg_sucesso += " Justificativas lançadas na linha de cada produto divergente (Coluna J)."
+                                    st.success(msg_sucesso)
+                                    
+                                    df_resultado = pd.DataFrame(resultados_exibicao)
+                                    
+                                    def colorir_status(val):
+                                        if "Divergente" in str(val):
+                                            return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                        else:
+                                            return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
 
-                                st.write("### Resultado da Conferência")
+                                    st.write("### 📊 Resultado da Conferência")
+                                    
+                                    colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
+                                    if autorizar_divergencia:
+                                        colunas_tabela.append("justificativa")
 
-                                colunas_tabela = ["produto", "descricao", "conferencia", "conferente", "status"]
-                                if autorizar_divergencia:
-                                    colunas_tabela.append("justificativa")
+                                    df_mostrar = df_resultado[colunas_tabela]
+                                    styler_res = df_mostrar.style
+                                    if hasattr(styler_res, "map"):
+                                        styler_res = styler_res.map(colorir_status, subset=["status"])
+                                    else:
+                                        styler_res = styler_res.applymap(colorir_status, subset=["status"])
 
-                                df_mostrar = df_resultado[colunas_tabela]
-                                styler_res = df_mostrar.style
-                                if hasattr(styler_res, "map"):
-                                    styler_res = styler_res.map(colorir_status, subset=["status"])
+                                    st.dataframe(
+                                        styler_res,
+                                        column_config={
+                                            "produto": "Código",
+                                            "descricao": "Descrição",
+                                            "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
+                                            "conferente": "Conferente",
+                                            "status": "Situação da Contagem",
+                                            "justificativa": "Justificativa (Coluna J)"
+                                        },
+                                        use_container_width=True
+                                    )
+
+                                    total_erros = df_resultado["_tem_erro"].sum()
+                                    if total_erros == 0:
+                                        st.balloons()
+                                        st.success("🎉 **Perfeito!** Todos os itens batem com a remessa.")
+                                    else:
+                                        if autorizar_divergencia:
+                                            st.info("ℹ️ **Conferência Finalizada com Justificativa:** As pendências foram autorizadas e registradas nos itens específicos.")
+                                        else:
+                                            st.warning(f"⚠️ **Atenção:** Existem **{total_erros} item(ns) divergente(s)**. Busque a remessa novamente para realizar a segunda conferência ou marque a opção de autorizar a divergência com justificativa item a item.")
                                 else:
-                                    styler_res = styler_res.applymap(colorir_status, subset=["status"])
-
-                                st.dataframe(
-                                    styler_res,
-                                    column_config={
-                                        "produto": "Código",
-                                        "descricao": "Descrição",
-                                        "conferencia": st.column_config.NumberColumn("Qtd. Conferida", format="%.2f"),
-                                        "conferente": "Conferente",
-                                        "status": "Situação da Contagem",
-                                        "justificativa": "Justificativa (Coluna J)"
-                                    },
-                                    use_container_width=True
-                                )
-
-                                total_erros = df_resultado["_tem_erro"].sum()
-                                if total_erros == 0:
-                                    st.balloons()
-                                    st.success("Perfeito! Todos os itens batem com a remessa.")
-                                elif autorizar_divergencia:
-                                    st.info("Conferência Finalizada com Justificativa.")
-                                else:
-                                    st.warning(f"Existem {total_erros} item(ns) divergente(s). Realize a segunda conferência ou autorize a divergência.")
+                                    mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
+                                    st.error(f"Erro ao salvar: {mensagem_erro}")
 
 # ==============================================================================
-# OPÇÃO: CADASTRAR NOVO CONFERENTE (REESTRUTURADO)
+# OPÇÃO: CADASTRAR NOVO CONFERENTE (Aba Local-Estoque - Coluna D)
 # ==============================================================================
 elif menu == "Cadastrar Novo Conferente":
-    with st.container(border=True):
-        st.markdown("<p style='font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 2px;'>Cadastro de Novo Conferente</p>", unsafe_allow_html=True)
-        st.caption("Os conferentes cadastrados são registrados automaticamente na Coluna D da aba Local-Estoque.")
+    st.markdown('<div class="main-title">👤 Cadastro de Conferente</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Os conferentes são lidos e gravados na Coluna D da aba <strong>Local-Estoque</strong>.</div>', unsafe_allow_html=True)
 
-        col_form, _ = st.columns([1.5, 1.0])
-        with col_form:
-            novo_conferente = st.text_input("Nome Completo do Conferente *", placeholder="Ex: JOÃO SILVA")
-            
-            st.markdown('<div class="st-key-btn_cadastrar_conf" style="margin-top: 8px;">', unsafe_allow_html=True)
-            btn_cadastrar = st.button("Cadastrar Conferente", use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        novo_conferente = st.text_input("Nome Completo do Conferente *", placeholder="Ex: JOÃO SILVA")
+        if st.button("Cadastrar Conferente", type="primary"):
+            if not novo_conferente.strip():
+                st.error("Informe o nome do conferente para realizar o cadastro.")
+            else:
+                nome_formatado = novo_conferente.strip().upper()
+                with st.spinner("Salvando novo conferente..."):
+                    res = enviar_cadastro_conferente(nome_formatado)
+                    if res.get("status") == "success":
+                        st.success(f"✅ Conferente **{nome_formatado}** cadastrado com sucesso!")
+                        st.balloons()
+                    else:
+                        mensagem_erro = res.get("message", "Falha de comunicação")
+                        st.error(f"Erro ao cadastrar: {mensagem_erro}")
 
-            if btn_cadastrar:
-                if not novo_conferente.strip():
-                    st.error("Informe o nome completo do conferente para realizar o cadastro.")
-                else:
-                    nome_formatado = novo_conferente.strip().upper()
-                    with st.spinner("Salvando novo conferente..."):
-                        res = enviar_cadastro_conferente(nome_formatado)
-                        if res.get("status") == "success":
-                            st.success(f"Conferente {nome_formatado} cadastrado com sucesso!")
-                            st.balloons()
-                        else:
-                            mensagem_erro = res.get("message", "Falha de comunicação")
-                            st.error(f"Erro ao cadastrar: {mensagem_erro}")
-
-        st.markdown("<hr style='margin: 16px 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 8px;'>Conferentes Atualmente Registrados</p>", unsafe_allow_html=True)
-        
-        conferentes_atuais = carregar_lista_conferentes()
-        if conferentes_atuais:
-            df_conf = pd.DataFrame(conferentes_atuais, columns=["Nome do Conferente"])
-            st.dataframe(df_conf, use_container_width=True)
-        else:
-            st.info("Nenhum conferente localizado até o momento.")
+    st.write("---")
+    st.write("#### 👥 Conferentes Atualmente Cadastrados:")
+    conferentes_atuais = carregar_lista_conferentes()
+    if conferentes_atuais:
+        df_conf = pd.DataFrame(conferentes_atuais, columns=["Nome do Conferente"])
+        st.dataframe(df_conf, use_container_width=True)
+    else:
+        st.info("Nenhum conferente localizado até o momento.")
