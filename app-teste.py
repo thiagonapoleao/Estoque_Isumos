@@ -16,10 +16,26 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Corporativa Compacta
+# Estilização Corporativa Compacta + Carregamento de Ícones Material Symbols
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined' !important;
+        font-weight: normal;
+        font-style: normal;
+        font-size: 16px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        vertical-align: middle;
+    }
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -230,16 +246,13 @@ def enviar_dados_apps_script(payload: dict) -> dict:
         return {"status": "error", "message": f"Falha de conexão: {str(ex)}"}
 
 def normalizar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    """Padroniza tipos e remove anomalias de formatação vindas do Sheets."""
     if df.empty:
         return df
 
-    # Normaliza a coluna Remessa para texto sem '.0' e sem espaços
     if "remessa" in df.columns:
         df["remessa"] = df["remessa"].fillna("").astype(str)
         df["remessa"] = df["remessa"].str.replace(r"\.0$", "", regex=True).str.strip()
 
-    # Normaliza campos de texto
     for col in ["produto", "descricao", "local", "conferente", "observacao"]:
         if col in df.columns:
             df[col] = df[col].fillna("").astype(str).str.strip()
@@ -682,16 +695,16 @@ elif menu == "Importar Remessa":
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        remessa_limpa,             # A: Remessa
-                        nome_local,                # B: Estoque
-                        data_importacao,           # C: Horario / Data
-                        str(item["Produto"]).strip(), # D: Codigo
+                        remessa_limpa,                  # A: Remessa
+                        nome_local,                     # B: Estoque
+                        data_importacao,                # C: Horario / Data
+                        str(item["Produto"]).strip(),   # D: Codigo
                         str(item["Descricao"]).strip(), # E: Descrição
-                        float(item["Quantidade"]), # F: Quantidade
-                        "",                        # G: Conferencia
-                        "",                        # H: Divergencia
-                        "",                        # I: Conferente
-                        ""                         # J: Justificstiva para Divergencia
+                        float(item["Quantidade"]),      # F: Quantidade
+                        "",                             # G: Conferencia
+                        "",                             # H: Divergencia
+                        "",                             # I: Conferente
+                        ""                              # J: Justificativa para Divergencia
                     ])
 
                 with st.spinner("Gravando linhas na aba Conferencia..."):
@@ -716,7 +729,6 @@ elif menu == "Folha de Impressão Cega":
     if df.empty:
         st.info("Nenhuma remessa encontrada na aba Conferencia.")
     else:
-        # Extrai lista de remessas sem duplicatas e sem vazios
         remessas_disponiveis = [
             str(r).strip() for r in df["remessa"].dropna().unique().tolist()
             if str(r).strip() not in ["", "nan", "None"]
@@ -948,9 +960,11 @@ elif menu == "Digitar Conferência Cega":
                 dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
                 df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
+                # Card com ícone Material Symbols renderizado e texto explicativo
                 st.markdown("""
                 <div class="keyboard-hint">
-                    ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+                    <span class="material-symbols-outlined" style="color: #273270; vertical-align: text-bottom; margin-right: 4px;">keyboard_double_arrow_down</span>
+                    <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para descer direto para a próxima linha.
                 </div>
                 """, unsafe_allow_html=True)
 
