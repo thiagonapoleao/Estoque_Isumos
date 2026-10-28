@@ -25,7 +25,7 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# --- DESIGN SYSTEM CORPORATIVO: BOTÕES DE NAVEGAÇÃO PROPORCIONAIS ---
+# --- DESIGN SYSTEM CORPORATIVO: BOTÕES DE NAVEGAÇÃO ULTRA COMPACTOS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -47,85 +47,86 @@ st.markdown("""
         padding-right: 1.5rem !important;
     }
 
-    /* Top Bar Container */
+    /* Top Bar Container Compacto */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        padding: 8px 14px !important;
-        margin-bottom: 18px !important;
-        box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05) !important;
+        border-radius: 10px !important;
+        padding: 4px 10px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
     }
 
     /* Bloco da Logo e Título */
     .brand-box {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 2px 0;
+        gap: 8px;
+        padding: 0;
     }
     .brand-logo-img {
-        height: 38px;
-        max-width: 110px;
+        height: 32px;
+        max-width: 95px;
         object-fit: contain;
         display: block;
     }
     .brand-logo-icon {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
         background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
         color: #ffffff;
-        border-radius: 8px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 19px;
-        box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+        font-size: 16px;
+        box-shadow: 0 2px 8px rgba(29, 78, 216, 0.25);
     }
     .brand-text-col {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.15;
+        line-height: 1.1;
     }
     .brand-title {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         font-weight: 800 !important;
         color: #0f172a !important;
         letter-spacing: -0.3px;
         white-space: nowrap;
     }
     .brand-subtitle {
-        font-size: 9.5px !important;
+        font-size: 8.5px !important;
         font-weight: 700 !important;
         color: #64748b !important;
-        letter-spacing: 0.6px;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
     }
 
-    /* BOTÕES DA TOPBAR: Tipografia Proporcional e Sem Quebra */
+    /* BOTÕES DA TOPBAR ULTRA COMPACTOS (Slim / Micro) */
     .nav-btn-active button,
     .nav-btn-inactive button,
     .nav-btn-sync button {
-        height: 38px !important;
-        min-height: 38px !important;
-        padding: 0 8px !important;
-        font-size: 11.5px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
         font-weight: 600 !important;
-        border-radius: 7px !important;
-        letter-spacing: -0.15px !important;
+        border-radius: 5px !important;
+        letter-spacing: -0.2px !important;
         white-space: nowrap !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     .nav-btn-active button *,
     .nav-btn-inactive button *,
     .nav-btn-sync button * {
-        font-size: 11.5px !important;
+        font-size: 10px !important;
         line-height: 1 !important;
     }
 
@@ -133,7 +134,7 @@ st.markdown("""
     .nav-btn-active button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
         border: 1.5px solid #1d4ed8 !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 4px 12px rgba(29, 78, 216, 0.4) !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3), 0 3px 8px rgba(29, 78, 216, 0.35) !important;
         transform: scale(1.01) !important;
     }
     .nav-btn-active button,
@@ -163,7 +164,7 @@ st.markdown("""
     .nav-btn-inactive button:hover {
         background-color: #eff6ff !important;
         border-color: #93c5fd !important;
-        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12) !important;
+        box-shadow: 0 1px 4px rgba(37, 99, 235, 0.1) !important;
     }
     .nav-btn-inactive button:hover,
     .nav-btn-inactive button:hover * {
@@ -181,7 +182,7 @@ st.markdown("""
     .nav-btn-sync button p,
     .nav-btn-sync button span {
         color: #1d4ed8 !important;
-        font-size: 13px !important;
+        font-size: 11px !important;
         font-weight: 700 !important;
     }
     .nav-btn-sync button:hover {
@@ -624,11 +625,11 @@ if img_b64:
 else:
     logo_html = '<div class="brand-logo-icon">📦</div>'
 
-# Proporção balanceada: Mais espaço para cada botão acomodar o texto em linha única
+# Proporção Compacta: Logo alinhada e botões slim ocupando toda a linha sem aperto
 with st.container(border=True):
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.7, 1.05, 1.0, 1.15, 1.0, 1.1, 0.45], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.6, 1.05, 1.0, 1.15, 1.0, 1.15, 0.45], vertical_alignment="center")
 
     with col_brand:
         st.markdown(f"""
