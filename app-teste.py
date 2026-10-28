@@ -25,51 +25,18 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# --- DESIGN SYSTEM CORPORATIVO MODERNO (SLATE & INDIGO TECH) ---
+# --- DESIGN SYSTEM CORPORATIVO: AZUL PRIMÁRIO (#1d4ed8 / #2563eb) & DESTAQUE DE FOCO ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-
-    :root {
-        --bg-app: #f8fafc;
-        --bg-surface: #ffffff;
-        --bg-subtle: #f1f5f9;
-        
-        --text-headline: #0f172a;
-        --text-body: #334155;
-        --text-muted: #64748b;
-        --text-inverse: #ffffff;
-        --text-inverse-subtle: #cbd5e1;
-        
-        --border-subtle: #e2e8f0;
-        --border-medium: #cbd5e1;
-        --border-active: #2563eb;
-        
-        --brand-dark: #0f172a;
-        --brand-slate: #1e293b;
-        --brand-blue: #2563eb;
-        --brand-blue-hover: #1d4ed8;
-        
-        --status-success-bg: #ecfdf5;
-        --status-success-text: #065f46;
-        --status-success-border: #a7f3d0;
-        
-        --status-danger-bg: #fef2f2;
-        --status-danger-text: #991b1b;
-        --status-danger-border: #fecaca;
-        
-        --status-warning-bg: #fffbeb;
-        --status-warning-text: #92400e;
-        --status-warning-border: #fde68a;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-size: 13px !important;
-        color: var(--text-body);
+        color: #1e293b;
     }
 
-    /* Estrutura Centralizada */
+    /* Container Centralizado */
     .block-container {
         max-width: 1240px !important;
         margin-left: auto !important;
@@ -80,14 +47,14 @@ st.markdown("""
         padding-right: 1.5rem !important;
     }
 
-    /* Container Unificado da TopBar */
+    /* Top Bar Container */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
-        background: var(--bg-surface) !important;
-        border: 1px solid var(--border-subtle) !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
         padding: 8px 14px !important;
         margin-bottom: 18px !important;
-        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+        box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05) !important;
     }
 
     /* Bloco da Logo e Título */
@@ -107,14 +74,14 @@ st.markdown("""
         width: 38px;
         height: 38px;
         min-width: 38px;
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        color: var(--text-inverse);
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        color: #ffffff;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 19px;
-        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+        box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
     }
     .brand-text-col {
         display: flex;
@@ -126,64 +93,123 @@ st.markdown("""
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-size: 14.5px !important;
         font-weight: 800 !important;
-        color: var(--text-headline) !important;
+        color: #0f172a !important;
         letter-spacing: -0.3px;
         white-space: nowrap;
     }
     .brand-subtitle {
         font-size: 9.5px !important;
         font-weight: 700 !important;
-        color: var(--text-muted) !important;
+        color: #64748b !important;
         letter-spacing: 0.6px;
         text-transform: uppercase;
     }
 
-    /* Botões da Navegação Superior (Compactos e Elegantes) */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) div[data-testid="column"] button {
+    /* Reset e Altura Padrão dos Botões da TopBar */
+    .nav-btn-active button,
+    .nav-btn-inactive button,
+    .nav-btn-sync button {
         height: 36px !important;
         min-height: 36px !important;
-        padding: 0 4px !important;
+        padding: 0 6px !important;
         font-size: 11px !important;
         font-weight: 600 !important;
         border-radius: 7px !important;
         letter-spacing: -0.1px !important;
         white-space: nowrap !important;
-        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    /* Botão Ativo da TopBar: Fundo Escuro com Texto Branco */
+    /* BOTÃO ATIVO: Azul Primário com Super Foco (Escala + Glow Elevado + Anel de Destaque) */
     .nav-btn-active button {
-        background: var(--brand-slate) !important;
-        color: var(--text-inverse) !important;
-        border: 1px solid var(--brand-slate) !important;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18) !important;
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+        border: 1.5px solid #1d4ed8 !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 6px 14px rgba(29, 78, 216, 0.4) !important;
+        transform: scale(1.02) !important;
     }
-    .nav-btn-active button * {
-        color: var(--text-inverse) !important;
+    .nav-btn-active button,
+    .nav-btn-active button *,
+    .nav-btn-active button p,
+    .nav-btn-active button span {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+        font-weight: 700 !important;
     }
 
-    /* Botão Inativo da TopBar: Fundo Claro com Texto Escuro */
+    /* BOTÃO INATIVO: Superfície Clara com Texto Elegante */
     .nav-btn-inactive button {
-        background: var(--bg-surface) !important;
-        color: var(--text-body) !important;
-        border: 1px solid var(--border-subtle) !important;
+        background-color: #f8fafc !important;
+        background-image: none !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+    }
+    .nav-btn-inactive button,
+    .nav-btn-inactive button *,
+    .nav-btn-inactive button p,
+    .nav-btn-inactive button span {
+        color: #1e293b !important;
+        fill: #1e293b !important;
+        font-weight: 600 !important;
     }
     .nav-btn-inactive button:hover {
-        background: var(--bg-subtle) !important;
-        color: var(--text-headline) !important;
-        border-color: var(--border-medium) !important;
+        background-color: #eff6ff !important;
+        border-color: #93c5fd !important;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12) !important;
+    }
+    .nav-btn-inactive button:hover,
+    .nav-btn-inactive button:hover * {
+        color: #1d4ed8 !important;
     }
 
-    /* Botão Sincronizar */
+    /* BOTÃO SINCRONIZAR */
     .nav-btn-sync button {
-        background: var(--bg-surface) !important;
-        color: var(--text-muted) !important;
-        border: 1px solid var(--border-subtle) !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .nav-btn-sync button,
+    .nav-btn-sync button *,
+    .nav-btn-sync button p,
+    .nav-btn-sync button span {
+        color: #1d4ed8 !important;
+        font-weight: 700 !important;
     }
     .nav-btn-sync button:hover {
-        background: var(--bg-subtle) !important;
-        color: var(--brand-blue) !important;
-        border-color: var(--border-medium) !important;
+        background-color: #eff6ff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+    }
+    .nav-btn-sync button:hover * {
+        color: #1d4ed8 !important;
+    }
+
+    /* TODOS OS BOTÕES DE AÇÃO DO PROJETO (Salvar, Gravar, Processar, Cadastrar): Azul Primário */
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+        border: 1px solid #1d4ed8 !important;
+        border-radius: 7px !important;
+        font-weight: 600 !important;
+        padding: 8px 20px !important;
+        font-size: 12.5px !important;
+        letter-spacing: 0.1px !important;
+        box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button,
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button * {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+    /* Foco de Maior Destaque ao Passar o Mouse ou Clicar */
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
+        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 8px 18px rgba(29, 78, 216, 0.38) !important;
+        transform: translateY(-1px) scale(1.01) !important;
+    }
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:focus,
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:active {
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.45), 0 4px 8px rgba(29, 78, 216, 0.3) !important;
+        transform: scale(0.99) !important;
     }
 
     /* Tipografia de Cabeçalho da Página */
@@ -191,15 +217,15 @@ st.markdown("""
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-size: 18px !important;
         font-weight: 700 !important;
-        color: var(--text-headline) !important;
+        color: #0f172a !important;
         margin-bottom: 2px !important;
         padding-bottom: 6px !important;
-        border-bottom: 1.5px solid var(--border-subtle) !important;
+        border-bottom: 1.5px solid #e2e8f0 !important;
         letter-spacing: -0.3px !important;
     }
     .sub-title {
         font-size: 12px !important;
-        color: var(--text-muted) !important;
+        color: #64748b !important;
         margin-bottom: 16px !important;
     }
 
@@ -211,8 +237,8 @@ st.markdown("""
         flex-wrap: wrap;
     }
     .metric-card {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 8px;
         padding: 10px 14px;
         flex: 1;
@@ -226,7 +252,7 @@ st.markdown("""
     }
     .metric-card span {
         font-size: 10px !important;
-        color: var(--text-muted);
+        color: #64748b;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -235,7 +261,7 @@ st.markdown("""
     .metric-card strong {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-size: 16px !important;
-        color: var(--text-headline);
+        color: #0f172a;
         margin-top: 3px;
         font-weight: 700;
         display: block;
@@ -243,12 +269,12 @@ st.markdown("""
 
     /* Dica de Teclado */
     .keyboard-hint {
-        background-color: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
         padding: 6px 10px;
         border-radius: 6px;
         font-size: 11px !important;
-        color: var(--text-body);
+        color: #334155;
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -256,43 +282,25 @@ st.markdown("""
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
     }
     .keyboard-hint kbd {
-        background: var(--bg-subtle);
-        border: 1px solid var(--border-medium);
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
         padding: 1px 5px;
         border-radius: 4px;
         font-weight: 700;
         font-size: 10px !important;
-        color: var(--text-headline);
+        color: #0f172a;
     }
 
     /* Box de Divergência */
     .divergence-box {
-        background-color: var(--status-warning-bg);
-        border: 1px solid var(--status-warning-border);
+        background-color: #fffbeb;
+        border: 1px solid #fde68a;
         border-radius: 8px;
         padding: 12px 14px;
         margin-top: 10px;
         margin-bottom: 12px;
         font-size: 11.5px !important;
-    }
-
-    /* Botão Principal de Ação */
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-        color: var(--text-inverse) !important;
-        border: 1px solid #0f172a !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        padding: 7px 18px !important;
-        font-size: 12px !important;
-        letter-spacing: 0.1px !important;
-        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12) !important;
-        transition: opacity 0.2s ease, transform 0.1s ease !important;
-    }
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
-        opacity: 0.93 !important;
-        transform: translateY(-1px) !important;
     }
 
     /* Formulários e Inputs */
@@ -305,7 +313,7 @@ st.markdown("""
     label p {
         font-size: 11.5px !important;
         font-weight: 600 !important;
-        color: var(--text-headline) !important;
+        color: #0f172a !important;
     }
 
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
@@ -708,7 +716,7 @@ if menu == "Dashboard de Resumo":
 
         st.markdown(f"""
         <div class="metric-container">
-            <div class="metric-card" style="border-top: 3px solid #2563eb;">
+            <div class="metric-card" style="border-top: 3px solid #1d4ed8;">
                 <span>Remessas Auditadas</span>
                 <strong>{total_remessas}</strong>
             </div>
@@ -765,7 +773,7 @@ if menu == "Dashboard de Resumo":
 
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                barras_mes = alt.Chart(df_mes).mark_bar(color="#2563eb", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#1d4ed8", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
                     x=alt.X("mes_ano:N", title="Mês/Ano", sort=alt.SortField(field="ano_mes_sort", order="ascending"), axis=alt.Axis(labelAngle=0, labelColor="#64748b", titleColor="#475569")),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]), axis=alt.Axis(labelColor="#64748b", titleColor="#475569"))
                 )
@@ -998,7 +1006,7 @@ elif menu == "Folha de Impressão Cega":
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 2px solid #0f172a;
+            border-bottom: 2px solid #1d4ed8;
             padding-bottom: 6px;
             margin-bottom: 8px;
         }}
@@ -1006,7 +1014,7 @@ elif menu == "Folha de Impressão Cega":
             font-size: 13.5px;
             font-weight: 800;
             margin: 0 0 3px 0;
-            color: #0f172a;
+            color: #1d4ed8;
             letter-spacing: 0.2px;
             text-transform: uppercase;
         }}
@@ -1023,13 +1031,13 @@ elif menu == "Folha de Impressão Cega":
             margin-top: 6px;
         }}
         th {{
-            border: 1px solid #0f172a;
-            background-color: #f1f5f9;
+            border: 1px solid #1d4ed8;
+            background-color: #eff6ff;
             padding: 5px 6px;
             font-size: 10px;
             text-align: left;
             font-weight: 700;
-            color: #0f172a;
+            color: #1e40af;
         }}
         .signature-box {{
             margin-top: 24px;
@@ -1040,18 +1048,21 @@ elif menu == "Folha de Impressão Cega":
             padding-top: 4px;
         }}
         .btn-imprimir {{
-            background: #0f172a;
+            background: #1d4ed8;
             color: white;
             border: none;
-            padding: 6px 14px;
+            padding: 7px 16px;
             font-size: 11px;
             font-weight: 600;
             border-radius: 5px;
             cursor: pointer;
             margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(29, 78, 216, 0.3);
+            transition: all 0.15s ease;
         }}
         .btn-imprimir:hover {{
-            background: #1e293b;
+            background: #1e40af;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
         }}
         @media print {{
             .btn-imprimir {{
@@ -1151,7 +1162,7 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-card" style="border-top: 3px solid #2563eb;">
+                    <div class="metric-card" style="border-top: 3px solid #1d4ed8;">
                         <span>Remessa</span>
                         <strong>{remessa_alvo}</strong>
                     </div>
@@ -1195,7 +1206,7 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown("""
                 <div class="keyboard-hint">
-                    <span style="font-size: 13px; color: #2563eb; font-weight: 800; line-height: 1;">⇊</span>
+                    <span style="font-size: 13px; color: #1d4ed8; font-weight: 800; line-height: 1;">⇊</span>
                     <span><strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.</span>
                 </div>
                 """, unsafe_allow_html=True)
