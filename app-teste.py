@@ -25,35 +25,57 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# Estilização Corporativa: Marca em destaque, Botões Compactos e Layout Centralizado
+# Design System Corporativo Moderno (Slate / Indigo Tech)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+    :root {
+        --primary: #1e293b;
+        --primary-accent: #3b82f6;
+        --primary-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        --surface: #ffffff;
+        --surface-subtle: #f8fafc;
+        --border-color: #e2e8f0;
+        --border-focus: #cbd5e1;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --success: #059669;
+        --success-bg: #ecfdf5;
+        --success-border: #a7f3d0;
+        --danger: #dc2626;
+        --danger-bg: #fef2f2;
+        --danger-border: #fecaca;
+        --warning: #d97706;
+        --warning-bg: #fffbeb;
+        --warning-border: #fde68a;
+    }
+
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-size: 13px !important;
+        color: var(--text-main);
     }
 
     /* Container Centralizado */
     .block-container {
-        max-width: 1220px !important;
+        max-width: 1240px !important;
         margin-left: auto !important;
         margin-right: auto !important;
         padding-top: 1rem !important;
-        padding-bottom: 2rem !important;
+        padding-bottom: 2.2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
     }
 
-    /* Estilização da Top Bar */
+    /* Top Bar Container */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 6px 10px !important;
-        margin-bottom: 14px !important;
-        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.04) !important;
+        background: var(--surface) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        padding: 6px 12px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
     }
 
     /* Identidade Visual Ampliada */
@@ -64,167 +86,172 @@ st.markdown("""
         padding: 2px 0;
     }
     .brand-logo-img {
-        height: 44px;
-        max-width: 125px;
+        height: 40px;
+        max-width: 120px;
         object-fit: contain;
         display: block;
     }
     .brand-logo-icon {
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
-        background: linear-gradient(135deg, #0f134f, #273270, #494c8c);
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        background: var(--primary-gradient);
         color: #ffffff;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 21px;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.25);
+        font-size: 19px;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
     }
     .brand-text-col {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.15;
+        line-height: 1.2;
     }
     .brand-title {
-        font-size: 15px !important;
+        font-size: 14.5px !important;
         font-weight: 800 !important;
-        color: #0f134f !important;
+        color: var(--text-main) !important;
         letter-spacing: -0.3px;
         white-space: nowrap;
     }
     .brand-subtitle {
-        font-size: 10.5px !important;
+        font-size: 10px !important;
         font-weight: 600 !important;
-        color: #64748b !important;
-        letter-spacing: 0.4px;
+        color: var(--text-muted) !important;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
     }
 
-    /* Botões de Navegação Reduzidos / Compactos */
+    /* Botões de Navegação Ultra Compactos */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) div[data-testid="column"] button {
         height: 28px !important;
         min-height: 28px !important;
-        padding: 0 4px !important;
-        font-size: 10px !important;
+        padding: 0 2px !important;
+        font-size: 9.5px !important;
         font-weight: 600 !important;
-        border-radius: 4px !important;
+        border-radius: 6px !important;
+        letter-spacing: -0.2px !important;
         white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
         transition: all 0.15s ease-in-out !important;
     }
 
-    /* Botão Ativo da Top Bar */
+    /* Botão Ativo */
     .nav-btn-active button {
-        background: #0f134f !important;
+        background: var(--primary) !important;
         color: #ffffff !important;
-        border: 1px solid #0f134f !important;
-        box-shadow: 0 1px 4px rgba(15, 19, 79, 0.15) !important;
+        border: 1px solid var(--primary) !important;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18) !important;
     }
 
-    /* Botão Inativo da Top Bar */
+    /* Botão Inativo */
     .nav-btn-inactive button {
-        background: #f8fafc !important;
+        background: var(--surface-subtle) !important;
         color: #475569 !important;
-        border: 1px solid #cbd5e1 !important;
+        border: 1px solid var(--border-color) !important;
     }
     .nav-btn-inactive button:hover {
-        background: #e2e8f0 !important;
-        color: #0f134f !important;
-        border-color: #94a3b8 !important;
+        background: #f1f5f9 !important;
+        color: var(--text-main) !important;
+        border-color: var(--border-focus) !important;
     }
 
     /* Botão de Sincronização */
     .nav-btn-sync button {
         background: #ffffff !important;
-        color: #273270 !important;
-        border: 1px solid #273270 !important;
+        color: #475569 !important;
+        border: 1px solid var(--border-color) !important;
     }
     .nav-btn-sync button:hover {
-        background: #f1f5f9 !important;
+        background: var(--surface-subtle) !important;
+        color: var(--primary-accent) !important;
+        border-color: #bfdbfe !important;
     }
     
     .main-title {
-        font-size: 18px !important;
+        font-size: 18.5px !important;
         font-weight: 700 !important;
-        color: #0f134f !important;
+        color: var(--text-main) !important;
         margin-bottom: 3px !important;
-        padding-bottom: 5px !important;
-        border-bottom: 1.5px solid #e2e8f0 !important;
-        letter-spacing: -0.2px !important;
+        padding-bottom: 6px !important;
+        border-bottom: 1.5px solid var(--border-color) !important;
+        letter-spacing: -0.3px !important;
     }
     .sub-title {
         font-size: 11.5px !important;
-        color: #64748b !important;
-        margin-bottom: 14px !important;
+        color: var(--text-muted) !important;
+        margin-bottom: 16px !important;
     }
 
     .metric-container {
         display: flex;
-        gap: 10px;
-        margin-bottom: 16px;
+        gap: 12px;
+        margin-bottom: 18px;
         flex-wrap: wrap;
     }
     .metric-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-left: 4px solid #273270;
-        padding: 8px 12px;
-        border-radius: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-left: 3.5px solid var(--primary-accent);
+        padding: 9px 13px;
+        border-radius: 8px;
         flex: 1;
-        min-width: 150px;
-        box-shadow: 0 1px 4px rgba(15, 19, 79, 0.04);
-        transition: all 0.2s ease-in-out;
+        min-width: 155px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     .metric-card:hover {
         transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(15, 19, 79, 0.08);
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
     }
     .metric-card span {
         font-size: 10px !important;
-        color: #64748b;
+        color: var(--text-muted);
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.4px;
     }
     .metric-card strong {
         display: block;
-        font-size: 14px !important;
-        color: #0f134f;
-        margin-top: 2px;
+        font-size: 14.5px !important;
+        color: var(--text-main);
+        margin-top: 3px;
         font-weight: 700;
     }
 
     .keyboard-hint {
-        background-color: #f8fafc;
-        border: 1px solid #cbd5e1;
-        padding: 5px 8px;
-        border-radius: 4px;
-        font-size: 10.5px !important;
+        background-color: var(--surface-subtle);
+        border: 1px solid var(--border-color);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11px !important;
         color: #334155;
         display: inline-flex;
         align-items: center;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
     .keyboard-hint kbd {
         background: #ffffff;
-        border: 1px solid #94a3b8;
+        border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
-        padding: 1px 3px;
-        border-radius: 3px;
+        padding: 1px 4px;
+        border-radius: 4px;
         font-weight: 700;
         font-size: 10px !important;
-        color: #0f134f;
+        color: var(--text-main);
     }
 
     .divergence-box {
-        background-color: #fff7ed;
-        border: 1px solid #fdba74;
-        border-radius: 6px;
-        padding: 10px 12px;
-        margin-top: 8px;
-        margin-bottom: 8px;
+        background-color: var(--warning-bg);
+        border: 1px solid var(--warning-border);
+        border-radius: 8px;
+        padding: 11px 13px;
+        margin-top: 10px;
+        margin-bottom: 10px;
         font-size: 11.5px !important;
     }
 
@@ -232,28 +259,30 @@ st.markdown("""
     div[data-baseweb="input"] > div,
     input, textarea, select {
         font-size: 12px !important;
+        border-radius: 6px !important;
     }
     label p {
         font-size: 11.5px !important;
         font-weight: 600 !important;
-        color: #1e293b !important;
+        color: #334155 !important;
     }
 
+    /* Botões Primários Corporativos */
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
-        background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
+        background: var(--primary-gradient) !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 6px !important;
         font-weight: 600 !important;
-        padding: 6px 14px !important;
+        padding: 7px 16px !important;
         font-size: 12px !important;
-        letter-spacing: 0.2px !important;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.14) !important;
+        letter-spacing: 0.1px !important;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12) !important;
         transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
     }
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
-        opacity: 0.95 !important;
-        transform: scale(1.005) !important;
+        opacity: 0.94 !important;
+        transform: translateY(-1px) !important;
     }
 
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
@@ -554,11 +583,11 @@ if img_b64:
 else:
     logo_html = '<div class="brand-logo-icon">📦</div>'
 
-# Proporção: Marca com mais espaço (3.2) e botões mais compactos (0.85 a 0.95)
+# Proporção balanceada: Marca destacada e botões com largura otimizada
 with st.container(border=True):
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([3.2, 0.85, 0.85, 0.95, 0.85, 0.95, 0.45], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([3.4, 0.85, 0.85, 0.95, 0.85, 0.95, 0.45], vertical_alignment="center")
 
     with col_brand:
         st.markdown(f"""
@@ -595,11 +624,11 @@ with st.container(border=True):
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS E FILTROS DINÂMICOS)
+# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM PALETA CORPORATIVA SLATE/INDIGO)
 # ==============================================================================
 if menu == "Dashboard de Resumo":
     st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e índice de acuracidade em tempo real.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e acuracidade em tempo real.</div>', unsafe_allow_html=True)
 
     with st.spinner("Compilando indicadores..."):
         df_raw = carregar_dados_planilha()
@@ -663,13 +692,13 @@ if menu == "Dashboard de Resumo":
                 <span>Itens Conferidos</span>
                 <strong>{total_conferidos} de {total_itens}</strong>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-left-color: {'#059669' if taxa_acuracia >= 98 else '#dc2626'};">
                 <span>Acuracidade Físico x Remessa</span>
-                <strong style="color: {'#16a34a' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
+                <strong style="color: {'#059669' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-left-color: {'#dc2626' if len(itens_com_erro) > 0 else '#059669'};">
                 <span>Itens com Divergência</span>
-                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#16a34a'};">{len(itens_com_erro)}</strong>
+                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#059669'};">{len(itens_com_erro)}</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -712,9 +741,9 @@ if menu == "Dashboard de Resumo":
 
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=alt.SortField(field="ano_mes_sort", order="ascending"), axis=alt.Axis(labelAngle=0)),
-                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#3b82f6", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=alt.SortField(field="ano_mes_sort", order="ascending"), axis=alt.Axis(labelAngle=0, labelColor="#64748b", titleColor="#475569")),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]), axis=alt.Axis(labelColor="#64748b", titleColor="#475569"))
                 )
                 textos_mes = barras_mes.mark_text(
                     align="center",
@@ -722,7 +751,7 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#1e293b"
                 ).encode(
                     text="Qtd:Q"
                 )
@@ -766,9 +795,9 @@ if menu == "Dashboard de Resumo":
 
             if not df_dia.empty:
                 max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
-                barras_dia = alt.Chart(df_dia).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X("dia_str:N", title=f"Data ({filtro_mes_ano_dia if 'filtro_mes_ano_dia' in locals() else 'Período'})", sort=alt.SortField(field="dt_parsed", order="ascending"), axis=alt.Axis(labelAngle=-45)),
-                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
+                barras_dia = alt.Chart(df_dia).mark_bar(color="#1e293b", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+                    x=alt.X("dia_str:N", title=f"Data ({filtro_mes_ano_dia if 'filtro_mes_ano_dia' in locals() else 'Período'})", sort=alt.SortField(field="dt_parsed", order="ascending"), axis=alt.Axis(labelAngle=-45, labelColor="#64748b", titleColor="#475569")),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]), axis=alt.Axis(labelColor="#64748b", titleColor="#475569"))
                 )
                 textos_dia = barras_dia.mark_text(
                     align="center",
@@ -776,7 +805,7 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#0f172a"
                 ).encode(
                     text="Qtd:Q"
                 )
@@ -926,9 +955,9 @@ elif menu == "Folha de Impressão Cega":
                     desc_item = str(row.get('descricao', ''))
                     linhas_tabela += (
                         "<tr>"
-                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-weight: bold; font-size: 9.5px;'>{cod_item}</td>"
-                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-size: 9.5px; line-height: 1.15;'>{desc_item}</td>"
-                        "<td style='border: 1px solid #475569; padding: 3px 5px; height: 20px;'></td>"
+                        f"<td style='border: 1px solid #94a3b8; padding: 4px 6px; font-weight: 700; font-size: 9.5px; color: #0f172a;'>{cod_item}</td>"
+                        f"<td style='border: 1px solid #94a3b8; padding: 4px 6px; font-size: 9.5px; line-height: 1.2; color: #334155;'>{desc_item}</td>"
+                        "<td style='border: 1px solid #94a3b8; padding: 4px 6px; height: 22px;'></td>"
                         "</tr>"
                     )
 
@@ -938,54 +967,56 @@ elif menu == "Folha de Impressão Cega":
     <meta charset="utf-8">
     <style>
         body {{
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: #0f172a;
             margin: 0;
             padding: 4px;
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 1.5px solid #0f134f;
-            padding-bottom: 5px;
-            margin-bottom: 6px;
+            border-bottom: 2px solid #1e293b;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }}
         .header-title {{
             font-size: 13.5px;
-            font-weight: bold;
+            font-weight: 800;
             margin: 0 0 3px 0;
-            color: #0f134f;
+            color: #0f172a;
+            letter-spacing: 0.2px;
             text-transform: uppercase;
         }}
         .header-meta {{
             display: flex;
             gap: 16px;
             font-size: 10px;
-            color: #334155;
+            color: #475569;
             font-weight: 600;
         }}
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
+            margin-top: 6px;
         }}
         th {{
-            border: 1px solid #0f134f;
+            border: 1px solid #1e293b;
             background-color: #f1f5f9;
-            padding: 4px 5px;
+            padding: 5px 6px;
             font-size: 10px;
             text-align: left;
-            font-weight: bold;
+            font-weight: 700;
+            color: #0f172a;
         }}
         .signature-box {{
-            margin-top: 20px;
+            margin-top: 24px;
             display: flex;
             justify-content: space-between;
             font-size: 9.5px;
-            color: #334155;
+            color: #475569;
             padding-top: 4px;
         }}
         .btn-imprimir {{
-            background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
+            background: #1e293b;
             color: white;
             border: none;
             padding: 6px 14px;
@@ -994,6 +1025,10 @@ elif menu == "Folha de Impressão Cega":
             border-radius: 5px;
             cursor: pointer;
             margin-bottom: 8px;
+            transition: background 0.15s ease;
+        }}
+        .btn-imprimir:hover {{
+            background: #0f172a;
         }}
         @media print {{
             .btn-imprimir {{
@@ -1014,9 +1049,9 @@ elif menu == "Folha de Impressão Cega":
     <div class="header-box">
         <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
         <div class="header-meta">
-            <div>REMESSA: {remessa_selecionada}</div>
-            <div>LOCAL: {local_cad}</div>
-            <div>DATA: {data_cad}</div>
+            <div>REMESSA: <strong>{remessa_selecionada}</strong></div>
+            <div>LOCAL: <strong>{local_cad}</strong></div>
+            <div>DATA: <strong>{data_cad}</strong></div>
         </div>
     </div>
 
@@ -1137,7 +1172,7 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown("""
                 <div class="keyboard-hint">
-                    <span style="font-size: 14px; margin-right: 5px; color: #273270; font-weight: 800; line-height: 1;">⇊</span>
+                    <span style="font-size: 13px; margin-right: 6px; color: #3b82f6; font-weight: 800; line-height: 1;">⇊</span>
                     <span><strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1189,8 +1224,8 @@ elif menu == "Digitar Conferência Cega":
                     else:
                         st.markdown("""
                         <div class="divergence-box">
-                            <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
-                            <span style="font-size: 11px; color: #431407;">
+                            <strong style="color: #92400e;">📝 Justificativa Individual por Item Divergente</strong><br>
+                            <span style="font-size: 11px; color: #78350f;">
                                 Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
                             </span>
                         </div>
@@ -1273,9 +1308,9 @@ elif menu == "Digitar Conferência Cega":
                                     
                                     def colorir_status(val):
                                         if "Divergente" in str(val):
-                                            return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                            return "background-color: #fef2f2; color: #dc2626; font-weight: 700;"
                                         else:
-                                            return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+                                            return "background-color: #ecfdf5; color: #059669; font-weight: 600;"
 
                                     st.write("### 📊 Resultado da Conferência")
                                     
