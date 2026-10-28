@@ -25,7 +25,7 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# --- DESIGN SYSTEM CORPORATIVO: TIPOGRAFIA REDUZIDA & AZUL PRIMÁRIO COM SUPER FOCO ---
+# --- DESIGN SYSTEM CORPORATIVO: BOTÕES DE NAVEGAÇÃO PROPORCIONAIS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -38,7 +38,7 @@ st.markdown("""
 
     /* Container Centralizado */
     .block-container {
-        max-width: 1240px !important;
+        max-width: 1260px !important;
         margin-left: auto !important;
         margin-right: auto !important;
         padding-top: 0.8rem !important;
@@ -61,7 +61,7 @@ st.markdown("""
     .brand-box {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         padding: 2px 0;
     }
     .brand-logo-img {
@@ -91,7 +91,7 @@ st.markdown("""
     }
     .brand-title {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-size: 14.5px !important;
+        font-size: 14px !important;
         font-weight: 800 !important;
         color: #0f172a !important;
         letter-spacing: -0.3px;
@@ -105,32 +105,36 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Botões da TopBar com Letras Reduzidas para Encaixe Perfeito */
+    /* BOTÕES DA TOPBAR: Tipografia Proporcional e Sem Quebra */
     .nav-btn-active button,
     .nav-btn-inactive button,
     .nav-btn-sync button {
-        height: 34px !important;
-        min-height: 34px !important;
-        padding: 0 2px !important;
-        font-size: 9.5px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        padding: 0 8px !important;
+        font-size: 11.5px !important;
         font-weight: 600 !important;
-        border-radius: 6px !important;
-        letter-spacing: -0.2px !important;
+        border-radius: 7px !important;
+        letter-spacing: -0.15px !important;
         white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     .nav-btn-active button *,
     .nav-btn-inactive button *,
     .nav-btn-sync button * {
-        font-size: 9.5px !important;
+        font-size: 11.5px !important;
+        line-height: 1 !important;
     }
 
-    /* BOTÃO ATIVO: Azul Primário com Super Foco */
+    /* BOTÃO ATIVO: Azul Primário com Foco Acentuado */
     .nav-btn-active button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
         border: 1.5px solid #1d4ed8 !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 6px 14px rgba(29, 78, 216, 0.4) !important;
-        transform: scale(1.02) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 4px 12px rgba(29, 78, 216, 0.4) !important;
+        transform: scale(1.01) !important;
     }
     .nav-btn-active button,
     .nav-btn-active button *,
@@ -141,7 +145,7 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* BOTÃO INATIVO: Superfície Clara com Texto Escuro */
+    /* BOTÃO INATIVO: Superfície Clara Neutra */
     .nav-btn-inactive button {
         background-color: #f8fafc !important;
         background-image: none !important;
@@ -152,8 +156,8 @@ st.markdown("""
     .nav-btn-inactive button *,
     .nav-btn-inactive button p,
     .nav-btn-inactive button span {
-        color: #1e293b !important;
-        fill: #1e293b !important;
+        color: #334155 !important;
+        fill: #334155 !important;
         font-weight: 600 !important;
     }
     .nav-btn-inactive button:hover {
@@ -177,7 +181,7 @@ st.markdown("""
     .nav-btn-sync button p,
     .nav-btn-sync button span {
         color: #1d4ed8 !important;
-        font-size: 11px !important;
+        font-size: 13px !important;
         font-weight: 700 !important;
     }
     .nav-btn-sync button:hover {
@@ -620,11 +624,11 @@ if img_b64:
 else:
     logo_html = '<div class="brand-logo-icon">📦</div>'
 
-# Proporção balanceada e moderna
+# Proporção balanceada: Mais espaço para cada botão acomodar o texto em linha única
 with st.container(border=True):
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([3.2, 0.9, 0.9, 0.95, 0.9, 0.95, 0.4], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.7, 1.05, 1.0, 1.15, 1.0, 1.1, 0.45], vertical_alignment="center")
 
     with col_brand:
         st.markdown(f"""
