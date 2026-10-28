@@ -18,69 +18,70 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Função auxiliar para carregar a imagem local em Base64
+# Função utilitária para codificação de imagem em Base64
 def carregar_imagem_base64(caminho_imagem: str) -> str:
     if os.path.exists(caminho_imagem):
         with open(caminho_imagem, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# Estilização Corporativa Compacta, Top Bar Compacta e Centralização do Conteúdo
+# --- DESIGN SYSTEM CORPORATIVO: COMPACTAÇÃO PRECISA E EQUILIBRADA ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        font-size: 13px !important;
+        font-size: 12.5px !important;
+        color: #1e293b;
     }
 
-    /* Container Centralizado e Compacto */
+    /* Container Centralizado com Menos Folga Superior */
     .block-container {
-        max-width: 1180px !important;
+        max-width: 1240px !important;
         margin-left: auto !important;
         margin-right: auto !important;
-        padding-top: 1rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
+        padding-top: 0.6rem !important;
+        padding-bottom: 1.8rem !important;
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
     }
 
-    /* Estilização da Top Bar Compacta */
+    /* Top Bar Container Slim */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 8px !important;
-        padding: 4px 8px !important;
+        padding: 3px 8px !important;
         margin-bottom: 14px !important;
-        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.04) !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
     }
 
-    /* Identidade Visual / Logo Compacta */
+    /* Bloco da Logo e Título com Encaixe Preciso */
     .brand-box {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 1px 0;
+        padding: 0;
     }
     .brand-logo-img {
-        height: 30px;
+        height: 28px;
         max-width: 85px;
         object-fit: contain;
         display: block;
     }
     .brand-logo-icon {
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
-        background: linear-gradient(135deg, #0f134f, #273270, #494c8c);
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
         color: #ffffff;
         border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 15px;
-        box-shadow: 0 2px 4px rgba(15, 19, 79, 0.2);
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
     }
     .brand-text-col {
         display: flex;
@@ -89,77 +90,145 @@ st.markdown("""
         line-height: 1.1;
     }
     .brand-title {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-size: 12px !important;
         font-weight: 800 !important;
-        color: #0f134f !important;
+        color: #0f172a !important;
         letter-spacing: -0.2px;
         white-space: nowrap;
     }
     .brand-subtitle {
-        font-size: 9px !important;
-        font-weight: 600 !important;
+        font-size: 8px !important;
+        font-weight: 700 !important;
         color: #64748b !important;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
     }
 
-    /* Botões da barra de navegação superior */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) div[data-testid="column"] button {
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
+    /* BOTÕES DA TOPBAR: Altura Reduzida e Tipografia Ajustada */
+    .nav-btn-active button,
+    .nav-btn-inactive button,
+    .nav-btn-sync button {
+        height: 26px !important;
+        min-height: 26px !important;
+        max-height: 26px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
         font-weight: 600 !important;
         border-radius: 5px !important;
+        letter-spacing: -0.2px !important;
         white-space: nowrap !important;
-        transition: all 0.15s ease-in-out !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.15s ease !important;
+    }
+    .nav-btn-active button *,
+    .nav-btn-inactive button *,
+    .nav-btn-sync button * {
+        font-size: 10px !important;
+        line-height: 1 !important;
     }
 
-    /* Botão Ativo da Top Bar */
+    /* BOTÃO ATIVO: Destaque Azul Primário com Foco Nítido */
     .nav-btn-active button {
-        background: #0f134f !important;
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+        border: 1px solid #1d4ed8 !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.28), 0 2px 5px rgba(29, 78, 216, 0.3) !important;
+        transform: scale(1.01) !important;
+    }
+    .nav-btn-active button,
+    .nav-btn-active button *,
+    .nav-btn-active button p,
+    .nav-btn-active button span {
         color: #ffffff !important;
-        border: 1px solid #0f134f !important;
-        box-shadow: 0 1px 4px rgba(15, 19, 79, 0.15) !important;
+        fill: #ffffff !important;
+        font-weight: 700 !important;
     }
 
-    /* Botão Inativo da Top Bar */
+    /* BOTÃO INATIVO: Superfície Clara Neutra */
     .nav-btn-inactive button {
-        background: #f8fafc !important;
-        color: #475569 !important;
+        background-color: #f8fafc !important;
+        background-image: none !important;
         border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+    }
+    .nav-btn-inactive button,
+    .nav-btn-inactive button *,
+    .nav-btn-inactive button p,
+    .nav-btn-inactive button span {
+        color: #334155 !important;
+        fill: #334155 !important;
+        font-weight: 600 !important;
     }
     .nav-btn-inactive button:hover {
-        background: #e2e8f0 !important;
-        color: #0f134f !important;
-        border-color: #94a3b8 !important;
+        background-color: #eff6ff !important;
+        border-color: #93c5fd !important;
+    }
+    .nav-btn-inactive button:hover,
+    .nav-btn-inactive button:hover * {
+        color: #1d4ed8 !important;
     }
 
-    /* Botão de Sincronização */
+    /* BOTÃO SINCRONIZAR */
     .nav-btn-sync button {
-        background: #ffffff !important;
-        color: #273270 !important;
-        border: 1px solid #273270 !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .nav-btn-sync button,
+    .nav-btn-sync button *,
+    .nav-btn-sync button p,
+    .nav-btn-sync button span {
+        color: #1d4ed8 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
     }
     .nav-btn-sync button:hover {
-        background: #f1f5f9 !important;
+        background-color: #eff6ff !important;
+        border-color: #2563eb !important;
     }
-    
+
+    /* BOTÕES DE AÇÃO DO CORPO */
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+        border: 1px solid #1d4ed8 !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        padding: 6px 16px !important;
+        font-size: 11.5px !important;
+        letter-spacing: 0.1px !important;
+        box-shadow: 0 3px 8px rgba(29, 78, 216, 0.22) !important;
+        transition: all 0.15s ease !important;
+    }
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button,
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button * {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
+        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+        box-shadow: 0 0 0 2.5px rgba(37, 99, 235, 0.3), 0 5px 12px rgba(29, 78, 216, 0.3) !important;
+    }
+
+    /* Tipografia de Cabeçalho da Página */
     .main-title {
-        font-size: 18px !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 16.5px !important;
         font-weight: 700 !important;
-        color: #0f134f !important;
-        margin-bottom: 3px !important;
-        padding-bottom: 5px !important;
+        color: #0f172a !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 4px !important;
         border-bottom: 1.5px solid #e2e8f0 !important;
         letter-spacing: -0.2px !important;
     }
     .sub-title {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         color: #64748b !important;
-        margin-bottom: 14px !important;
+        margin-bottom: 12px !important;
     }
 
+    /* Grid de Métricas / KPIs Compactas */
     .metric-container {
         display: flex;
         gap: 10px;
@@ -169,97 +238,82 @@ st.markdown("""
     .metric-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 4px solid #273270;
-        padding: 8px 12px;
         border-radius: 6px;
+        padding: 8px 12px;
         flex: 1;
         min-width: 150px;
-        box-shadow: 0 1px 4px rgba(15, 19, 79, 0.04);
-        transition: all 0.2s ease-in-out;
-    }
-    .metric-card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(15, 19, 79, 0.08);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
     }
     .metric-card span {
-        font-size: 10px !important;
+        font-size: 9.5px !important;
         color: #64748b;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.4px;
+        display: block;
     }
     .metric-card strong {
-        display: block;
-        font-size: 14px !important;
-        color: #0f134f;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 14.5px !important;
+        color: #0f172a;
         margin-top: 2px;
         font-weight: 700;
+        display: block;
     }
 
+    /* Dica de Teclado */
     .keyboard-hint {
-        background-color: #f8fafc;
-        border: 1px solid #cbd5e1;
-        padding: 5px 8px;
-        border-radius: 4px;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 4px 8px;
+        border-radius: 5px;
         font-size: 10.5px !important;
         color: #334155;
         display: inline-flex;
         align-items: center;
+        gap: 5px;
         margin-bottom: 8px;
     }
     .keyboard-hint kbd {
-        background: #ffffff;
-        border: 1px solid #94a3b8;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
-        padding: 1px 3px;
+        padding: 1px 4px;
         border-radius: 3px;
         font-weight: 700;
-        font-size: 10px !important;
-        color: #0f134f;
+        font-size: 9.5px !important;
+        color: #0f172a;
     }
 
+    /* Box de Divergência */
     .divergence-box {
-        background-color: #fff7ed;
-        border: 1px solid #fdba74;
+        background-color: #fffbeb;
+        border: 1px solid #fde68a;
         border-radius: 6px;
-        padding: 10px 12px;
+        padding: 9px 12px;
         margin-top: 8px;
-        margin-bottom: 8px;
-        font-size: 11.5px !important;
+        margin-bottom: 10px;
+        font-size: 11px !important;
     }
 
+    /* Formulários e Inputs Compactos */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
-        font-size: 12px !important;
+        font-size: 11.5px !important;
+        border-radius: 5px !important;
     }
     label p {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
-        color: #1e293b !important;
-    }
-
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
-        background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        padding: 6px 14px !important;
-        font-size: 12px !important;
-        letter-spacing: 0.2px !important;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.14) !important;
-        transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
-    }
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
-        opacity: 0.95 !important;
-        transform: scale(1.005) !important;
+        color: #0f172a !important;
     }
 
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
     }
 
+    /* Formatação de Impressão */
     @media print {
         header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print, [data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
             display: none !important;
@@ -535,12 +589,12 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR COMPACTA) ---
+# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR SLIM) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 opcoes_menu = [
-    ("📊 Resumo", "Dashboard de Resumo"),
+    ("📊 Dashboard", "Dashboard de Resumo"),
     ("📥 Importar", "Importar Remessa"),
     ("🖨️ Folha Cega", "Folha de Impressão Cega"),
     ("🔍 Conferir", "Digitar Conferência Cega"),
@@ -554,11 +608,11 @@ if img_b64:
 else:
     logo_html = '<div class="brand-logo-icon">📦</div>'
 
-# Container protetor da Top Bar compacto e alinhado
+# Proporção Compacta e Precisa
 with st.container(border=True):
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.0, 1.0, 1.0, 1.1, 1.0, 1.1, 0.5], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.5, 1.05, 1.0, 1.15, 1.0, 1.15, 0.4], vertical_alignment="center")
 
     with col_brand:
         st.markdown(f"""
@@ -595,11 +649,11 @@ with st.container(border=True):
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS)
+# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM PALETA CORPORATIVA SLATE/INDIGO)
 # ==============================================================================
 if menu == "Dashboard de Resumo":
     st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e índice de acuracidade em tempo real.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Monitoramento de produtividade, divergências e acuracidade em tempo real.</div>', unsafe_allow_html=True)
 
     with st.spinner("Compilando indicadores..."):
         df_raw = carregar_dados_planilha()
@@ -616,7 +670,11 @@ if menu == "Dashboard de Resumo":
         df["dt_parsed"] = pd.to_datetime(dt_parsed, errors="coerce")
         df["dt_parsed"] = df["dt_parsed"].fillna(pd.Timestamp.now().normalize())
 
+        df["ano"] = df["dt_parsed"].dt.year.astype(str)
+        df["mes_num"] = df["dt_parsed"].dt.month
+        df["mes_nome"] = df["dt_parsed"].dt.strftime("%B")
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
+        df["ano_mes_sort"] = df["dt_parsed"].dt.strftime("%Y-%m")
         df["dia_str"] = df["dt_parsed"].dt.strftime("%d/%m/%Y")
 
         df["quantidade"] = pd.to_numeric(df.get("quantidade", 0), errors="coerce").fillna(0.0)
@@ -651,21 +709,21 @@ if menu == "Dashboard de Resumo":
 
         st.markdown(f"""
         <div class="metric-container">
-            <div class="metric-card">
+            <div class="metric-card" style="border-top: 3px solid #1d4ed8;">
                 <span>Remessas Auditadas</span>
                 <strong>{total_remessas}</strong>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-top: 3px solid #64748b;">
                 <span>Itens Conferidos</span>
                 <strong>{total_conferidos} de {total_itens}</strong>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-top: 3px solid {'#059669' if taxa_acuracia >= 98 else '#dc2626'};">
                 <span>Acuracidade Físico x Remessa</span>
-                <strong style="color: {'#16a34a' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
+                <strong style="color: {'#059669' if taxa_acuracia >= 98 else '#dc2626'};">{taxa_acuracia:.1f}%</strong>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-top: 3px solid {'#dc2626' if len(itens_com_erro) > 0 else '#059669'};">
                 <span>Itens com Divergência</span>
-                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#16a34a'};">{len(itens_com_erro)}</strong>
+                <strong style="color: {'#dc2626' if len(itens_com_erro) > 0 else '#059669'};">{len(itens_com_erro)}</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -674,14 +732,43 @@ if menu == "Dashboard de Resumo":
 
         col_g1, col_g2 = st.columns(2)
 
+        # ----------------- GRÁFICO 1: EVOLUÇÃO MENSAL COM FILTRO DE ANO -----------------
         with col_g1:
             st.markdown("##### 📅 Conferências Realizadas por Mês")
-            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
+            
+            df_conferidos_base = df_filtrado[df_filtrado["conferencia"].notna()].copy()
+            anos_disponiveis = sorted(df_conferidos_base["ano"].dropna().unique().tolist(), reverse=True)
+            
+            if anos_disponiveis:
+                ano_atual_str = str(datetime.now().year)
+                idx_ano_default = anos_disponiveis.index(ano_atual_str) if ano_atual_str in anos_disponiveis else 0
+                
+                filtro_ano_graf1 = st.selectbox(
+                    "Filtrar Ano do Gráfico:",
+                    ["TODOS OS ANOS"] + anos_disponiveis,
+                    index=idx_ano_default + 1 if ano_atual_str in anos_disponiveis else 0,
+                    key="sel_ano_graf1"
+                )
+                
+                if filtro_ano_graf1 != "TODOS OS ANOS":
+                    df_graf_mes_base = df_conferidos_base[df_conferidos_base["ano"] == filtro_ano_graf1]
+                else:
+                    df_graf_mes_base = df_conferidos_base
+            else:
+                df_graf_mes_base = df_conferidos_base
+
+            df_mes = (
+                df_graf_mes_base.groupby(["ano_mes_sort", "mes_ano"])
+                .size()
+                .reset_index(name="Qtd")
+                .sort_values("ano_mes_sort")
+            )
+
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
-                barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
-                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
+                barras_mes = alt.Chart(df_mes).mark_bar(color="#1d4ed8", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=alt.SortField(field="ano_mes_sort", order="ascending"), axis=alt.Axis(labelAngle=0, labelColor="#64748b", titleColor="#475569")),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]), axis=alt.Axis(labelColor="#64748b", titleColor="#475569"))
                 )
                 textos_mes = barras_mes.mark_text(
                     align="center",
@@ -689,23 +776,53 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#0f172a"
                 ).encode(
                     text="Qtd:Q"
                 )
                 chart_mes = (barras_mes + textos_mes).properties(height=260)
                 st.altair_chart(chart_mes, use_container_width=True)
             else:
-                st.info("Sem dados suficientes para a evolução mensal.")
+                st.info("Sem dados suficientes para a evolução mensal no filtro selecionado.")
 
+        # ----------------- GRÁFICO 2: VOLUME POR DIA COM FILTRO DE MÊS/ANO -----------------
         with col_g2:
             st.markdown("##### 📊 Volume de Conferência por Dia")
-            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
+            
+            meses_anos_disponiveis = (
+                df_conferidos_base[["ano_mes_sort", "mes_ano"]]
+                .drop_duplicates()
+                .sort_values("ano_mes_sort", ascending=False)
+            )
+
+            if not meses_anos_disponiveis.empty:
+                lista_opcoes_mes_ano = meses_anos_disponiveis["mes_ano"].tolist()
+                mes_ano_atual = datetime.now().strftime("%m/%Y")
+                idx_mes_default = lista_opcoes_mes_ano.index(mes_ano_atual) if mes_ano_atual in lista_opcoes_mes_ano else 0
+
+                filtro_mes_ano_dia = st.selectbox(
+                    "Filtrar Mês/Ano Específico:",
+                    lista_opcoes_mes_ano,
+                    index=idx_mes_default,
+                    key="sel_mes_ano_graf2"
+                )
+
+                df_graf_dia_base = df_conferidos_base[df_conferidos_base["mes_ano"] == filtro_mes_ano_dia]
+            else:
+                df_graf_dia_base = df_conferidos_base
+
+            df_dia = (
+                df_graf_dia_base.groupby(["dt_parsed", "dia_str"])
+                .size()
+                .reset_index(name="Qtd")
+                .sort_values("dt_parsed")
+            )
+
             if not df_dia.empty:
                 max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
-                barras_dia = alt.Chart(df_dia).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
-                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
+                barras_dia = alt.Chart(df_dia).mark_bar(color="#0f172a", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+                    x=alt.X("dia_str:N", title=f"Data ({filtro_mes_ano_dia if 'filtro_mes_ano_dia' in locals() else 'Período'})", sort=alt.SortField(field="dt_parsed", order="ascending"), axis=alt.Axis(labelAngle=-45, labelColor="#64748b", titleColor="#475569")),
+                    y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]), axis=alt.Axis(labelColor="#64748b", titleColor="#475569"))
                 )
                 textos_dia = barras_dia.mark_text(
                     align="center",
@@ -713,14 +830,14 @@ if menu == "Dashboard de Resumo":
                     dy=-4,
                     fontSize=11,
                     fontWeight=600,
-                    color="#0f134f"
+                    color="#0f172a"
                 ).encode(
                     text="Qtd:Q"
                 )
                 chart_dia = (barras_dia + textos_dia).properties(height=260)
                 st.altair_chart(chart_dia, use_container_width=True)
             else:
-                st.info("Sem dados suficientes para a evolução diária.")
+                st.info("Sem conferências realizadas no Mês/Ano selecionado.")
 
         st.write("---")
         col_e1, col_e2 = st.columns(2)
@@ -863,9 +980,9 @@ elif menu == "Folha de Impressão Cega":
                     desc_item = str(row.get('descricao', ''))
                     linhas_tabela += (
                         "<tr>"
-                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-weight: bold; font-size: 9.5px;'>{cod_item}</td>"
-                        f"<td style='border: 1px solid #475569; padding: 3px 5px; font-size: 9.5px; line-height: 1.15;'>{desc_item}</td>"
-                        "<td style='border: 1px solid #475569; padding: 3px 5px; height: 20px;'></td>"
+                        f"<td style='border: 1px solid #94a3b8; padding: 4px 6px; font-weight: 700; font-size: 9.5px; color: #0f172a;'>{cod_item}</td>"
+                        f"<td style='border: 1px solid #94a3b8; padding: 4px 6px; font-size: 9.5px; line-height: 1.2; color: #334155;'>{desc_item}</td>"
+                        "<td style='border: 1px solid #94a3b8; padding: 4px 6px; height: 22px;'></td>"
                         "</tr>"
                     )
 
@@ -875,62 +992,70 @@ elif menu == "Folha de Impressão Cega":
     <meta charset="utf-8">
     <style>
         body {{
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: #0f172a;
             margin: 0;
             padding: 4px;
             background-color: #ffffff;
         }}
         .header-box {{
-            border-bottom: 1.5px solid #0f134f;
-            padding-bottom: 5px;
-            margin-bottom: 6px;
+            border-bottom: 2px solid #1d4ed8;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }}
         .header-title {{
             font-size: 13.5px;
-            font-weight: bold;
+            font-weight: 800;
             margin: 0 0 3px 0;
-            color: #0f134f;
+            color: #1d4ed8;
+            letter-spacing: 0.2px;
             text-transform: uppercase;
         }}
         .header-meta {{
             display: flex;
             gap: 16px;
             font-size: 10px;
-            color: #334155;
+            color: #475569;
             font-weight: 600;
         }}
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
+            margin-top: 6px;
         }}
         th {{
-            border: 1px solid #0f134f;
-            background-color: #f1f5f9;
-            padding: 4px 5px;
+            border: 1px solid #1d4ed8;
+            background-color: #eff6ff;
+            padding: 5px 6px;
             font-size: 10px;
             text-align: left;
-            font-weight: bold;
+            font-weight: 700;
+            color: #1e40af;
         }}
         .signature-box {{
-            margin-top: 20px;
+            margin-top: 24px;
             display: flex;
             justify-content: space-between;
             font-size: 9.5px;
-            color: #334155;
+            color: #475569;
             padding-top: 4px;
         }}
         .btn-imprimir {{
-            background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
+            background: #1d4ed8;
             color: white;
             border: none;
-            padding: 6px 14px;
+            padding: 7px 16px;
             font-size: 11px;
             font-weight: 600;
             border-radius: 5px;
             cursor: pointer;
             margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(29, 78, 216, 0.3);
+            transition: all 0.15s ease;
+        }}
+        .btn-imprimir:hover {{
+            background: #1e40af;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
         }}
         @media print {{
             .btn-imprimir {{
@@ -951,9 +1076,9 @@ elif menu == "Folha de Impressão Cega":
     <div class="header-box">
         <div class="header-title">FOLHA DE CONFERÊNCIA FÍSICA (CONTAGEM CEGA)</div>
         <div class="header-meta">
-            <div>REMESSA: {remessa_selecionada}</div>
-            <div>LOCAL: {local_cad}</div>
-            <div>DATA: {data_cad}</div>
+            <div>REMESSA: <strong>{remessa_selecionada}</strong></div>
+            <div>LOCAL: <strong>{local_cad}</strong></div>
+            <div>DATA: <strong>{data_cad}</strong></div>
         </div>
     </div>
 
@@ -1030,19 +1155,19 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-top: 3px solid #1d4ed8;">
                         <span>Remessa</span>
                         <strong>{remessa_alvo}</strong>
                     </div>
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-top: 3px solid #64748b;">
                         <span>Local / Depósito</span>
                         <strong>{local_atual}</strong>
                     </div>
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-top: 3px solid #64748b;">
                         <span>Data de Importação</span>
                         <strong>{data_atual_br}</strong>
                     </div>
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-top: 3px solid #0f172a;">
                         <span>Itens a Conferir</span>
                         <strong>{len(dados_trabalho)}</strong>
                     </div>
@@ -1074,7 +1199,7 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown("""
                 <div class="keyboard-hint">
-                    <span style="font-size: 14px; margin-right: 5px; color: #273270; font-weight: 800; line-height: 1;">⇊</span>
+                    <span style="font-size: 13px; color: #1d4ed8; font-weight: 800; line-height: 1;">⇊</span>
                     <span><strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1126,8 +1251,8 @@ elif menu == "Digitar Conferência Cega":
                     else:
                         st.markdown("""
                         <div class="divergence-box">
-                            <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
-                            <span style="font-size: 11px; color: #431407;">
+                            <strong style="color: #92400e;">📝 Justificativa Individual por Item Divergente</strong><br>
+                            <span style="font-size: 11px; color: #78350f;">
                                 Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
                             </span>
                         </div>
@@ -1208,11 +1333,12 @@ elif menu == "Digitar Conferência Cega":
                                     
                                     df_resultado = pd.DataFrame(resultados_exibicao)
                                     
+                                    # Formatação de Contraste no Styler
                                     def colorir_status(val):
                                         if "Divergente" in str(val):
-                                            return "background-color: #fee2e2; color: #991b1b; font-weight: 700;"
+                                            return "background-color: #fef2f2; color: #991b1b; font-weight: 700; border: 1px solid #fecaca;"
                                         else:
-                                            return "background-color: #f0fdf4; color: #15803d; font-weight: 600;"
+                                            return "background-color: #ecfdf5; color: #065f46; font-weight: 600; border: 1px solid #a7f3d0;"
 
                                     st.write("### 📊 Resultado da Conferência")
                                     
