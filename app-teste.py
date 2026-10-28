@@ -25,39 +25,39 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# --- DESIGN SYSTEM CORPORATIVO: BOTÕES DE NAVEGAÇÃO ULTRA COMPACTOS ---
+# --- DESIGN SYSTEM CORPORATIVO: COMPACTAÇÃO PRECISA E EQUILIBRADA ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        font-size: 13px !important;
+        font-size: 12.5px !important;
         color: #1e293b;
     }
 
-    /* Container Centralizado */
+    /* Container Centralizado com Menos Folga Superior */
     .block-container {
-        max-width: 1260px !important;
+        max-width: 1240px !important;
         margin-left: auto !important;
         margin-right: auto !important;
-        padding-top: 0.8rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
+        padding-top: 0.6rem !important;
+        padding-bottom: 1.8rem !important;
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
     }
 
-    /* Top Bar Container Compacto */
+    /* Top Bar Container Slim */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 4px 10px !important;
-        margin-bottom: 16px !important;
-        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
+        border-radius: 8px !important;
+        padding: 3px 8px !important;
+        margin-bottom: 14px !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
     }
 
-    /* Bloco da Logo e Título */
+    /* Bloco da Logo e Título com Encaixe Preciso */
     .brand-box {
         display: flex;
         align-items: center;
@@ -65,23 +65,23 @@ st.markdown("""
         padding: 0;
     }
     .brand-logo-img {
-        height: 32px;
-        max-width: 95px;
+        height: 28px;
+        max-width: 85px;
         object-fit: contain;
         display: block;
     }
     .brand-logo-icon {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
         background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
         color: #ffffff;
         border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
-        box-shadow: 0 2px 8px rgba(29, 78, 216, 0.25);
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
     }
     .brand-text-col {
         display: flex;
@@ -91,37 +91,37 @@ st.markdown("""
     }
     .brand-title {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
         color: #0f172a !important;
-        letter-spacing: -0.3px;
+        letter-spacing: -0.2px;
         white-space: nowrap;
     }
     .brand-subtitle {
-        font-size: 8.5px !important;
+        font-size: 8px !important;
         font-weight: 700 !important;
         color: #64748b !important;
         letter-spacing: 0.5px;
         text-transform: uppercase;
     }
 
-    /* BOTÕES DA TOPBAR ULTRA COMPACTOS (Slim / Micro) */
+    /* BOTÕES DA TOPBAR: Altura Reduzida e Tipografia Ajustada */
     .nav-btn-active button,
     .nav-btn-inactive button,
     .nav-btn-sync button {
-        height: 28px !important;
-        min-height: 28px !important;
-        max-height: 28px !important;
+        height: 26px !important;
+        min-height: 26px !important;
+        max-height: 26px !important;
         padding: 0 4px !important;
         font-size: 10px !important;
         font-weight: 600 !important;
         border-radius: 5px !important;
         letter-spacing: -0.2px !important;
         white-space: nowrap !important;
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transition: all 0.15s ease !important;
     }
     .nav-btn-active button *,
     .nav-btn-inactive button *,
@@ -130,11 +130,11 @@ st.markdown("""
         line-height: 1 !important;
     }
 
-    /* BOTÃO ATIVO: Azul Primário com Foco Acentuado */
+    /* BOTÃO ATIVO: Destaque Azul Primário com Foco Nítido */
     .nav-btn-active button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
-        border: 1.5px solid #1d4ed8 !important;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3), 0 3px 8px rgba(29, 78, 216, 0.35) !important;
+        border: 1px solid #1d4ed8 !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.28), 0 2px 5px rgba(29, 78, 216, 0.3) !important;
         transform: scale(1.01) !important;
     }
     .nav-btn-active button,
@@ -164,7 +164,6 @@ st.markdown("""
     .nav-btn-inactive button:hover {
         background-color: #eff6ff !important;
         border-color: #93c5fd !important;
-        box-shadow: 0 1px 4px rgba(37, 99, 235, 0.1) !important;
     }
     .nav-btn-inactive button:hover,
     .nav-btn-inactive button:hover * {
@@ -188,23 +187,19 @@ st.markdown("""
     .nav-btn-sync button:hover {
         background-color: #eff6ff !important;
         border-color: #2563eb !important;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
-    }
-    .nav-btn-sync button:hover * {
-        color: #1d4ed8 !important;
     }
 
     /* BOTÕES DE AÇÃO DO CORPO */
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
         border: 1px solid #1d4ed8 !important;
-        border-radius: 7px !important;
+        border-radius: 6px !important;
         font-weight: 600 !important;
-        padding: 8px 20px !important;
-        font-size: 12.5px !important;
+        padding: 6px 16px !important;
+        font-size: 11.5px !important;
         letter-spacing: 0.1px !important;
-        box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25) !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 3px 8px rgba(29, 78, 216, 0.22) !important;
+        transition: all 0.15s ease !important;
     }
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button,
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button * {
@@ -213,66 +208,55 @@ st.markdown("""
     }
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
         background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 8px 18px rgba(29, 78, 216, 0.38) !important;
-        transform: translateY(-1px) scale(1.01) !important;
-    }
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:focus,
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:active {
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.45), 0 4px 8px rgba(29, 78, 216, 0.3) !important;
-        transform: scale(0.99) !important;
+        box-shadow: 0 0 0 2.5px rgba(37, 99, 235, 0.3), 0 5px 12px rgba(29, 78, 216, 0.3) !important;
     }
 
     /* Tipografia de Cabeçalho da Página */
     .main-title {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-size: 18px !important;
+        font-size: 16.5px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         margin-bottom: 2px !important;
-        padding-bottom: 6px !important;
+        padding-bottom: 4px !important;
         border-bottom: 1.5px solid #e2e8f0 !important;
-        letter-spacing: -0.3px !important;
+        letter-spacing: -0.2px !important;
     }
     .sub-title {
-        font-size: 12px !important;
+        font-size: 11px !important;
         color: #64748b !important;
-        margin-bottom: 16px !important;
+        margin-bottom: 12px !important;
     }
 
-    /* Grid de Métricas / KPIs */
+    /* Grid de Métricas / KPIs Compactas */
     .metric-container {
         display: flex;
-        gap: 12px;
-        margin-bottom: 20px;
+        gap: 10px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
     }
     .metric-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 10px 14px;
+        border-radius: 6px;
+        padding: 8px 12px;
         flex: 1;
-        min-width: 160px;
+        min-width: 150px;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
     }
     .metric-card span {
-        font-size: 10px !important;
+        font-size: 9.5px !important;
         color: #64748b;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
         display: block;
     }
     .metric-card strong {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-size: 16px !important;
+        font-size: 14.5px !important;
         color: #0f172a;
-        margin-top: 3px;
+        margin-top: 2px;
         font-weight: 700;
         display: block;
     }
@@ -281,24 +265,23 @@ st.markdown("""
     .keyboard-hint {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 11px !important;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-size: 10.5px !important;
         color: #334155;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+        gap: 5px;
+        margin-bottom: 8px;
     }
     .keyboard-hint kbd {
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         border-bottom-width: 2px;
-        padding: 1px 5px;
-        border-radius: 4px;
+        padding: 1px 4px;
+        border-radius: 3px;
         font-weight: 700;
-        font-size: 10px !important;
+        font-size: 9.5px !important;
         color: #0f172a;
     }
 
@@ -306,28 +289,28 @@ st.markdown("""
     .divergence-box {
         background-color: #fffbeb;
         border: 1px solid #fde68a;
-        border-radius: 8px;
-        padding: 12px 14px;
-        margin-top: 10px;
-        margin-bottom: 12px;
-        font-size: 11.5px !important;
+        border-radius: 6px;
+        padding: 9px 12px;
+        margin-top: 8px;
+        margin-bottom: 10px;
+        font-size: 11px !important;
     }
 
-    /* Formulários e Inputs */
+    /* Formulários e Inputs Compactos */
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
-        font-size: 12px !important;
-        border-radius: 6px !important;
+        font-size: 11.5px !important;
+        border-radius: 5px !important;
     }
     label p {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
         color: #0f172a !important;
     }
 
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
     }
 
     /* Formatação de Impressão */
@@ -606,7 +589,7 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR) ---
+# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR SLIM) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
@@ -625,11 +608,11 @@ if img_b64:
 else:
     logo_html = '<div class="brand-logo-icon">📦</div>'
 
-# Proporção Compacta: Logo alinhada e botões slim ocupando toda a linha sem aperto
+# Proporção Compacta e Precisa
 with st.container(border=True):
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.6, 1.05, 1.0, 1.15, 1.0, 1.15, 0.45], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.5, 1.05, 1.0, 1.15, 1.0, 1.15, 0.4], vertical_alignment="center")
 
     with col_brand:
         st.markdown(f"""
