@@ -945,12 +945,10 @@ elif menu == "Digitar Conferência Cega":
                 dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
                 df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-                # Card com SVG nativo inline para o ícone de seta dupla para baixo
+                # Card com caractere nativo de seta dupla para baixo (renderização garantida)
                 st.markdown("""
                 <div class="keyboard-hint">
-                    <svg style="vertical-align: middle; margin-right: 6px; fill: #273270;" width="16" height="16" viewBox="0 0 24 24">
-                        <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z M16.59 3.59L12 8.17 7.41 3.59 6 5l6 6 6-6z"/>
-                    </svg>
+                    <span style="font-size: 15px; margin-right: 6px; color: #273270; font-weight: 800; line-height: 1;">⇊</span>
                     <span><strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.</span>
                 </div>
                 """, unsafe_allow_html=True)
