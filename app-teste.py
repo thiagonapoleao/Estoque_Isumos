@@ -16,26 +16,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização Corporativa Compacta + Carregamento de Ícones Material Symbols
+# Estilização Corporativa Compacta
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
-
-    .material-symbols-outlined {
-        font-family: 'Material Symbols Outlined' !important;
-        font-weight: normal;
-        font-style: normal;
-        font-size: 16px;
-        line-height: 1;
-        letter-spacing: normal;
-        text-transform: none;
-        display: inline-block;
-        white-space: nowrap;
-        word-wrap: normal;
-        direction: ltr;
-        vertical-align: middle;
-    }
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -100,7 +84,8 @@ st.markdown("""
         border-radius: 5px;
         font-size: 11px !important;
         color: #334155;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         margin-bottom: 10px;
     }
     .keyboard-hint kbd {
@@ -960,11 +945,13 @@ elif menu == "Digitar Conferência Cega":
                 dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
                 df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-                # Card com ícone Material Symbols renderizado e texto explicativo
+                # Card com SVG nativo inline para o ícone de seta dupla para baixo
                 st.markdown("""
                 <div class="keyboard-hint">
-                    <span class="material-symbols-outlined" style="color: #273270; vertical-align: text-bottom; margin-right: 4px;">keyboard_double_arrow_down</span>
-                    <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para descer direto para a próxima linha.
+                    <svg style="vertical-align: middle; margin-right: 6px; fill: #273270;" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z M16.59 3.59L12 8.17 7.41 3.59 6 5l6 6 6-6z"/>
+                    </svg>
+                    <span><strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.</span>
                 </div>
                 """, unsafe_allow_html=True)
 
