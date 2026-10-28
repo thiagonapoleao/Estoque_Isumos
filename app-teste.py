@@ -7,6 +7,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
 import altair as alt
+import os
+import base64
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -15,6 +17,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Função auxiliar para carregar a imagem local em Base64
+def carregar_imagem_base64(caminho_imagem: str) -> str:
+    if os.path.exists(caminho_imagem):
+        with open(caminho_imagem, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return ""
 
 # Estilização Corporativa Compacta & Top Navigation Bar em Container
 st.markdown("""
@@ -50,6 +59,12 @@ st.markdown("""
         align-items: center;
         gap: 10px;
         padding: 2px 0;
+    }
+    .brand-logo-img {
+        height: 38px;
+        max-width: 110px;
+        object-fit: contain;
+        display: block;
     }
     .brand-logo-icon {
         width: 36px;
@@ -527,17 +542,23 @@ opcoes_menu = [
     ("👤 Conferentes", "Cadastrar Novo Conferente")
 ]
 
-# Container protetor da Top Bar (elimina cortes e esconde o menu)
+# Preparação do logotipo em Base64
+img_b64 = carregar_imagem_base64("Logotipo.png")
+if img_b64:
+    logo_html = f'<img src="data:image/png;base64,{img_b64}" class="brand-logo-img" alt="Logo">'
+else:
+    logo_html = '<div class="brand-logo-icon">📦</div>'
+
+# Container protetor da Top Bar (elimina cortes e organiza os elementos)
 with st.container(border=True):
-    # Marcador oculto para o seletor CSS do container
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.0, 1.1, 1.1, 1.2, 1.1, 1.2, 0.6], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.3, 1.1, 1.1, 1.2, 1.1, 1.2, 0.6], vertical_alignment="center")
 
     with col_brand:
-        st.markdown("""
+        st.markdown(f"""
         <div class="brand-box">
-            <div class="brand-logo-icon">📦</div>
+            {logo_html}
             <div class="brand-text-col">
                 <span class="brand-title">ESTOQUE & CONFERÊNCIA</span>
                 <span class="brand-subtitle">Gestão Integrada</span>
