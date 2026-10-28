@@ -25,7 +25,7 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# --- DESIGN SYSTEM CORPORATIVO: AZUL PRIMÁRIO (#1d4ed8 / #2563eb) & DESTAQUE DE FOCO ---
+# --- DESIGN SYSTEM CORPORATIVO: TIPOGRAFIA REDUZIDA & AZUL PRIMÁRIO COM SUPER FOCO ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -105,22 +105,27 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Reset e Altura Padrão dos Botões da TopBar */
+    /* Botões da TopBar com Letras Reduzidas para Encaixe Perfeito */
     .nav-btn-active button,
     .nav-btn-inactive button,
     .nav-btn-sync button {
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0 2px !important;
+        font-size: 9.5px !important;
         font-weight: 600 !important;
-        border-radius: 7px !important;
-        letter-spacing: -0.1px !important;
+        border-radius: 6px !important;
+        letter-spacing: -0.2px !important;
         white-space: nowrap !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
+    .nav-btn-active button *,
+    .nav-btn-inactive button *,
+    .nav-btn-sync button * {
+        font-size: 9.5px !important;
+    }
 
-    /* BOTÃO ATIVO: Azul Primário com Super Foco (Escala + Glow Elevado + Anel de Destaque) */
+    /* BOTÃO ATIVO: Azul Primário com Super Foco */
     .nav-btn-active button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
         border: 1.5px solid #1d4ed8 !important;
@@ -136,7 +141,7 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* BOTÃO INATIVO: Superfície Clara com Texto Elegante */
+    /* BOTÃO INATIVO: Superfície Clara com Texto Escuro */
     .nav-btn-inactive button {
         background-color: #f8fafc !important;
         background-image: none !important;
@@ -172,6 +177,7 @@ st.markdown("""
     .nav-btn-sync button p,
     .nav-btn-sync button span {
         color: #1d4ed8 !important;
+        font-size: 11px !important;
         font-weight: 700 !important;
     }
     .nav-btn-sync button:hover {
@@ -183,7 +189,7 @@ st.markdown("""
         color: #1d4ed8 !important;
     }
 
-    /* TODOS OS BOTÕES DE AÇÃO DO PROJETO (Salvar, Gravar, Processar, Cadastrar): Azul Primário */
+    /* BOTÕES DE AÇÃO DO CORPO */
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
         border: 1px solid #1d4ed8 !important;
@@ -200,7 +206,6 @@ st.markdown("""
         color: #ffffff !important;
         font-weight: 600 !important;
     }
-    /* Foco de Maior Destaque ao Passar o Mouse ou Clicar */
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
         background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 8px 18px rgba(29, 78, 216, 0.38) !important;
@@ -601,7 +606,7 @@ if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
 opcoes_menu = [
-    ("📊 Resumo", "Dashboard de Resumo"),
+    ("📊 Dashboard", "Dashboard de Resumo"),
     ("📥 Importar", "Importar Remessa"),
     ("🖨️ Folha Cega", "Folha de Impressão Cega"),
     ("🔍 Conferir", "Digitar Conferência Cega"),
