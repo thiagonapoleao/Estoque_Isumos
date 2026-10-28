@@ -13,10 +13,10 @@ st.set_page_config(
     page_title="Gestão de Conferência de Mercadorias",
     page_icon="📦",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Estilização Corporativa Compacta
+# Estilização Corporativa Compacta & Top Navigation Bar
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -24,6 +24,78 @@ st.markdown("""
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-size: 13px !important;
+    }
+
+    /* Redução de espaçamentos superiores padrão do Streamlit */
+    .block-container {
+        padding-top: 1.2rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+
+    /* Top Bar Header */
+    .top-navbar-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 6px 14px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(15, 19, 79, 0.05);
+    }
+    .top-navbar-brand {
+        font-size: 14px !important;
+        font-weight: 800 !important;
+        color: #0f134f !important;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Estilização dos botões de navegação da Top Bar */
+    div[data-testid="column"] button[kind="secondary"],
+    div[data-testid="column"] button[kind="primary"] {
+        height: 38px !important;
+        min-height: 38px !important;
+        padding: 0 10px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    /* Botão Ativo da Navegação Superior */
+    .nav-btn-active button {
+        background: #0f134f !important;
+        color: #ffffff !important;
+        border: 1px solid #0f134f !important;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.2) !important;
+    }
+
+    /* Botão Inativo da Navegação Superior */
+    .nav-btn-inactive button {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .nav-btn-inactive button:hover {
+        background: #e2e8f0 !important;
+        color: #0f134f !important;
+        border-color: #94a3b8 !important;
+    }
+
+    /* Botão de Sincronização */
+    .nav-btn-sync button {
+        background: #ffffff !important;
+        color: #273270 !important;
+        border: 1px solid #273270 !important;
+    }
+    .nav-btn-sync button:hover {
+        background: #f1f5f9 !important;
     }
     
     .main-title {
@@ -120,8 +192,8 @@ st.markdown("""
         color: #1e293b !important;
     }
 
-    div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
-        background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
+    /* Estilo para botões de ação do corpo da página (Submit/Save) */
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         color: #ffffff !important;
         border: none !important;
@@ -133,33 +205,9 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
         transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
     }
-    div.stButton > button:hover {
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
         opacity: 0.95 !important;
         transform: scale(1.005) !important;
-    }
-
-    [data-testid="stSidebar"] {
-        background-color: #f8fafc;
-        border-right: 1px solid #e2e8f0;
-    }
-    .sidebar-brand {
-        padding: 10px 12px;
-        border-radius: 6px;
-        background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
-        color: #ffffff;
-        margin-bottom: 14px;
-        text-align: center;
-        font-weight: 700;
-        font-size: 13px !important;
-        letter-spacing: 0.4px;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.15);
-    }
-    .sidebar-menu-title {
-        font-size: 10.5px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        margin-bottom: 6px !important;
-        letter-spacing: 0.5px !important;
     }
 
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
@@ -167,7 +215,7 @@ st.markdown("""
     }
 
     @media print {
-        header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
+        header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print, .top-navbar-container, [data-testid="column"] {
             display: none !important;
         }
         .printable-area {
@@ -437,33 +485,51 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO POR BOTÕES ---
+# --- 5. NAVEGAÇÃO SUPERIOR CORPORATIVA (TOP NAVBAR) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
-st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
-st.sidebar.markdown('<p class="sidebar-menu-title">MENU DE NAVEGAÇÃO</p>', unsafe_allow_html=True)
-
 opcoes_menu = [
-    "Dashboard de Resumo",
-    "Importar Remessa",
-    "Folha de Impressão Cega",
-    "Digitar Conferência Cega",
-    "Cadastrar Novo Conferente"
+    ("📊 Dashboard de Resumo", "Dashboard de Resumo"),
+    ("📥 Importar Remessa", "Importar Remessa"),
+    ("🖨️ Folha de Impressão Cega", "Folha de Impressão Cega"),
+    ("🔍 Digitar Conferência Cega", "Digitar Conferência Cega"),
+    ("👤 Cadastrar Conferente", "Cadastrar Novo Conferente")
 ]
 
-for opcao in opcoes_menu:
-    is_active = (st.session_state.menu_selecionado == opcao)
-    rotulo = f"▶ {opcao}" if is_active else opcao
-    if st.sidebar.button(rotulo, key=f"btn_nav_{opcao}", use_container_width=True):
-        st.session_state.menu_selecionado = opcao
-        st.rerun()
+# Layout da barra superior em colunas: [Brand] + [5 abas] + [Botão de Refresh]
+col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([1.6, 1.3, 1.2, 1.4, 1.4, 1.2, 0.7])
 
-st.sidebar.write("---")
-if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_width=True):
-    carregar_dados_planilha_cached.clear()
-    carregar_lista_conferentes.clear()
-    st.rerun()
+with col_brand:
+    st.markdown("""
+    <div style="padding-top: 8px;">
+        <span style="font-weight: 800; font-size: 14px; color: #0f134f; letter-spacing: -0.2px;">📦 ESTOQUE & CONFERÊNCIA</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+nav_cols = [c1, c2, c3, c4, c5]
+
+for idx, (label_icone, chave_menu) in enumerate(opcoes_menu):
+    with nav_cols[idx]:
+        is_active = (st.session_state.menu_selecionado == chave_menu)
+        classe_css = "nav-btn-active" if is_active else "nav-btn-inactive"
+        
+        st.markdown(f'<div class="{classe_css}">', unsafe_allow_html=True)
+        if st.button(label_icone, key=f"nav_top_{chave_menu}", use_container_width=True):
+            if st.session_state.menu_selecionado != chave_menu:
+                st.session_state.menu_selecionado = chave_menu
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+with col_sync:
+    st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
+    if st.button("🔄", key="btn_top_sync", help="Sincronizar dados com a planilha Google", use_container_width=True):
+        carregar_dados_planilha_cached.clear()
+        carregar_lista_conferentes.clear()
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown("<hr style='margin-top: 6px; margin-bottom: 20px; border: 0; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
@@ -945,7 +1011,6 @@ elif menu == "Digitar Conferência Cega":
                 dados_trabalho["conferencia"] = dados_trabalho["conferencia"].fillna(0.0)
                 df_editavel = dados_trabalho[["row_index", "produto", "descricao", "conferencia"]].copy()
 
-                # Card com caractere nativo de seta dupla para baixo (renderização garantida)
                 st.markdown("""
                 <div class="keyboard-hint">
                     <span style="font-size: 15px; margin-right: 6px; color: #273270; font-weight: 800; line-height: 1;">⇊</span>
