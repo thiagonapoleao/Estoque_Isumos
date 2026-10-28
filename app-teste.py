@@ -25,7 +25,7 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# Estilização Corporativa Compacta, Top Bar Compacta e Centralização do Conteúdo
+# Estilização Corporativa: Marca em destaque, Botões Compactos e Layout Centralizado
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -35,9 +35,9 @@ st.markdown("""
         font-size: 13px !important;
     }
 
-    /* Container Centralizado e Compacto */
+    /* Container Centralizado */
     .block-container {
-        max-width: 1180px !important;
+        max-width: 1220px !important;
         margin-left: auto !important;
         margin-right: auto !important;
         padding-top: 1rem !important;
@@ -46,71 +46,71 @@ st.markdown("""
         padding-right: 1.5rem !important;
     }
 
-    /* Estilização da Top Bar Compacta */
+    /* Estilização da Top Bar */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 8px !important;
-        padding: 4px 8px !important;
+        padding: 6px 10px !important;
         margin-bottom: 14px !important;
         box-shadow: 0 2px 8px rgba(15, 19, 79, 0.04) !important;
     }
 
-    /* Identidade Visual / Logo Compacta */
+    /* Identidade Visual Ampliada */
     .brand-box {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 1px 0;
+        gap: 12px;
+        padding: 2px 0;
     }
     .brand-logo-img {
-        height: 30px;
-        max-width: 85px;
+        height: 44px;
+        max-width: 125px;
         object-fit: contain;
         display: block;
     }
     .brand-logo-icon {
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
         background: linear-gradient(135deg, #0f134f, #273270, #494c8c);
         color: #ffffff;
-        border-radius: 6px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 15px;
-        box-shadow: 0 2px 4px rgba(15, 19, 79, 0.2);
+        font-size: 21px;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.25);
     }
     .brand-text-col {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.1;
+        line-height: 1.15;
     }
     .brand-title {
-        font-size: 12px !important;
+        font-size: 15px !important;
         font-weight: 800 !important;
         color: #0f134f !important;
-        letter-spacing: -0.2px;
+        letter-spacing: -0.3px;
         white-space: nowrap;
     }
     .brand-subtitle {
-        font-size: 9px !important;
+        font-size: 10.5px !important;
         font-weight: 600 !important;
         color: #64748b !important;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.4px;
         text-transform: uppercase;
     }
 
-    /* Botões da barra de navegação superior */
+    /* Botões de Navegação Reduzidos / Compactos */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) div[data-testid="column"] button {
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
         font-weight: 600 !important;
-        border-radius: 5px !important;
+        border-radius: 4px !important;
         white-space: nowrap !important;
         transition: all 0.15s ease-in-out !important;
     }
@@ -535,7 +535,7 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR COMPACTA) ---
+# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
@@ -554,11 +554,11 @@ if img_b64:
 else:
     logo_html = '<div class="brand-logo-icon">📦</div>'
 
-# Container protetor da Top Bar compacto e alinhado
+# Proporção: Marca com mais espaço (3.2) e botões mais compactos (0.85 a 0.95)
 with st.container(border=True):
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.0, 1.0, 1.0, 1.1, 1.0, 1.1, 0.5], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([3.2, 0.85, 0.85, 0.95, 0.85, 0.95, 0.45], vertical_alignment="center")
 
     with col_brand:
         st.markdown(f"""
