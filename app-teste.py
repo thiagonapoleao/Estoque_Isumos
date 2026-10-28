@@ -25,7 +25,7 @@ def carregar_imagem_base64(caminho_imagem: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# Estilização Corporativa Compacta & Top Navigation Bar em Container
+# Estilização Corporativa Compacta, Top Bar Compacta e Centralização do Conteúdo
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -35,93 +35,95 @@ st.markdown("""
         font-size: 13px !important;
     }
 
-    /* Redução de espaçamentos superiores padrão do Streamlit */
+    /* Container Centralizado e Compacto */
     .block-container {
+        max-width: 1180px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
         padding-top: 1rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
     }
 
-    /* Estilização do Container Unificado da Top Bar */
+    /* Estilização da Top Bar Compacta */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
         background: #ffffff !important;
-        border: 1.5px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 6px 12px !important;
-        margin-bottom: 16px !important;
-        box-shadow: 0 4px 12px rgba(15, 19, 79, 0.05) !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 4px 8px !important;
+        margin-bottom: 14px !important;
+        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.04) !important;
     }
 
-    /* Identidade Visual / Logo Container */
+    /* Identidade Visual / Logo Compacta */
     .brand-box {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 2px 0;
+        gap: 8px;
+        padding: 1px 0;
     }
     .brand-logo-img {
-        height: 38px;
-        max-width: 110px;
+        height: 30px;
+        max-width: 85px;
         object-fit: contain;
         display: block;
     }
     .brand-logo-icon {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
         background: linear-gradient(135deg, #0f134f, #273270, #494c8c);
         color: #ffffff;
-        border-radius: 8px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.25);
+        font-size: 15px;
+        box-shadow: 0 2px 4px rgba(15, 19, 79, 0.2);
     }
     .brand-text-col {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1.15;
+        line-height: 1.1;
     }
     .brand-title {
-        font-size: 13.5px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
         color: #0f134f !important;
         letter-spacing: -0.2px;
         white-space: nowrap;
     }
     .brand-subtitle {
-        font-size: 10px !important;
+        font-size: 9px !important;
         font-weight: 600 !important;
         color: #64748b !important;
         letter-spacing: 0.3px;
         text-transform: uppercase;
     }
 
-    /* Botões de navegação dentro da barra */
-    div[data-testid="column"] button[kind="secondary"],
-    div[data-testid="column"] button[kind="primary"] {
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 0 8px !important;
-        font-size: 11.5px !important;
+    /* Botões da barra de navegação superior */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) div[data-testid="column"] button {
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
-        border-radius: 6px !important;
+        border-radius: 5px !important;
         white-space: nowrap !important;
-        transition: all 0.2s ease-in-out !important;
+        transition: all 0.15s ease-in-out !important;
     }
 
-    /* Botão Ativo da Navegação Superior */
+    /* Botão Ativo da Top Bar */
     .nav-btn-active button {
         background: #0f134f !important;
         color: #ffffff !important;
         border: 1px solid #0f134f !important;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.2) !important;
+        box-shadow: 0 1px 4px rgba(15, 19, 79, 0.15) !important;
     }
 
-    /* Botão Inativo da Navegação Superior */
+    /* Botão Inativo da Top Bar */
     .nav-btn-inactive button {
         background: #f8fafc !important;
         color: #475569 !important;
@@ -144,75 +146,75 @@ st.markdown("""
     }
     
     .main-title {
-        font-size: 19px !important;
+        font-size: 18px !important;
         font-weight: 700 !important;
         color: #0f134f !important;
-        margin-bottom: 4px !important;
-        padding-bottom: 6px !important;
+        margin-bottom: 3px !important;
+        padding-bottom: 5px !important;
         border-bottom: 1.5px solid #e2e8f0 !important;
         letter-spacing: -0.2px !important;
     }
     .sub-title {
-        font-size: 12px !important;
+        font-size: 11.5px !important;
         color: #64748b !important;
-        margin-bottom: 16px !important;
+        margin-bottom: 14px !important;
     }
 
     .metric-container {
         display: flex;
-        gap: 12px;
-        margin-bottom: 18px;
+        gap: 10px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
     }
     .metric-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-left: 4px solid #273270;
-        padding: 10px 14px;
-        border-radius: 8px;
+        padding: 8px 12px;
+        border-radius: 6px;
         flex: 1;
-        min-width: 170px;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.04);
+        min-width: 150px;
+        box-shadow: 0 1px 4px rgba(15, 19, 79, 0.04);
         transition: all 0.2s ease-in-out;
     }
     .metric-card:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(15, 19, 79, 0.08);
+        box-shadow: 0 3px 8px rgba(15, 19, 79, 0.08);
     }
     .metric-card span {
-        font-size: 10.5px !important;
+        font-size: 10px !important;
         color: #64748b;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.3px;
     }
     .metric-card strong {
         display: block;
-        font-size: 15px !important;
+        font-size: 14px !important;
         color: #0f134f;
-        margin-top: 3px;
+        margin-top: 2px;
         font-weight: 700;
     }
 
     .keyboard-hint {
         background-color: #f8fafc;
         border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        border-radius: 5px;
-        font-size: 11px !important;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 10.5px !important;
         color: #334155;
         display: inline-flex;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .keyboard-hint kbd {
         background: #ffffff;
         border: 1px solid #94a3b8;
         border-bottom-width: 2px;
-        padding: 1px 4px;
+        padding: 1px 3px;
         border-radius: 3px;
         font-weight: 700;
-        font-size: 10.5px !important;
+        font-size: 10px !important;
         color: #0f134f;
     }
 
@@ -220,34 +222,33 @@ st.markdown("""
         background-color: #fff7ed;
         border: 1px solid #fdba74;
         border-radius: 6px;
-        padding: 12px 14px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        font-size: 12px !important;
+        padding: 10px 12px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        font-size: 11.5px !important;
     }
 
     div[data-baseweb="select"] > div,
     div[data-baseweb="input"] > div,
     input, textarea, select {
-        font-size: 12.5px !important;
+        font-size: 12px !important;
     }
     label p {
-        font-size: 12px !important;
+        font-size: 11.5px !important;
         font-weight: 600 !important;
         color: #1e293b !important;
     }
 
-    /* Estilo para botões de ação do corpo da página (Submit/Save) */
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 6px !important;
         font-weight: 600 !important;
-        padding: 7px 16px !important;
-        font-size: 12.5px !important;
+        padding: 6px 14px !important;
+        font-size: 12px !important;
         letter-spacing: 0.2px !important;
-        box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.14) !important;
         transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
     }
     div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
@@ -256,12 +257,16 @@ st.markdown("""
     }
 
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
-        font-size: 12px !important;
+        font-size: 11.5px !important;
     }
 
     @media print {
         header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print, [data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
             display: none !important;
+        }
+        .block-container {
+            max-width: 100% !important;
+            padding: 0 !important;
         }
         .printable-area {
             display: block !important;
@@ -530,7 +535,7 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR CONTAINER) ---
+# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR COMPACTA) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
@@ -549,11 +554,11 @@ if img_b64:
 else:
     logo_html = '<div class="brand-logo-icon">📦</div>'
 
-# Container protetor da Top Bar (elimina cortes e organiza os elementos)
+# Container protetor da Top Bar compacto e alinhado
 with st.container(border=True):
     st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
     
-    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.3, 1.1, 1.1, 1.2, 1.1, 1.2, 0.6], vertical_alignment="center")
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.0, 1.0, 1.0, 1.1, 1.0, 1.1, 0.5], vertical_alignment="center")
 
     with col_brand:
         st.markdown(f"""
@@ -1069,7 +1074,7 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown("""
                 <div class="keyboard-hint">
-                    <span style="font-size: 15px; margin-right: 6px; color: #273270; font-weight: 800; line-height: 1;">⇊</span>
+                    <span style="font-size: 14px; margin-right: 5px; color: #273270; font-weight: 800; line-height: 1;">⇊</span>
                     <span><strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1122,7 +1127,7 @@ elif menu == "Digitar Conferência Cega":
                         st.markdown("""
                         <div class="divergence-box">
                             <strong style="color: #9a3412;">📝 Justificativa Individual por Item Divergente</strong><br>
-                            <span style="font-size: 11.5px; color: #431407;">
+                            <span style="font-size: 11px; color: #431407;">
                                 Informe a justificativa específica para cada produto que apresentou divergência. Ela será gravada na linha exata do produto (Coluna J).
                             </span>
                         </div>
