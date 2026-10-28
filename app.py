@@ -7,23 +7,140 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import streamlit.components.v1 as components
 import altair as alt
+import os
+import base64
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Gestão de Conferência de Mercadorias",
     page_icon="📦",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Estilização Corporativa Compacta
+# Função auxiliar para carregar a imagem local em Base64
+def carregar_imagem_base64(caminho_imagem: str) -> str:
+    if os.path.exists(caminho_imagem):
+        with open(caminho_imagem, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return ""
+
+# Estilização Corporativa Compacta & Top Navigation Bar em Container
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-size: 13px !important;
+    }
+
+    /* Redução de espaçamentos superiores padrão do Streamlit */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+
+    /* Estilização do Container Unificado da Top Bar */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 6px 12px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 4px 12px rgba(15, 19, 79, 0.05) !important;
+    }
+
+    /* Identidade Visual / Logo Container */
+    .brand-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 2px 0;
+    }
+    .brand-logo-img {
+        height: 38px;
+        max-width: 110px;
+        object-fit: contain;
+        display: block;
+    }
+    .brand-logo-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        background: linear-gradient(135deg, #0f134f, #273270, #494c8c);
+        color: #ffffff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.25);
+    }
+    .brand-text-col {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.15;
+    }
+    .brand-title {
+        font-size: 13.5px !important;
+        font-weight: 800 !important;
+        color: #0f134f !important;
+        letter-spacing: -0.2px;
+        white-space: nowrap;
+    }
+    .brand-subtitle {
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    /* Botões de navegação dentro da barra */
+    div[data-testid="column"] button[kind="secondary"],
+    div[data-testid="column"] button[kind="primary"] {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 8px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        white-space: nowrap !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    /* Botão Ativo da Navegação Superior */
+    .nav-btn-active button {
+        background: #0f134f !important;
+        color: #ffffff !important;
+        border: 1px solid #0f134f !important;
+        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.2) !important;
+    }
+
+    /* Botão Inativo da Navegação Superior */
+    .nav-btn-inactive button {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .nav-btn-inactive button:hover {
+        background: #e2e8f0 !important;
+        color: #0f134f !important;
+        border-color: #94a3b8 !important;
+    }
+
+    /* Botão de Sincronização */
+    .nav-btn-sync button {
+        background: #ffffff !important;
+        color: #273270 !important;
+        border: 1px solid #273270 !important;
+    }
+    .nav-btn-sync button:hover {
+        background: #f1f5f9 !important;
     }
     
     .main-title {
@@ -84,7 +201,8 @@ st.markdown("""
         border-radius: 5px;
         font-size: 11px !important;
         color: #334155;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         margin-bottom: 10px;
     }
     .keyboard-hint kbd {
@@ -119,8 +237,8 @@ st.markdown("""
         color: #1e293b !important;
     }
 
-    div.stButton > button, div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
-        background: -webkit-linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
+    /* Estilo para botões de ação do corpo da página (Submit/Save) */
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
         background: linear-gradient(90deg, #0f134f, #273270, #494c8c) !important;
         color: #ffffff !important;
         border: none !important;
@@ -132,33 +250,9 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(15, 19, 79, 0.16) !important;
         transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out !important;
     }
-    div.stButton > button:hover {
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
         opacity: 0.95 !important;
         transform: scale(1.005) !important;
-    }
-
-    [data-testid="stSidebar"] {
-        background-color: #f8fafc;
-        border-right: 1px solid #e2e8f0;
-    }
-    .sidebar-brand {
-        padding: 10px 12px;
-        border-radius: 6px;
-        background: linear-gradient(90deg, #0f134f, #273270, #494c8c);
-        color: #ffffff;
-        margin-bottom: 14px;
-        text-align: center;
-        font-weight: 700;
-        font-size: 13px !important;
-        letter-spacing: 0.4px;
-        box-shadow: 0 2px 6px rgba(15, 19, 79, 0.15);
-    }
-    .sidebar-menu-title {
-        font-size: 10.5px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        margin-bottom: 6px !important;
-        letter-spacing: 0.5px !important;
     }
 
     [data-testid="stDataFrame"] div, [data-testid="stDataEditor"] div {
@@ -166,7 +260,7 @@ st.markdown("""
     }
 
     @media print {
-        header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print {
+        header, .stSidebar, .stButton, [data-testid="stToolbar"], footer, .no-print, [data-testid="stVerticalBlockBorderWrapper"]:has(.topbar-wrapper-marker) {
             display: none !important;
         }
         .printable-area {
@@ -230,16 +324,13 @@ def enviar_dados_apps_script(payload: dict) -> dict:
         return {"status": "error", "message": f"Falha de conexão: {str(ex)}"}
 
 def normalizar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    """Padroniza tipos e remove anomalias de formatação vindas do Sheets."""
     if df.empty:
         return df
 
-    # Normaliza a coluna Remessa para texto sem '.0' e sem espaços
     if "remessa" in df.columns:
         df["remessa"] = df["remessa"].fillna("").astype(str)
         df["remessa"] = df["remessa"].str.replace(r"\.0$", "", regex=True).str.strip()
 
-    # Normaliza campos de texto
     for col in ["produto", "descricao", "local", "conferente", "observacao"]:
         if col in df.columns:
             df[col] = df[col].fillna("").astype(str).str.strip()
@@ -439,33 +530,62 @@ def extrair_excel(uploaded_file):
 
     return itens
 
-# --- 5. NAVEGAÇÃO POR BOTÕES ---
+# --- 5. NAVEGAÇÃO SUPERIOR ENVOLVIDA EM CONTAINER (TOP BAR CONTAINER) ---
 if "menu_selecionado" not in st.session_state:
     st.session_state.menu_selecionado = "Dashboard de Resumo"
 
-st.sidebar.markdown('<div class="sidebar-brand">ESTOQUE & CONFERÊNCIA</div>', unsafe_allow_html=True)
-st.sidebar.markdown('<p class="sidebar-menu-title">MENU DE NAVEGAÇÃO</p>', unsafe_allow_html=True)
-
 opcoes_menu = [
-    "Dashboard de Resumo",
-    "Importar Remessa",
-    "Folha de Impressão Cega",
-    "Digitar Conferência Cega",
-    "Cadastrar Novo Conferente"
+    ("📊 Resumo", "Dashboard de Resumo"),
+    ("📥 Importar", "Importar Remessa"),
+    ("🖨️ Folha Cega", "Folha de Impressão Cega"),
+    ("🔍 Conferir", "Digitar Conferência Cega"),
+    ("👤 Conferentes", "Cadastrar Novo Conferente")
 ]
 
-for opcao in opcoes_menu:
-    is_active = (st.session_state.menu_selecionado == opcao)
-    rotulo = f"▶ {opcao}" if is_active else opcao
-    if st.sidebar.button(rotulo, key=f"btn_nav_{opcao}", use_container_width=True):
-        st.session_state.menu_selecionado = opcao
-        st.rerun()
+# Preparação do logotipo em Base64
+img_b64 = carregar_imagem_base64("Logotipo.png")
+if img_b64:
+    logo_html = f'<img src="data:image/png;base64,{img_b64}" class="brand-logo-img" alt="Logo">'
+else:
+    logo_html = '<div class="brand-logo-icon">📦</div>'
 
-st.sidebar.write("---")
-if st.sidebar.button("🔄 Sincronizar / Atualizar Planilha", use_container_width=True):
-    carregar_dados_planilha_cached.clear()
-    carregar_lista_conferentes.clear()
-    st.rerun()
+# Container protetor da Top Bar (elimina cortes e organiza os elementos)
+with st.container(border=True):
+    st.markdown('<div class="topbar-wrapper-marker" style="display:none;"></div>', unsafe_allow_html=True)
+    
+    col_brand, c1, c2, c3, c4, c5, col_sync = st.columns([2.3, 1.1, 1.1, 1.2, 1.1, 1.2, 0.6], vertical_alignment="center")
+
+    with col_brand:
+        st.markdown(f"""
+        <div class="brand-box">
+            {logo_html}
+            <div class="brand-text-col">
+                <span class="brand-title">ESTOQUE & CONFERÊNCIA</span>
+                <span class="brand-subtitle">Gestão Integrada</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    nav_cols = [c1, c2, c3, c4, c5]
+    for idx, (label_icone, chave_menu) in enumerate(opcoes_menu):
+        with nav_cols[idx]:
+            is_active = (st.session_state.menu_selecionado == chave_menu)
+            classe_css = "nav-btn-active" if is_active else "nav-btn-inactive"
+            
+            st.markdown(f'<div class="{classe_css}">', unsafe_allow_html=True)
+            if st.button(label_icone, key=f"nav_top_{chave_menu}", use_container_width=True):
+                if st.session_state.menu_selecionado != chave_menu:
+                    st.session_state.menu_selecionado = chave_menu
+                    st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_sync:
+        st.markdown('<div class="nav-btn-sync">', unsafe_allow_html=True)
+        if st.button("🔄", key="btn_top_sync", help="Sincronizar dados com a planilha Google", use_container_width=True):
+            carregar_dados_planilha_cached.clear()
+            carregar_lista_conferentes.clear()
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 menu = st.session_state.menu_selecionado
 
@@ -682,16 +802,16 @@ elif menu == "Importar Remessa":
                 linhas_para_sheets = []
                 for item in itens:
                     linhas_para_sheets.append([
-                        remessa_limpa,             # A: Remessa
-                        nome_local,                # B: Estoque
-                        data_importacao,           # C: Horario / Data
-                        str(item["Produto"]).strip(), # D: Codigo
+                        remessa_limpa,                  # A: Remessa
+                        nome_local,                     # B: Estoque
+                        data_importacao,                # C: Horario / Data
+                        str(item["Produto"]).strip(),   # D: Codigo
                         str(item["Descricao"]).strip(), # E: Descrição
-                        float(item["Quantidade"]), # F: Quantidade
-                        "",                        # G: Conferencia
-                        "",                        # H: Divergencia
-                        "",                        # I: Conferente
-                        ""                         # J: Justificstiva para Divergencia
+                        float(item["Quantidade"]),      # F: Quantidade
+                        "",                             # G: Conferencia
+                        "",                             # H: Divergencia
+                        "",                             # I: Conferente
+                        ""                              # J: Justificativa para Divergencia
                     ])
 
                 with st.spinner("Gravando linhas na aba Conferencia..."):
@@ -716,7 +836,6 @@ elif menu == "Folha de Impressão Cega":
     if df.empty:
         st.info("Nenhuma remessa encontrada na aba Conferencia.")
     else:
-        # Extrai lista de remessas sem duplicatas e sem vazios
         remessas_disponiveis = [
             str(r).strip() for r in df["remessa"].dropna().unique().tolist()
             if str(r).strip() not in ["", "nan", "None"]
@@ -950,7 +1069,8 @@ elif menu == "Digitar Conferência Cega":
 
                 st.markdown("""
                 <div class="keyboard-hint">
-                    ⚡ <strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.
+                    <span style="font-size: 15px; margin-right: 6px; color: #273270; font-weight: 800; line-height: 1;">⇊</span>
+                    <span><strong>Agilidade de Digitação:</strong> Digite o valor e aperte <kbd>Enter</kbd> para salvar e descer direto para o próximo produto.</span>
                 </div>
                 """, unsafe_allow_html=True)
 
