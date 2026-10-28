@@ -595,7 +595,7 @@ with st.container(border=True):
 menu = st.session_state.menu_selecionado
 
 # ==============================================================================
-# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS)
+# OPÇÃO: DASHBOARD DE RESUMO (ALTAIR COM VALORES NAS BARRAS E FILTROS DINÂMICOS)
 # ==============================================================================
 if menu == "Dashboard de Resumo":
     st.markdown('<div class="main-title">📊 Resumo Gerencial de Conferência Cega</div>', unsafe_allow_html=True)
@@ -616,7 +616,11 @@ if menu == "Dashboard de Resumo":
         df["dt_parsed"] = pd.to_datetime(dt_parsed, errors="coerce")
         df["dt_parsed"] = df["dt_parsed"].fillna(pd.Timestamp.now().normalize())
 
+        df["ano"] = df["dt_parsed"].dt.year.astype(str)
+        df["mes_num"] = df["dt_parsed"].dt.month
+        df["mes_nome"] = df["dt_parsed"].dt.strftime("%B")
         df["mes_ano"] = df["dt_parsed"].dt.strftime("%m/%Y")
+        df["ano_mes_sort"] = df["dt_parsed"].dt.strftime("%Y-%m")
         df["dia_str"] = df["dt_parsed"].dt.strftime("%d/%m/%Y")
 
         df["quantidade"] = pd.to_numeric(df.get("quantidade", 0), errors="coerce").fillna(0.0)
@@ -674,13 +678,42 @@ if menu == "Dashboard de Resumo":
 
         col_g1, col_g2 = st.columns(2)
 
+        # ----------------- GRÁFICO 1: EVOLUÇÃO MENSAL COM FILTRO DE ANO -----------------
         with col_g1:
             st.markdown("##### 📅 Conferências Realizadas por Mês")
-            df_mes = df_filtrado[df_filtrado["conferencia"].notna()].groupby("mes_ano").size().reset_index(name="Qtd")
+            
+            df_conferidos_base = df_filtrado[df_filtrado["conferencia"].notna()].copy()
+            anos_disponiveis = sorted(df_conferidos_base["ano"].dropna().unique().tolist(), reverse=True)
+            
+            if anos_disponiveis:
+                ano_atual_str = str(datetime.now().year)
+                idx_ano_default = anos_disponiveis.index(ano_atual_str) if ano_atual_str in anos_disponiveis else 0
+                
+                filtro_ano_graf1 = st.selectbox(
+                    "Filtrar Ano do Gráfico:",
+                    ["TODOS OS ANOS"] + anos_disponiveis,
+                    index=idx_ano_default + 1 if ano_atual_str in anos_disponiveis else 0,
+                    key="sel_ano_graf1"
+                )
+                
+                if filtro_ano_graf1 != "TODOS OS ANOS":
+                    df_graf_mes_base = df_conferidos_base[df_conferidos_base["ano"] == filtro_ano_graf1]
+                else:
+                    df_graf_mes_base = df_conferidos_base
+            else:
+                df_graf_mes_base = df_conferidos_base
+
+            df_mes = (
+                df_graf_mes_base.groupby(["ano_mes_sort", "mes_ano"])
+                .size()
+                .reset_index(name="Qtd")
+                .sort_values("ano_mes_sort")
+            )
+
             if not df_mes.empty:
                 max_val_mes = float(df_mes["Qtd"].max() * 1.18) if df_mes["Qtd"].max() > 0 else 10.0
                 barras_mes = alt.Chart(df_mes).mark_bar(color="#273270", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=None, axis=alt.Axis(labelAngle=0)),
+                    x=alt.X("mes_ano:N", title="Mês/Ano", sort=alt.SortField(field="ano_mes_sort", order="ascending"), axis=alt.Axis(labelAngle=0)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_mes]))
                 )
                 textos_mes = barras_mes.mark_text(
@@ -696,15 +729,45 @@ if menu == "Dashboard de Resumo":
                 chart_mes = (barras_mes + textos_mes).properties(height=260)
                 st.altair_chart(chart_mes, use_container_width=True)
             else:
-                st.info("Sem dados suficientes para a evolução mensal.")
+                st.info("Sem dados suficientes para a evolução mensal no filtro selecionado.")
 
+        # ----------------- GRÁFICO 2: VOLUME POR DIA COM FILTRO DE MÊS/ANO -----------------
         with col_g2:
             st.markdown("##### 📊 Volume de Conferência por Dia")
-            df_dia = df_filtrado[df_filtrado["conferencia"].notna()].groupby(["dt_parsed", "dia_str"]).size().reset_index(name="Qtd").sort_values("dt_parsed")
+            
+            meses_anos_disponiveis = (
+                df_conferidos_base[["ano_mes_sort", "mes_ano"]]
+                .drop_duplicates()
+                .sort_values("ano_mes_sort", ascending=False)
+            )
+
+            if not meses_anos_disponiveis.empty:
+                lista_opcoes_mes_ano = meses_anos_disponiveis["mes_ano"].tolist()
+                mes_ano_atual = datetime.now().strftime("%m/%Y")
+                idx_mes_default = lista_opcoes_mes_ano.index(mes_ano_atual) if mes_ano_atual in lista_opcoes_mes_ano else 0
+
+                filtro_mes_ano_dia = st.selectbox(
+                    "Filtrar Mês/Ano Específico:",
+                    lista_opcoes_mes_ano,
+                    index=idx_mes_default,
+                    key="sel_mes_ano_graf2"
+                )
+
+                df_graf_dia_base = df_conferidos_base[df_conferidos_base["mes_ano"] == filtro_mes_ano_dia]
+            else:
+                df_graf_dia_base = df_conferidos_base
+
+            df_dia = (
+                df_graf_dia_base.groupby(["dt_parsed", "dia_str"])
+                .size()
+                .reset_index(name="Qtd")
+                .sort_values("dt_parsed")
+            )
+
             if not df_dia.empty:
                 max_val_dia = float(df_dia["Qtd"].max() * 1.18) if df_dia["Qtd"].max() > 0 else 10.0
                 barras_dia = alt.Chart(df_dia).mark_bar(color="#0f134f", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X("dia_str:N", title="Data", sort=None, axis=alt.Axis(labelAngle=-45)),
+                    x=alt.X("dia_str:N", title=f"Data ({filtro_mes_ano_dia if 'filtro_mes_ano_dia' in locals() else 'Período'})", sort=alt.SortField(field="dt_parsed", order="ascending"), axis=alt.Axis(labelAngle=-45)),
                     y=alt.Y("Qtd:Q", title="Qtd. Itens", scale=alt.Scale(domain=[0, max_val_dia]))
                 )
                 textos_dia = barras_dia.mark_text(
@@ -720,7 +783,7 @@ if menu == "Dashboard de Resumo":
                 chart_dia = (barras_dia + textos_dia).properties(height=260)
                 st.altair_chart(chart_dia, use_container_width=True)
             else:
-                st.info("Sem dados suficientes para a evolução diária.")
+                st.info("Sem conferências realizadas no Mês/Ano selecionado.")
 
         st.write("---")
         col_e1, col_e2 = st.columns(2)
