@@ -190,7 +190,7 @@ st.markdown("""
     }
 
     /* BOTÕES DE AÇÃO DO CORPO */
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button {
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync):not(.danger-btn) > button {
         background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
         border: 1px solid #1d4ed8 !important;
         border-radius: 6px !important;
@@ -201,12 +201,12 @@ st.markdown("""
         box-shadow: 0 3px 8px rgba(29, 78, 216, 0.22) !important;
         transition: all 0.15s ease !important;
     }
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button,
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button * {
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync):not(.danger-btn) > button,
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync):not(.danger-btn) > button * {
         color: #ffffff !important;
         font-weight: 600 !important;
     }
-    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync) > button:hover {
+    div.stButton:not(.nav-btn-active):not(.nav-btn-inactive):not(.nav-btn-sync):not(.danger-btn) > button:hover {
         background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
         box-shadow: 0 0 0 2.5px rgba(37, 99, 235, 0.3), 0 5px 12px rgba(29, 78, 216, 0.3) !important;
     }
@@ -215,11 +215,20 @@ st.markdown("""
     .danger-btn button {
         background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
         border: 1px solid #b91c1c !important;
-        box-shadow: 0 3px 8px rgba(220, 38, 38, 0.22) !important;
+        border-radius: 6px !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 11.5px !important;
+        box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25) !important;
+        transition: all 0.15s ease !important;
     }
     .danger-btn button:hover {
         background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
-        box-shadow: 0 0 0 2.5px rgba(239, 68, 68, 0.3), 0 5px 12px rgba(185, 28, 28, 0.3) !important;
+        box-shadow: 0 0 0 2.5px rgba(239, 68, 68, 0.35), 0 5px 12px rgba(185, 28, 28, 0.35) !important;
+    }
+    .danger-btn button * {
+        color: #ffffff !important;
+        font-weight: 700 !important;
     }
 
     /* Tipografia de Cabeçalho da Página */
@@ -307,14 +316,14 @@ st.markdown("""
         font-size: 11px !important;
     }
 
-    /* Box de Exclusão Perigosa */
+    /* Box de Alerta Vermelho / Exclusão */
     .danger-box {
         background-color: #fef2f2;
         border: 1px solid #fecaca;
         border-radius: 6px;
-        padding: 9px 12px;
-        margin-top: 14px;
-        margin-bottom: 10px;
+        padding: 10px 14px;
+        margin-top: 8px;
+        margin-bottom: 12px;
         font-size: 11px !important;
     }
 
@@ -921,7 +930,7 @@ if menu == "Dashboard de Resumo":
                 st.success("🎉 Nenhuma divergência registrada no filtro atual!")
 
 # ==============================================================================
-# OPÇÃO: IMPORTAR REMESSA (Aba Conferencia) COM TRAVA DE DUPLICIDADE E EXCLUSÃO
+# OPÇÃO: IMPORTAR REMESSA (Aba Conferencia) - COM BLOQUEIO DE DUPLICIDADE
 # ==============================================================================
 elif menu == "Importar Remessa":
     st.markdown('<div class="main-title">📥 Importação de Remessa</div>', unsafe_allow_html=True)
@@ -942,7 +951,7 @@ elif menu == "Importar Remessa":
             nome_local = str(nome_local_input).strip().upper()
 
             # --- VALIDAÇÃO CONTRA DUPLICIDADE DE REMESSA ---
-            with st.spinner("Validando existência prévia da remessa na base..."):
+            with st.spinner("Verificando se a remessa já existe na base..."):
                 df_existente = carregar_dados_planilha()
                 remessas_cadastradas = []
                 if not df_existente.empty and "remessa" in df_existente.columns:
@@ -952,7 +961,7 @@ elif menu == "Importar Remessa":
                     ]
 
             if remessa_limpa in remessas_cadastradas:
-                st.error(f"⛔ **Importação Bloqueada:** A remessa **{remessa_limpa}** já foi importada anteriormente e existe na base de dados. Caso deseje reimportá-la, utilize a opção de exclusão abaixo primeiro.")
+                st.error(f"⛔ **Importação Bloqueada:** O número de remessa **{remessa_limpa}** já existe na aba Conferencia. Se precisar reimportá-la, acesse a aba 'Conferir' e exclua a remessa antiga primeiro.")
             else:
                 with st.spinner("Processando linhas a partir da coluna 'Produto'..."):
                     itens = extrair_excel(arquivo_excel)
@@ -985,60 +994,6 @@ elif menu == "Importar Remessa":
                             st.dataframe(df_preview, use_container_width=True)
                         else:
                             st.error(f"Erro: {res.get('message', 'Falha ao processar requisição')}")
-
-    # --- SEÇÃO DE GERENCIAMENTO / EXCLUSÃO DE REMESSA ---
-    st.write("---")
-    st.markdown("##### 🗑️ Exclusão Completa de Remessa")
-    st.markdown('<div class="sub-title">Exclui permanentemente todos os registros vinculados a uma remessa específica na planilha.</div>', unsafe_allow_html=True)
-    
-    df_remessas_del = carregar_dados_planilha()
-    if not df_remessas_del.empty and "remessa" in df_remessas_del.columns:
-        remessas_para_deletar = [
-            str(r).strip() for r in df_remessas_del["remessa"].dropna().unique()
-            if str(r).strip() not in ["", "nan", "None"]
-        ]
-        
-        col_del1, col_del2 = st.columns([2, 1])
-        with col_del1:
-            remessa_a_excluir = st.selectbox(
-                "Selecione a Remessa que deseja Excluir:",
-                [""] + remessas_para_deletar,
-                key="sel_remessa_excluir_import"
-            )
-        
-        if remessa_a_excluir:
-            qtd_linhas = len(df_remessas_del[df_remessas_del["remessa"].astype(str).str.strip() == remessa_a_excluir])
-            
-            st.markdown(f"""
-            <div class="danger-box">
-                <strong style="color: #991b1b;">⚠️ Atenção: Ação Irreversível!</strong><br>
-                <span style="color: #7f1d1d;">
-                    Você selecionou a remessa <strong>{remessa_a_excluir}</strong>, que contém <strong>{qtd_linhas} item(ns)</strong> cadastrados.
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            confirmar_exclusao = st.checkbox(
-                f"Confirmo a exclusão definitiva de todos os itens da remessa {remessa_a_excluir}",
-                key="chk_confirmar_exclusao_import"
-            )
-            
-            st.markdown('<div class="danger-btn">', unsafe_allow_html=True)
-            if st.button("🗑️ Excluir Remessa Definitivamente", key="btn_del_remessa_import"):
-                if not confirmar_exclusao:
-                    st.error("⚠️ Marque a caixa de confirmação antes de prosseguir com a exclusão.")
-                else:
-                    with st.spinner(f"Excluindo remessa {remessa_a_excluir}..."):
-                        res_del = enviar_exclusao_remessa(remessa_a_excluir)
-                        if res_del.get("status") == "success":
-                            st.success(f"✅ Remessa **{remessa_a_excluir}** e seus {qtd_linhas} registros foram excluídos com sucesso!")
-                            carregar_dados_planilha_cached.clear()
-                            st.rerun()
-                        else:
-                            st.error(f"Erro ao excluir remessa: {res_del.get('message', 'Erro na API')}")
-            st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.info("Nenhuma remessa disponível para exclusão.")
 
 # ==============================================================================
 # OPÇÃO: FOLHA DE IMPRESSÃO CEGA (ECONÔMICA)
@@ -1201,7 +1156,7 @@ elif menu == "Folha de Impressão Cega":
                 components.html(documento_html, height=altura_calculada, scrolling=True)
 
 # ==============================================================================
-# OPÇÃO: DIGITAR CONFERÊNCIA CEGA & JUSTIFICATIVA POR ITEM (COM EXCLUSÃO)
+# OPÇÃO: DIGITAR CONFERÊNCIA CEGA & EXCLUSÃO DIRETA DA REMESSA
 # ==============================================================================
 elif menu == "Digitar Conferência Cega":
     st.markdown('<div class="main-title">🔍 Digitação de Conferência Cega e Validação</div>', unsafe_allow_html=True)
@@ -1216,10 +1171,64 @@ elif menu == "Digitar Conferência Cega":
             str(r).strip() for r in df["remessa"].dropna().unique().tolist()
             if str(r).strip() not in ["", "nan", "None"]
         ]
-        
-        col_pesq, col_opt_del = st.columns([3, 1], vertical_alignment="bottom")
-        with col_pesq:
-            remessa_pesquisa = st.selectbox("Pesquisar pelo Número da Remessa:", [""] + remessas)
+
+        # Estado para controlar o modal de confirmação de exclusão
+        if "mostrar_confirmacao_excluir" not in st.session_state:
+            st.session_state.mostrar_confirmacao_excluir = False
+
+        col_pesquisa, col_btn_del = st.columns([3.5, 1.5], vertical_alignment="bottom")
+
+        with col_pesquisa:
+            remessa_pesquisa = st.selectbox(
+                "Pesquisar pelo Número da Remessa:",
+                [""] + remessas,
+                key="sel_remessa_conferencia"
+            )
+
+        with col_btn_del:
+            if remessa_pesquisa:
+                st.markdown('<div class="danger-btn">', unsafe_allow_html=True)
+                if st.button("🗑️ Excluir Remessa", key="btn_abrir_excluir", use_container_width=True):
+                    st.session_state.mostrar_confirmacao_excluir = not st.session_state.mostrar_confirmacao_excluir
+                st.markdown('</div>', unsafe_allow_html=True)
+
+        # PAINEL DE CONFIRMAÇÃO DE EXCLUSÃO DA REMESSA
+        if remessa_pesquisa and st.session_state.mostrar_confirmacao_excluir:
+            remessa_alvo_del = str(remessa_pesquisa).strip()
+            total_linhas_del = len(df[df["remessa"].astype(str).str.strip() == remessa_alvo_del])
+
+            st.markdown(f"""
+            <div class="danger-box">
+                <strong style="color: #991b1b; font-size: 12px;">⚠️ EXCLUIR TODA A REMESSA {remessa_alvo_del}</strong><br>
+                <span style="color: #7f1d1d;">
+                    Esta ação apagará <strong>todos os {total_linhas_del} itens</strong> desta remessa permanentemente da aba <strong>Conferencia</strong>.
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            c_conf, c_btn1, c_btn2 = st.columns([2.5, 1.2, 1], vertical_alignment="center")
+            with c_conf:
+                chk_autoriza = st.checkbox(f"Confirmar exclusão definitiva da remessa {remessa_alvo_del}", key="chk_del_def")
+            with c_btn1:
+                st.markdown('<div class="danger-btn">', unsafe_allow_html=True)
+                if st.button("Confirmar Exclusão", key="btn_confirmar_del_final", use_container_width=True):
+                    if not chk_autoriza:
+                        st.error("Marque a caixa de confirmação primeiro.")
+                    else:
+                        with st.spinner(f"Excluindo remessa {remessa_alvo_del}..."):
+                            res_del = enviar_exclusao_remessa(remessa_alvo_del)
+                            if res_del.get("status") == "success":
+                                st.session_state.mostrar_confirmacao_excluir = False
+                                carregar_dados_planilha_cached.clear()
+                                st.success(f"✅ Remessa {remessa_alvo_del} excluída com sucesso!")
+                                st.rerun()
+                            else:
+                                st.error(f"Erro: {res_del.get('message', 'Falha na API')}")
+                st.markdown('</div>', unsafe_allow_html=True)
+            with c_btn2:
+                if st.button("Cancelar", key="btn_cancela_del", use_container_width=True):
+                    st.session_state.mostrar_confirmacao_excluir = False
+                    st.rerun()
 
         if remessa_pesquisa:
             remessa_alvo = str(remessa_pesquisa).strip()
@@ -1476,38 +1485,6 @@ elif menu == "Digitar Conferência Cega":
                                 else:
                                     mensagem_erro = res.get("message", "Falha na comunicação com a planilha")
                                     st.error(f"Erro ao salvar: {mensagem_erro}")
-
-                # --- EXCLUSÃO DIRETA DA REMESSA EM FOCO ---
-                st.write("---")
-                with st.expander(f"⚙️ Opções Avançadas: Excluir Remessa {remessa_alvo}"):
-                    st.markdown(f"""
-                    <div class="danger-box">
-                        <strong style="color: #991b1b;">⚠️ Atenção: Exclusão Total dos Registros</strong><br>
-                        <span style="color: #7f1d1d;">
-                            Deseja remover completamente a remessa <strong>{remessa_alvo}</strong> ({len(itens_remessa)} itens) da aba Conferencia?
-                        </span>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    conf_del_foco = st.checkbox(
-                        f"Sim, desejo apagar permanentemente a remessa {remessa_alvo}",
-                        key=f"chk_del_foco_{remessa_alvo}"
-                    )
-                    
-                    st.markdown('<div class="danger-btn">', unsafe_allow_html=True)
-                    if st.button("🗑️ Confirmar Exclusão da Remessa", key=f"btn_del_foco_{remessa_alvo}"):
-                        if not conf_del_foco:
-                            st.error("⚠️ Marque o checkbox de confirmação para autorizar a remoção.")
-                        else:
-                            with st.spinner(f"Excluindo remessa {remessa_alvo}..."):
-                                res_del = enviar_exclusao_remessa(remessa_alvo)
-                                if res_del.get("status") == "success":
-                                    st.success(f"✅ Remessa **{remessa_alvo}** excluída com sucesso!")
-                                    carregar_dados_planilha_cached.clear()
-                                    st.rerun()
-                                else:
-                                    st.error(f"Erro ao excluir: {res_del.get('message', 'Erro na API')}")
-                    st.markdown('</div>', unsafe_allow_html=True)
 
 # ==============================================================================
 # OPÇÃO: CADASTRAR NOVO CONFERENTE (Aba Local-Estoque - Coluna D)
